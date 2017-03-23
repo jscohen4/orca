@@ -63,4 +63,9 @@ df['8RI'] = ((df[SR_pts + SJR_pts] * cfsd_mafd)
 
 df['8RI'].fillna(method='bfill', inplace=True)
 
+# flood control indices
+f = lambda x: x[1]+0.95*x[0]
+df['SHA_fci'] = df['SHA_in'].rolling(2).apply(f)
+df.SHA_fci.fillna(method='bfill', inplace=True)
+
 df.to_csv('cord-data.csv')

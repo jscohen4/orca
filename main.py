@@ -13,11 +13,13 @@ shasta = Reservoir(df, 'SHA')
 for t in range(1,T):
   shasta.step(t)
 
+results = shasta.results_as_df(df.index)
+
 plt.subplot(2,1,1)
-plt.plot(shasta.S)
-plt.plot(df.SHA_storage.values)
+h = results.SHA_storage.plot()
+df.SHA_storage.plot(ax=h)
 
 plt.subplot(2,1,2)
-plt.plot(shasta.R)
-plt.plot(df.SHA_out.values * cfs_tafd)
+h = results.SHA_out.plot()
+(df.SHA_out * cfs_tafd).plot(ax=h)
 plt.show()
