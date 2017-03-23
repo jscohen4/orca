@@ -1,0 +1,26 @@
+{
+  "ec_target" : {
+    "collinsville": {"W": [null, 2.64, 2.64, 2.64, 2.64, 2.64, null, null, null, null, null, null],
+                     "AN": [null, 2.64, 2.64, 2.64, 2.64, 2.64, null, null, null, null, null, null],
+                     "BN": [null, 2.64, 2.64, 2.64, 2.64, 2.64, null, null, null, null, null, null],
+                     "D": [null, 2.64, 2.64, 2.64, 2.64, 2.64, null, null, null, null, null, null],
+                     "C": [null, 2.64, 2.64, 2.64, 2.64, 2.64, null, null, null, null, null, null]},
+
+    "emmaton": {"W": [null, null, null, 0.45, 0.45, 0.45, 0.45, 0.45, null, null, null, null],
+                "AN": [null, null, null, 0.45, 0.45, 0.45, 0.63, 0.63, null, null, null, null],
+                "BN": [null, null, null, 0.45, 0.45, 0.45, 1.14, 1.14, null, null, null, null],
+                "D": [null, null, null, 0.45, 0.45, 0.45, 1.67, 1.67, null, null, null, null],
+                "C": [null, null, null, 2.78, 2.78, 2.78, 2.78, 2.78, null, null, null, null]},
+
+    "jerseypoint": {"W": [null, null, null, 0.45, 0.45, 0.45, 0.45, 0.45, null, null, null, null],
+                    "AN": [null, null, null, 0.45, 0.45, 0.45, 0.45, 0.45, null, null, null, null],
+                    "BN": [null, null, null, 0.45, 0.45, 0.45, 0.74, 0.74, null, null, null, null],
+                    "D": [null, null, null, 0.45, 0.45, 0.45, 1.35, 1.35, null, null, null, null],
+                    "C": [null, null, null, 2.20, 2.20, 2.20, 2.20, 2.20, null, null, null, null]}
+  },
+
+  "model_params": {"emmaton": [4.06662745, 2.36449617, -3.44927871, 17],
+                   "collinsville": [4.26498281, 2.29738551, -3.69736123, 8],
+                   "jerseypoint": [3.55662917, 2.25417983, -3.70881883, 12]}
+
+}
