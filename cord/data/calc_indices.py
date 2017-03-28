@@ -20,13 +20,12 @@ thresholds = [9.2, 7.8, 6.5, 5.4, 0.0]
 values = ['W', 'AN', 'BN', 'D', 'C']
 prev_year = 9.8 # WY 1999
 
-def get_SR_WYT(y):
+def get_SR_WYT(y,index=None):
   global prev_year
   WYI = 0.3*y[winter(y)].sum() + 0.4*y[summer(y)].sum() + 0.3*prev_year
   prev_year = np.min((10.0,WYI))
   for t,v in zip(thresholds,values):
     if WYI > t:
-      print v
       return v
 
 df['SR_WYT'] = ((df[SR_pts] * cfsd_mafd)
@@ -34,7 +33,16 @@ df['SR_WYT'] = ((df[SR_pts] * cfsd_mafd)
                 .resample('AS-OCT')
                 .apply(get_SR_WYT))
 
+# df['SR_WYT_rolling'] = ((df[SR_pts] * cfsd_mafd)
+#                         .sum(axis=1)
+#                         .rolling(365)
+#                         .sum().clip(lower=None, upper=10))
+
 df.SR_WYT.fillna(method='ffill', inplace=True)
+
+# df.SR_WYT_rolling.fillna(method='ffill', inplace=True)
+# df.SR_WYT_rolling.plot()
+# plt.show()
 
 # San Joaquin Water Year Type
 thresholds = [3.8, 3.1, 2.5, 2.1, 0.0]
@@ -65,8 +73,18 @@ df['8RI'] = ((df[SR_pts + SJR_pts] * cfsd_mafd)
 df['8RI'].fillna(method='bfill', inplace=True)
 
 # flood control indices
-f = lambda x: x[1]+0.95*x[0]
-df['SHA_fci'] = df['SHA_in'].rolling(2).apply(f)
+def rolling_fci(inflow):
+  T = len(inflow)
+  x = np.zeros(T)
+  for i,t in enumerate(inflow.index):
+    if t.month==10 and t.day==1:
+      x[i] = 100000 # cfs, start each WY here
+    else:
+      x[i] = inflow[t] + 0.95*x[i-1]
+
+  return pd.Series(x, index=inflow.index)
+
+df['SHA_fci'] = rolling_fci(df['SHA_in_fix'])
 df.SHA_fci.fillna(method='bfill', inplace=True)
 
 df.to_csv('cord-data.csv')

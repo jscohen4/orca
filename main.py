@@ -8,6 +8,7 @@ sns.set_style('whitegrid')
 datafile = 'cord/data/cord-data.csv'
 
 df = pd.read_csv(datafile, index_col=0, parse_dates=True)
+# df = df['2007-10-01':]
 T = len(df)
 
 shasta = Reservoir(df, 'SHA')
@@ -36,6 +37,9 @@ df.SHA_storage.plot(ax=h)
 plt.subplot(2,1,2)
 h = results.SHA_out.plot()
 (df.SHA_out * cfs_tafd).plot(ax=h)
+
+# h = results.SHA_tocs.plot()
+# df.SHA_tocs_obs.plot(ax=h)
 
 plt.show()
 

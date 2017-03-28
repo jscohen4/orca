@@ -6,6 +6,8 @@ from ulmo.cdec import historical as cd
 # first 8 are the 8-river index
 # first 4 are the SRI and SR WYT
 # http://cdec.water.ca.gov/cgi-progs/staSearch?sta=&sensor_chk=on&sensor=8
+cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
+
 df = pd.DataFrame()
 sd = '10-01-1999' # reliable start for CDEC daily data
 ids = ['BND', 'ORO', 'YRS', 'FOL', 'NML', 'TLG', 'MRC', 'MIL']
@@ -16,16 +18,20 @@ data = cd.get_data(station_ids=ids, sensor_ids=[8],
 for k in ids:
   df[k + '_fnf'] = data[k]['FULL NATURAL FLOW daily']['value']
 
-# flowrates: inflow / outflow / pumping
-ids = ['SHA', 'CLE', 'ORO', 'FOL', 'NML', 'DNP', 'EXC', 'MIL', 'SNL']
+# flowrates: inflow / outflow / evap / pumping
+ids = ['SHA', 'ORO', 'FOL']#, 'CLE', 'NML', 'DNP', 'EXC', 'MIL', 'SNL']
 
-data = cd.get_data(station_ids=ids, sensor_ids=[15,23,76], 
+data = cd.get_data(station_ids=ids, sensor_ids=[15,23,74,76,94], 
                    resolutions=['daily'], start=sd)
 
 for k in ids:
   df[k + '_in'] = data[k]['RESERVOIR INFLOW daily']['value']
   df[k + '_out'] = data[k]['RESERVOIR OUTFLOW daily']['value']
   df[k + '_storage'] = data[k]['RESERVOIR STORAGE daily']['value'] / 1000 # TAF
+  df[k + '_evap'] = data[k]['EVAPORATION, LAKE COMPUTED CFS daily']['value']
+  df[k + '_tocs_obs'] = data[k]['RESERVOIR, TOP CONSERV STORAGE daily']['value'] / 1000
+  # fix mass balance problems in inflow
+  df[k + '_in_fix'] = df[k+'_storage'].diff()/cfs_tafd + df[k+'_out'] + df[k+'_evap']
 
 # observed delta outflow
 data = cd.get_data(['DTO'], [23], ['daily'], start=sd)

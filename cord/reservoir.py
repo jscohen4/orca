@@ -16,20 +16,22 @@ class Reservoir():
     for k,v in json.load(open('cord/data/%s_properties.json' % key)).items():
         setattr(self,k,v)
 
-    self.Q = df['%s_in'% key].values * cfs_tafd
+    self.Q = df['%s_in_fix'% key].values * cfs_tafd
+    self.E = df['%s_evap'% key].values * cfs_tafd
     self.fci = df['%s_fci' % key].values
     self.S = np.zeros(T)
     self.R = np.zeros(T)
+    self.tocs = np.zeros(T)
     self.Rtarget = np.zeros(T)
     self.Rexport = np.zeros(T)
-    self.S[0] = self.capacity / 1.5 # ?? assumption
+    self.S[0] = df['%s_storage' % key].iloc[0]
     self.R[0] = 0
 
   def current_tocs(self,d,ix):
-    for i,v in enumerate(self.tocs['index']):
+    for i,v in enumerate(self.tocs_rule['index']):
       if ix > v:
         break
-    return np.interp(d, self.tocs['dowy'][i], self.tocs['storage'][i])
+    return np.interp(d, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
 
   def step(self, t, dmin=0.0, sodd=0.0):
 
@@ -41,25 +43,28 @@ class Reservoir():
     envmin = self.env_min_flow[wyt][m-1] * cfs_tafd
     nodd = np.interp(d, first_of_month, self.nodd)
     sodd *= self.sodd_pct * self.sodd_curtail_pct[wyt]
-    toc = self.current_tocs(dowy, self.fci[t])
+    self.tocs[t] = self.current_tocs(dowy, self.fci[t])
     dout = dmin * self.delta_outflow_pct
 
     # decide next release
     W = self.S[t-1] + self.Q[t]
-    self.Rtarget[t] = np.max((0.2*(W - toc), nodd+sodd+dout, envmin))
+    # HB's idea for flood control relesae..
+    # fcr = (W-self.tocs[t])*np.exp(4.5*10**-6 * (W-self.capacity))
+    fcr = 0.2*(W-self.tocs[t])
+    self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin))
     self.Rexport[t] = sodd
 
     # then clip based on constraints
     self.R[t] = min(self.Rtarget[t], W - self.dead_pool)
     self.R[t] = min(self.R[t], self.max_outflow * cfs_tafd)
     self.R[t] +=  max(W - self.R[t] - self.capacity, 0) # spill
-    self.S[t] = W - self.R[t] # mass balance update
+    self.S[t] = W - self.R[t] - self.E[t] # mass balance update
 
 
   def results_as_df(self, index):
     df = pd.DataFrame()
-    names = ['storage', 'out', 'target', 'rexport']
-    things = [self.S, self.R, self.Rtarget, self.Rexport]
+    names = ['storage', 'out', 'target', 'rexport', 'tocs']
+    things = [self.S, self.R, self.Rtarget, self.Rexport, self.tocs]
     for n,t in zip(names,things):
       df['%s_%s' % (self.key,n)] = pd.Series(t, index=index)
     return df
