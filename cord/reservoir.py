@@ -13,51 +13,53 @@ class Reservoir():
     self.index = df.index
     self.key = key
     self.wyt = df.SR_WYT
-    self.properties = json.load(open('cord/data/%s_properties.json' % key))
-    self.K = self.properties['capacity']
+    for k,v in json.load(open('cord/data/%s_properties.json' % key)).items():
+        setattr(self,k,v)
+
     self.Q = df['%s_in'% key].values * cfs_tafd
     self.fci = df['%s_fci' % key].values
     self.S = np.zeros(T)
     self.R = np.zeros(T)
     self.Rtarget = np.zeros(T)
-    self.S[0] = self.K / 1.5 # ?? assumption
+    self.Rexport = np.zeros(T)
+    self.S[0] = self.capacity / 1.5 # ?? assumption
     self.R[0] = 0
 
-  def tocs(self,d,ix):
-    t = self.properties['tocs']
-    for i,v in enumerate(t['index']):
+  def current_tocs(self,d,ix):
+    for i,v in enumerate(self.tocs['index']):
       if ix > v:
         break
-    return np.interp(d, t['dowy'][i], t['storage'][i])
+    return np.interp(d, self.tocs['dowy'][i], self.tocs['storage'][i])
 
-  def step(self, t):
+  def step(self, t, dmin=0.0, sodd=0.0):
 
-    d = water_day(self.index.dayofyear[t])
+    d = self.index.dayofyear[t]
+    dowy = water_day(d)
     m = self.index.month[t]
     wyt = self.wyt[t]
 
-    envmin = self.properties['env_min_flow'][wyt][m-1] * cfs_tafd
-    toc = self.tocs(d, self.fci[t])
-
+    envmin = self.env_min_flow[wyt][m-1] * cfs_tafd
+    nodd = np.interp(d, first_of_month, self.nodd)
+    sodd *= self.sodd_pct * self.sodd_curtail_pct[wyt]
+    toc = self.current_tocs(dowy, self.fci[t])
+    dout = dmin * self.delta_outflow_pct
 
     # decide next release
     W = self.S[t-1] + self.Q[t]
-    if W > toc:
-      self.Rtarget[t] = 0.2*(W - toc)
-    else:
-      self.Rtarget[t] = envmin
+    self.Rtarget[t] = np.max((0.2*(W - toc), nodd+sodd+dout, envmin))
+    self.Rexport[t] = sodd
 
     # then clip based on constraints
-    self.R[t] = min(self.Rtarget[t], W)
-    self.R[t] = min(self.R[t], self.properties['max_outflow'] * cfs_tafd)
-    self.R[t] +=  max(W - self.R[t] - self.K, 0) # spill
+    self.R[t] = min(self.Rtarget[t], W - self.dead_pool)
+    self.R[t] = min(self.R[t], self.max_outflow * cfs_tafd)
+    self.R[t] +=  max(W - self.R[t] - self.capacity, 0) # spill
     self.S[t] = W - self.R[t] # mass balance update
 
 
   def results_as_df(self, index):
     df = pd.DataFrame()
-    names = ['storage', 'out', 'target']
-    things = [self.S, self.R, self.Rtarget]
+    names = ['storage', 'out', 'target', 'rexport']
+    things = [self.S, self.R, self.Rtarget, self.Rexport]
     for n,t in zip(names,things):
       df['%s_%s' % (self.key,n)] = pd.Series(t, index=index)
     return df

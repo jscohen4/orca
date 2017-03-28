@@ -26,6 +26,7 @@ def get_SR_WYT(y):
   prev_year = np.min((10.0,WYI))
   for t,v in zip(thresholds,values):
     if WYI > t:
+      print v
       return v
 
 df['SR_WYT'] = ((df[SR_pts] * cfsd_mafd)

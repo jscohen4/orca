@@ -41,6 +41,6 @@ for k in ids:
 df['DeltaIn'] = df['DeltaOut'] + df['HRO_pump'] + df['TRP_pump']
 
 # cleanup
-df[df < 0] = 0.0
-df.fillna(method='ffill', inplace=True)
+df[df < 0] = np.nan
+df.interpolate(inplace=True)
 df.to_csv('cord-data.csv')

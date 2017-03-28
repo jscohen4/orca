@@ -2,36 +2,49 @@ from __future__ import division
 import numpy as np 
 import pandas as pd
 import json
-
-tafw_cfsd = 1000 / 86400 * 43560 / 7
-cfsd_tafw = 2.29568411*10**-5 * 86400 / 1000 * 7
-
-class Model():
-
-  def __init__(self, datafile, sd, ed):
-    # should not technically be using any of this delta data
-    self.df = pd.read_csv(datafile, index_col=0, parse_dates=True)[sd:ed]
-    self.T = len(self.df.index)
-
-  def simulate():
-    delta = Delta('delta_rules.json')
-    
-    
-    for t in range(1,T):
-      v = delta.get_required_outflow(t, wyt)
+from util import *
 
 class Delta():
 
-  def __init__(self, datafile):
-    self.rules = json.load(open(datafile))
+  def __init__(self, df, key):
+    T = len(df)
+    self.index = df.index
+    self.key = key
+    self.wyt = df.SR_WYT
 
-  # datetime and wyt is all that's needed
-  def get_required_outflow(t, wyt):
-    pass
-    # all constraints here
+    for k,v in json.load(open('cord/data/Delta_properties.json')).items():
+      setattr(self,k,v)
+
+    # what vars to store/save here
+    self.dmin = np.zeros(T)
+    self.sodd_cvp = np.zeros(T)
+    self.TRP_pump = np.zeros(T)
+    self.HRO_pump = np.zeros(T)
+
+  def calc_flow_bounds(self, t, sum_res_inflows):
+    d = self.index.dayofyear[t]
+    m = self.index.month[t]
+    wyt = self.wyt[t]
+
+    gains = sum_res_inflows * self.gains_factor[m-1]
+    min_rule = np.interp(d, first_of_month, self.min_outflow[wyt]) * cfs_tafd
+    export_ratio = np.interp(d, first_of_month, self.export_ratio[wyt])
+    outflow_ratio = 1 - export_ratio
+    # ratio_rule = gains * 
+    
+
+    # pump capacities
+    cvp_max = np.interp(d, self.pump_max['cvp']['d'], 
+                           self.pump_max['cvp']['pmax']) * cfs_tafd
+
+    if min_rule > gains: # additional flow needed
+      self.dmin[t] = min_rule - gains
+      self.sodd_cvp[t] = cvp_max / export_ratio
+    else: # extra unstored water available
+      self.sodd_cvp[t] = max((cvp_max - 0.55*(gains - min_rule)) / export_ratio, 0)
+      # self.TRP_pump[t] = 0.55*(gains - min_rule)
+
+    # cvp_pmax = 
+    # swp_pmax = 
 
 
-# blah blah blah
-model = Model('data-clean.csv', sd='10-01-1999', ed='09-30-2015')
-print model.df
-print json.load(open('delta_rules.json'))

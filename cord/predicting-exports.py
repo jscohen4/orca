@@ -32,28 +32,29 @@ def salinity_flow_requirement(site, St, t):
 # https://www.usbr.gov/mp/nepa/documentShow.cfm?Doc_ID=19490
 # banks + tracy (mean daily cfs)
 # plus extra 500 cfs july-sept. from EWA (only when habitat outflow constraint is binding)
-banks = [8500, 8500, 7590, 6680, 6680, 6680, 7180, 7180, 7180, 6680, 6680, 7590]
-capacity = np.array(banks) + 4600 # add tracy
+# banks = [8500, 8500, 7590, 6680, 6680, 6680, 7180, 7180, 7180, 6680, 6680, 7590]
+# capacity = np.array(banks) + 4600 # add tracy
 
-df['pump_capacity'] = pd.Series([capacity[m-1] for m in df.index.month], index=df.index)
+# df['pump_capacity'] = pd.Series([capacity[m-1] for m in df.index.month], index=df.index)
 
 # legally Banks+Tracy cannot exceed 1500 cfs from Apr 15 - May 15
 ix = ((df.index.month==4) & (df.index.day >= 15)) | ((df.index.month==5) & (df.index.day <= 15))
 df.pump_capacity[ix] = 1500
 
 # Export-inflow ratio constraints
-pct = [0.65, 0.35, 0.35, 0.35, 0.35, 0.35, 0.65, 0.65, 0.65, 0.65, 0.65, 0.65]
-df['export_ratio_constraint'] = df.inflow * np.array([pct[m-1] for m in df.index.month])
-df['outflow_ratio_constraint'] = df.inflow * (1 - np.array([pct[m-1] for m in df.index.month]))
+# pct = [0.65, 0.35, 0.35, 0.35, 0.35, 0.35, 0.65, 0.65, 0.65, 0.65, 0.65, 0.65]
+# df['export_ratio_constraint'] = df.inflow * np.array([pct[m-1] for m in df.index.month])
+# df['outflow_ratio_constraint'] = df.inflow * (1 - np.array([pct[m-1] for m in df.index.month]))
 
 # January 8RI changes February export ratio constraint
-ix = (df.index.month==2) & (df.jan8RI < 1)
-df[ix].export_ratio_constraint = df.inflow[ix] * 0.45
-df[ix].outflow_ratio_constraint = df.inflow[ix] * 0.55
+# DONE (sorta)
+# ix = (df.index.month==2) & (df.jan8RI < 1)
+# df[ix].export_ratio_constraint = df.inflow[ix] * 0.45
+# df[ix].outflow_ratio_constraint = df.inflow[ix] * 0.55
 
-ix = (df.index.month==2) & (df.jan8RI > 1) & (df.jan8RI < 1.5)
-df[ix].export_ratio_constraint = df.inflow[ix] * 0.40
-df[ix].outflow_ratio_constraint = df.inflow[ix] * 0.60
+# ix = (df.index.month==2) & (df.jan8RI > 1) & (df.jan8RI < 1.5)
+# df[ix].export_ratio_constraint = df.inflow[ix] * 0.40
+# df[ix].outflow_ratio_constraint = df.inflow[ix] * 0.60
 
 # find required flow Qt to meet salinity targets St
 for k in St.keys():
@@ -65,17 +66,19 @@ for k in St.keys():
 df['min_delta_outflow'] = pd.Series()
 
 # Jan: if 8RI < 800 TAF in previous December: 4500 cfs, else 6000 cfs
-df[df.index.month==1].min_delta_outflow = 6000
-df[(df.index.month==1) & (df.dec8RI < 0.8)].min_delta_outflow = 4500
+# DONE (sorta)
+# df[df.index.month==1].min_delta_outflow = 6000
+# df[(df.index.month==1) & (df.dec8RI < 0.8)].min_delta_outflow = 4500
 
 # Feb: 7100 cfs or EC_collins < 2.64
 # Mar: same
 # Apr: same
 # May: same (unless SRI forecast < 8.1 MAF at 90% exceedance, then 4000 cfs)
 # June: same (unless SRI forecast < 8.1 MAF at 90% exceedance, then 4000 cfs)
-df[df.Qt_collinsville > 7100].Qt_collinsville = 7100
-ix = ((df.index.month==5) | (df.index.month==6)) & (df.maySRI < 8.1) & (df.Qt_collinsville > 4000)
-df[ix].Qt_collinsville = 4000
+# DONE (sorta, not including salinity)
+# df[df.Qt_collinsville > 7100].Qt_collinsville = 7100
+# ix = ((df.index.month==5) | (df.index.month==6)) & (df.maySRI < 8.1) & (df.Qt_collinsville > 4000)
+# df[ix].Qt_collinsville = 4000
 
 # July: 8000 cfs in a 'W' or 'AN' year; 6500 in 'BN'; 5000 in 'D'; 4000 in 'C'
 # August: 4000 in W/AN/BN; 3500 in D, 3000 in C
@@ -83,15 +86,16 @@ df[ix].Qt_collinsville = 4000
 # Oct: 4000 in W/AN/BN/D; 3000 in C
 # Nov: 4500 in W/AN/BN/D; 3500 in C
 # Dec: same as Nov
-temp = {7: {'W': 8000, 'AN': 8000, 'BN': 6500, 'D': 5000, 'C': 4000},
-        8: {'W': 4000, 'AN': 4000, 'BN': 4000, 'D': 3500, 'C': 3000},
-        9: {'W': 3000, 'AN': 3000, 'BN': 3000, 'D': 3000, 'C': 3000},
-        10: {'W': 4000, 'AN': 4000, 'BN': 4000, 'D': 4000, 'C': 3000},
-        11: {'W': 4500, 'AN': 4500, 'BN': 4500, 'D': 4500, 'C': 4500},
-        12: {'W': 4500, 'AN': 4500, 'BN': 4500, 'D': 4500, 'C': 4500}}
+# DONE
+# temp = {7: {'W': 8000, 'AN': 8000, 'BN': 6500, 'D': 5000, 'C': 4000},
+#         8: {'W': 4000, 'AN': 4000, 'BN': 4000, 'D': 3500, 'C': 3000},
+#         9: {'W': 3000, 'AN': 3000, 'BN': 3000, 'D': 3000, 'C': 3000},
+#         10: {'W': 4000, 'AN': 4000, 'BN': 4000, 'D': 4000, 'C': 3000},
+#         11: {'W': 4500, 'AN': 4500, 'BN': 4500, 'D': 4500, 'C': 4500},
+#         12: {'W': 4500, 'AN': 4500, 'BN': 4500, 'D': 4500, 'C': 4500}}
 
-ix = (df.index.month >= 7) & (df.index.month <= 12)
-df.ix[ix, 'min_delta_outflow'] = [temp[i.month][df.wyt[i]] for i in df[ix].index]
+# ix = (df.index.month >= 7) & (df.index.month <= 12)
+# df.ix[ix, 'min_delta_outflow'] = [temp[i.month][df.wyt[i]] for i in df[ix].index]
 
 # plot export requirements
 export_constraints = ['pump_capacity', 'export_ratio_constraint']
