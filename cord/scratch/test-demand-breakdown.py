@@ -51,7 +51,8 @@ def plotyear(x):
   print x
   x.plot()
 
-df[['TRP_pump', 'HRO_pump', 'SNL_storage']].plot()
+df.TRP_pump.resample('M').mean().plot()
+# df[['TRP_pump', 'HRO_pump', 'SNL_storage']].plot()
 # h = df[['ORO_out']].plot(kind='area', linewidth=0)
 # # df.plot(kind='scatter', x='month', y='SHA_out')
 # # h = df.filter(like='fnf').plot(kind='area', linewidth=0)
