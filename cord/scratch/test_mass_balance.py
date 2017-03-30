@@ -4,7 +4,7 @@ import pandas as pd
 
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 
-df = pd.read_csv('cord-data.csv', index_col=0, parse_dates=True)
+df = pd.read_csv('../data/cord-data.csv', index_col=0, parse_dates=True)
 
 # df = df['10-01-2005':]
 

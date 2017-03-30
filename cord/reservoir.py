@@ -12,7 +12,7 @@ class Reservoir():
     T = len(df)
     self.index = df.index
     self.key = key
-    self.wyt = df.SR_WYT
+    self.wyt = df.SR_WYT_rolling # 120 day MA lag
     for k,v in json.load(open('cord/data/%s_properties.json' % key)).items():
         setattr(self,k,v)
 
@@ -23,7 +23,7 @@ class Reservoir():
     self.R = np.zeros(T)
     self.tocs = np.zeros(T)
     self.Rtarget = np.zeros(T)
-    self.Rexport = np.zeros(T)
+    self.R_to_delta = np.zeros(T)
     self.S[0] = df['%s_storage' % key].iloc[0]
     self.R[0] = 0
 
@@ -34,7 +34,6 @@ class Reservoir():
     return np.interp(d, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
 
   def step(self, t, dmin=0.0, sodd=0.0):
-
     d = self.index.dayofyear[t]
     dowy = water_day(d)
     m = self.index.month[t]
@@ -46,25 +45,27 @@ class Reservoir():
     self.tocs[t] = self.current_tocs(dowy, self.fci[t])
     dout = dmin * self.delta_outflow_pct
 
+    if not self.nodd_meets_envmin:
+      envmin += nodd 
+
     # decide next release
     W = self.S[t-1] + self.Q[t]
     # HB's idea for flood control relesae..
     # fcr = (W-self.tocs[t])*np.exp(4.5*10**-6 * (W-self.capacity))
     fcr = 0.2*(W-self.tocs[t])
     self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin))
-    self.Rexport[t] = sodd
 
     # then clip based on constraints
     self.R[t] = min(self.Rtarget[t], W - self.dead_pool)
     self.R[t] = min(self.R[t], self.max_outflow * cfs_tafd)
     self.R[t] +=  max(W - self.R[t] - self.capacity, 0) # spill
     self.S[t] = W - self.R[t] - self.E[t] # mass balance update
-
+    self.R_to_delta[t] = max(self.R[t] - nodd, 0) # delta calcs need this
 
   def results_as_df(self, index):
     df = pd.DataFrame()
-    names = ['storage', 'out', 'target', 'rexport', 'tocs']
-    things = [self.S, self.R, self.Rtarget, self.Rexport, self.tocs]
+    names = ['storage', 'out', 'target', 'out_to_delta', 'tocs']
+    things = [self.S, self.R, self.Rtarget, self.R_to_delta, self.tocs]
     for n,t in zip(names,things):
       df['%s_%s' % (self.key,n)] = pd.Series(t, index=index)
     return df

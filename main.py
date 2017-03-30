@@ -2,46 +2,34 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from cord import *
-import seaborn as sns
-sns.set_style('whitegrid')
 
-datafile = 'cord/data/cord-data.csv'
+model = Model('cord/data/cord-data.csv', sd='10-01-1999')
+# results = model.simulate() # takes a while... save results
+# results.to_csv('cord/data/results.csv')
+results = pd.read_csv('cord/data/results.csv', index_col=0, parse_dates=True)
 
-df = pd.read_csv(datafile, index_col=0, parse_dates=True)
-# df = df['2007-10-01':]
-T = len(df)
+# calibration points (lists of pandas series)
+sim = [results['DEL_HRO_pump'] / cfs_tafd,
+       results['DEL_TRP_pump'] / cfs_tafd,
+       results['SHA_storage'],
+       results['SHA_out'] / cfs_tafd,
+       results['FOL_storage'],
+       results['FOL_out'] / cfs_tafd,
+       results['ORO_storage'],
+       results['ORO_out'] / cfs_tafd]
 
-shasta = Reservoir(df, 'SHA')
-delta = Delta(df, 'DEL')
+obs = [model.df['HRO_pump'],
+       model.df['TRP_pump'],
+       model.df['SHA_storage'],
+       model.df['SHA_out'],
+       model.df['FOL_storage'],
+       model.df['FOL_out'],
+       model.df['ORO_storage'],
+       model.df['ORO_out']]
 
-for t in range(1,T):
-  sumin = shasta.Q[t] + df.FOL_in[t] * cfs_tafd + df.ORO_in[t] * cfs_tafd
-  delta.calc_flow_bounds(t, sumin)
-  shasta.step(t, delta.dmin[t], delta.sodd_cvp[t])
-  # folsom.step(t, delta.dmin[t], delta.sodd_cvp[t])
-  # oroville.step(t, delta.dmin[t], delta.sodd_swp[t])
-  # delta.step(t, gains, shasta.R[t], folsom.R[t], oroville.R[t])
-
-results = shasta.results_as_df(df.index)
-
-# (results.SHA_rexport / cfs_tafd).plot()
-# df.TRP_pump.plot()
-
-# results = results.resample('M').mean()
-# df = df.resample('M').mean()
-
-plt.subplot(2,1,1)
-h = results.SHA_storage.plot()
-df.SHA_storage.plot(ax=h)
-
-plt.subplot(2,1,2)
-h = results.SHA_out.plot()
-(df.SHA_out * cfs_tafd).plot(ax=h)
-
-# h = results.SHA_tocs.plot()
-# df.SHA_tocs_obs.plot(ax=h)
-
-plt.show()
-
-# plt.scatter(results.SHA_out.values, (df.SHA_out*cfs_tafd).values)
-# plt.show()
+for f in ['D','W','M','AS-OCT']:
+  i = 0
+  for s,o in zip(sim,obs):
+    plotter.compare(s, o, freq=f)
+    plt.savefig('cord/figs/%s%d.png' % (f,i), dpi=150)
+    i += 1

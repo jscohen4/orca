@@ -21,7 +21,7 @@ for k in ids:
 # flowrates: inflow / outflow / evap / pumping
 ids = ['SHA', 'ORO', 'FOL']#, 'CLE', 'NML', 'DNP', 'EXC', 'MIL', 'SNL']
 
-data = cd.get_data(station_ids=ids, sensor_ids=[15,23,74,76,94], 
+data = cd.get_data(station_ids=ids, sensor_ids=[15,23,74,76,94,45], 
                    resolutions=['daily'], start=sd)
 
 for k in ids:
@@ -30,6 +30,7 @@ for k in ids:
   df[k + '_storage'] = data[k]['RESERVOIR STORAGE daily']['value'] / 1000 # TAF
   df[k + '_evap'] = data[k]['EVAPORATION, LAKE COMPUTED CFS daily']['value']
   df[k + '_tocs_obs'] = data[k]['RESERVOIR, TOP CONSERV STORAGE daily']['value'] / 1000
+  df[k + '_precip'] = data[k]['PRECIPITATION, INCREMENTAL daily']['value']
   # fix mass balance problems in inflow
   df[k + '_in_fix'] = df[k+'_storage'].diff()/cfs_tafd + df[k+'_out'] + df[k+'_evap']
 
@@ -45,6 +46,20 @@ for k in ids:
 
 # estimate delta inflow from this (ignores GCD and direct precip)
 df['DeltaIn'] = df['DeltaOut'] + df['HRO_pump'] + df['TRP_pump']
+
+# other reservoirs for folsom flood control index
+ids = ['FMD','UNV','HHL']
+
+data = cd.get_data(station_ids=ids, sensor_ids=[15], 
+                   resolutions=['daily'], start=sd)
+
+for k in ids:
+  df[k + '_storage'] = data[k]['RESERVOIR STORAGE daily']['value'] / 1000 # TAF
+
+# oroville release from thermalito instead?
+# no -- there is a canal diversion that isn't accounted for.
+# data = cd.get_data(['THA'], [85], ['daily'], start=sd)
+# df['THA_out'] = data['THA']['DISCHARGE,CONTROL REGULATING daily']['value']
 
 # cleanup
 df[df < 0] = np.nan
