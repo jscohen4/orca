@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
-from reservoir import Reservoir
-from delta import Delta
-from util import *
+from .reservoir import Reservoir
+from .delta import Delta
+from .util import *
 
 
 class Model():
