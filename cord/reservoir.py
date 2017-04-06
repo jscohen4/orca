@@ -24,6 +24,8 @@ class Reservoir():
     self.tocs = np.zeros(T)
     self.Rtarget = np.zeros(T)
     self.R_to_delta = np.zeros(T)
+    self.storage_bounds = np.zeros(2)
+    self.index_bounds = np.zeros(2)
     self.S[0] = df['%s_storage' % key].iloc[0]
     self.R[0] = 0
 
@@ -31,8 +33,13 @@ class Reservoir():
     for i,v in enumerate(self.tocs_rule['index']):
       if ix > v:
         break
-    return np.interp(d, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
-
+      self.storage_bounds[0] = np.interp(d, self.tocs_rule['dowy'][i-1], self.tocs_rule['storage'][i-1])
+      self.storage_bounds[1] = np.interp(d, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
+      self.index_bounds[0] = self.tocs_rule['index'][i-1]
+      self.index_bounds[1] = self.tocs_rule['index'][i]
+    #return np.interp(d, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
+    return np.interp(ix, self.index_bounds, self.storage_bounds)
+  
   def step(self, t, dmin=0.0, sodd=0.0):
     d = self.index.dayofyear[t]
     dowy = water_day(d)

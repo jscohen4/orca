@@ -23,7 +23,9 @@ class Model():
       sumin = (self.shasta.Q[t] 
              + self.df.FOL_in[t] * cfs_tafd 
              + self.df.ORO_in[t] * cfs_tafd)
-      self.delta.calc_flow_bounds(t, sumin)
+			 
+      self.delta.calc_flow_bounds(t, sumin, self.shasta.nodd, self.folsom.nodd, self.oroville.nodd)
+	  
       self.shasta.step(t, self.delta.dmin[t], self.delta.sodd_cvp[t])
       self.folsom.step(t, self.delta.dmin[t], self.delta.sodd_cvp[t])
       self.oroville.step(t, self.delta.dmin[t], self.delta.sodd_swp[t])

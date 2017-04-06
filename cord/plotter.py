@@ -42,4 +42,4 @@ def compare(res,obs,freq='D'):
   ax1.set_ylim([0.0, ax1.get_ylim()[1]])
 
   plt.tight_layout()
-  # plt.show()
+  plt.show()
