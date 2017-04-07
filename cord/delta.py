@@ -34,8 +34,12 @@ class Delta():
     sumnodds = sum([np.interp(d, first_of_month, n) for n in nodds])
     gains = self.netgains[t] + sumnodds
     self.gains[t] = gains 
-    min_rule = np.interp(d, first_of_month, self.min_outflow[wyt]) * cfs_tafd
-    export_ratio = np.interp(d, first_of_month, self.export_ratio[wyt])
+
+    # min_rule = np.interp(d, first_of_month, self.min_outflow[wyt]) * cfs_tafd
+    # export_ratio = np.interp(d, first_of_month, self.export_ratio[wyt])
+
+    min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
+    export_ratio = self.export_ratio[wyt][m-1]
 
     # pump capacities (tracy's reduced to match observations)
     cvp_max = np.interp(d, self.pump_max['cvp']['d'], 
@@ -58,8 +62,10 @@ class Delta():
 
     self.inflow[t] = self.gains[t] + cvp_flows + swp_flows
 
-    min_rule = np.interp(d, first_of_month, self.min_outflow[wyt]) * cfs_tafd
-    export_ratio = np.interp(d, first_of_month, self.export_ratio[wyt])
+    # min_rule = np.interp(d, first_of_month, self.min_outflow[wyt]) * cfs_tafd
+    # export_ratio = np.interp(d, first_of_month, self.export_ratio[wyt])
+    min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
+    export_ratio = self.export_ratio[wyt][m-1]
 
     cvp_max = np.interp(d, self.pump_max['cvp']['d'], 
                            self.pump_max['cvp']['pmax']) * cfs_tafd

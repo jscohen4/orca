@@ -38,6 +38,10 @@ for k in ids:
 data = cd.get_data(['DTO'], [23], ['daily'], start=sd)
 df['DeltaOut'] = data['DTO']['RESERVOIR OUTFLOW daily']['value']
 
+# San Luis storage
+data = cd.get_data(['SNL'], [15], ['daily'], start=sd)
+df['SNL_storage'] = data['SNL']['RESERVOIR STORAGE daily']['value'] / 1000
+
 # banks & tracy pumping
 ids = ['HRO', 'TRP']
 data = cd.get_data(ids, [70], ['daily'], start=sd)
