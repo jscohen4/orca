@@ -35,9 +35,6 @@ class Delta():
     gains = self.netgains[t] + sumnodds
     self.gains[t] = gains 
 
-    # min_rule = np.interp(d, first_of_month, self.min_outflow[wyt]) * cfs_tafd
-    # export_ratio = np.interp(d, first_of_month, self.export_ratio[wyt])
-
     min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
     export_ratio = self.export_ratio[wyt][m-1]
 
@@ -49,11 +46,11 @@ class Delta():
 
     if min_rule > gains: # additional flow needed
       self.dmin[t] = min_rule - gains
-      self.sodd_cvp[t] = cvp_max / export_ratio
-      self.sodd_swp[t] = swp_max / export_ratio
+      self.sodd_cvp[t] = max(cvp_max / export_ratio - 0.75 * min_rule, 0)
+      self.sodd_swp[t] = max(swp_max / export_ratio - 0.25 * min_rule, 0)
     else: # extra unstored water available
-      self.sodd_cvp[t] = max((cvp_max - 0.55*(gains - min_rule)) / export_ratio, 0)
-      self.sodd_swp[t] = max((swp_max - 0.45*(gains - min_rule)) / export_ratio, 0)
+      self.sodd_cvp[t] = max(cvp_max / export_ratio - 0.55 * gains, 0)
+      self.sodd_swp[t] = max(swp_max / export_ratio - 0.45 * gains, 0)
 
   def step(self, t, cvp_flows, swp_flows):
     d = self.index.dayofyear[t]
@@ -62,8 +59,6 @@ class Delta():
 
     self.inflow[t] = self.gains[t] + cvp_flows + swp_flows
 
-    # min_rule = np.interp(d, first_of_month, self.min_outflow[wyt]) * cfs_tafd
-    # export_ratio = np.interp(d, first_of_month, self.export_ratio[wyt])
     min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
     export_ratio = self.export_ratio[wyt][m-1]
 
@@ -74,11 +69,11 @@ class Delta():
 
     surplus = self.gains[t] - min_rule
     if surplus > 0:
-      self.TRP_pump[t] = min(cvp_flows*export_ratio + 0.55*surplus, cvp_max)
-      self.HRO_pump[t] = min(swp_flows*export_ratio + 0.45*surplus, swp_max)
+      self.TRP_pump[t] = max(min((cvp_flows + 0.55 * self.gains[t]) * export_ratio, cvp_max), 0)
+      self.HRO_pump[t] = max(min((swp_flows + 0.45 * self.gains[t]) * export_ratio, swp_max), 0)
     else:
-      self.TRP_pump[t] = max(min(cvp_flows*export_ratio - 0.75*(-surplus), cvp_max), 0)
-      self.HRO_pump[t] = max(min(swp_flows*export_ratio - 0.25*(-surplus), swp_max), 0)
+      self.TRP_pump[t] = max(min((cvp_flows + 0.75 * self.gains[t]) * export_ratio, cvp_max), 0)
+      self.HRO_pump[t] = max(min((swp_flows + 0.25 * self.gains[t]) * export_ratio, swp_max), 0)
 
     self.outflow[t] = self.inflow[t] - self.TRP_pump[t] - self.HRO_pump[t]
     # if outflow < max(min_rule, (1-export_ratio)*inflow):
