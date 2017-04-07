@@ -53,7 +53,7 @@ class Reservoir():
     # HB's idea for flood control relesae..
     # fcr = (W-self.tocs[t])*np.exp(4.5*10**-6 * (W-self.capacity))
     fcr = 0.2*(W-self.tocs[t])
-    self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin))
+    self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin)) 
 
     # then clip based on constraints
     self.R[t] = min(self.Rtarget[t], W - self.dead_pool)

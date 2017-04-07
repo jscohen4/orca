@@ -14,16 +14,14 @@ class Model():
     self.shasta = Reservoir(self.df, 'SHA')
     self.folsom = Reservoir(self.df, 'FOL')
     self.oroville = Reservoir(self.df, 'ORO')
+    self.reservoirs = [self.shasta, self.folsom, self.oroville]
     self.delta = Delta(self.df, 'DEL')
 
 
   def simulate(self):
 
     for t in range(1,self.T):
-      sumin = (self.shasta.Q[t] 
-             + self.df.FOL_in[t] * cfs_tafd 
-             + self.df.ORO_in[t] * cfs_tafd)
-      self.delta.calc_flow_bounds(t, sumin)
+      self.delta.calc_flow_bounds(t, [r.nodd for r in self.reservoirs])
       self.shasta.step(t, self.delta.dmin[t], self.delta.sodd_cvp[t])
       self.folsom.step(t, self.delta.dmin[t], self.delta.sodd_cvp[t])
       self.oroville.step(t, self.delta.dmin[t], self.delta.sodd_swp[t])

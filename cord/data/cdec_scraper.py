@@ -44,9 +44,6 @@ data = cd.get_data(ids, [70], ['daily'], start=sd)
 for k in ids:
   df[k + '_pump'] = data[k]['DISCHARGE, PUMPING daily']['value']
 
-# estimate delta inflow from this (ignores GCD and direct precip)
-df['DeltaIn'] = df['DeltaOut'] + df['HRO_pump'] + df['TRP_pump']
-
 # other reservoirs for folsom flood control index
 ids = ['FMD','UNV','HHL']
 

@@ -28,12 +28,12 @@
   "sodd_pct": 0.80,
   "sodd_curtail_pct": {
     "W": 1.0,
-    "AN": 1.0,
-    "BN": 1.0,
-    "D": 0.8,
+    "AN": 0.9,
+    "BN": 0.8,
+    "D": 0.7,
     "C": 0.4
   },
   "max_outflow": 79000,
-  "delta_outflow_pct": 0.615,
+  "delta_outflow_pct": 0.6,
   "dead_pool": 550
 }

@@ -11,13 +11,14 @@ class Delta():
     self.index = df.index
     self.key = key
     self.wyt = df.SR_WYT_rolling
+    self.netgains = df.netgains * cfs_tafd
 
     for k,v in json.load(open('cord/data/Delta_properties.json')).items():
       setattr(self,k,v)
 
     # what vars to store/save here
-    self.gains = np.zeros(T)
     self.dmin = np.zeros(T)
+    self.gains = np.zeros(T)
     self.sodd_cvp = np.zeros(T)
     self.sodd_swp = np.zeros(T)
     self.TRP_pump = np.zeros(T)
@@ -25,13 +26,14 @@ class Delta():
     self.inflow = np.zeros(T)
     self.outflow = np.zeros(T)
 
-  def calc_flow_bounds(self, t, sum_res_inflows):
+  def calc_flow_bounds(self, t, nodds):
     d = self.index.dayofyear[t]
     m = self.index.month[t]
     wyt = self.wyt[t]
 
-    gains = sum_res_inflows * self.gains_factor[m-1]
-    self.gains[t] = gains
+    sumnodds = sum([np.interp(d, first_of_month, n) for n in nodds])
+    gains = self.netgains[t] + sumnodds
+    self.gains[t] = gains 
     min_rule = np.interp(d, first_of_month, self.min_outflow[wyt]) * cfs_tafd
     export_ratio = np.interp(d, first_of_month, self.export_ratio[wyt])
 

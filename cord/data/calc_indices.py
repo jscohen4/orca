@@ -15,7 +15,17 @@ SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf']
 
 # don't change this data
 df = pd.read_csv('cord-data.csv', index_col=0, parse_dates=True)
+
 df['WY'] = pd.Series([water_year(d) for d in df.index], index=df.index)
+
+# estimate delta inflow from this (ignores GCD and direct precip)
+df.drop(['DeltaIn', 'netgains'], axis=1, inplace=True)
+df['DeltaIn'] = df['DeltaOut'] + df['HRO_pump'] + df['TRP_pump']
+df['netgains'] = (df.DeltaIn - 
+                  df.SHA_out.shift(5) - 
+                  df.ORO_out.shift(3) - 
+                  df.FOL_out.shift(1))
+df.netgains.fillna(method='bfill', inplace=True)
 
 def WYI_to_WYT(WYI, thresholds, values):
   for t,v in zip(thresholds,values):
