@@ -10,7 +10,7 @@ class Delta():
     T = len(df)
     self.index = df.index
     self.key = key
-    self.wyt = df.SR_WYT_rolling
+    self.wyt = df.SR_WYT
     self.gains_sac = df.SAC_gains
     self.gains_d = df.Delta_gains
 
@@ -27,7 +27,7 @@ class Delta():
     self.inflow = np.zeros(T)
     self.outflow = np.zeros(T)
 
-  def calc_flow_bounds(self, t, sum_res_inflows, folsom_nodd, shasta_nodd, oroville_nodd):
+  def calc_flow_bounds(self, t, sum_res_inflows, folsom_nodd, shasta_nodd, oroville_nodd,orovilleAS,folsomAS,shastaAS):
     d = self.index.dayofyear[t]
     m = self.index.month[t]
     wyt = self.wyt[t]
@@ -47,27 +47,64 @@ class Delta():
     export_ratio = self.export_ratio[wyt][m-1]
 
     # pump capacities (tracy's reduced to match observations)
-    cvp_max = np.interp(d, self.pump_max['cvp']['d'], 
-                           self.pump_max['cvp']['target']) * cfs_tafd
-    swp_max = np.interp(d, self.pump_max['swp']['d'], 
-                           self.pump_max['swp']['target']) * cfs_tafd
-	
-	#I think you've got the export/outflow relationship wrong
-	#changed it to only consider exports made from unstored flows
-	#consider export of stored flows separately, later
+    # cvp_max = np.interp(d, self.pump_max['cvp']['d'], self.pump_max['cvp']['target']) * cfs_tafd
+    # swp_max = np.interp(d, self.pump_max['swp']['d'], self.pump_max['swp']['target']) * cfs_tafd
+    	
+    folsomSODDPCT = self.calc_weekly_storage_release(t,gains,min_rule,orovilleAS,folsomAS,shastaAS)
+    return folsomSODDPCT
+    
+  def calc_weekly_storage_release(self,t,gains,min_rule,orovilleAS,folsomAS,shastaAS):
+    ##this function takes the total storage available for release at each reservoir and distributes that throughout the year based on the Export/Inflow
+    ##ratio 'tax' that exists in that week
+    d = self.index.dayofyear[t]
+    dowy = water_day(d)
+    wyt = self.wyt[t]
+    m = self.index.month[t]
+    ##if it is before July 1 (when E/I ratio reverts back to 0.65) releases only occur if there is extra storage available beyond what
+    ##would be needed to run the pumps at capacity from July 1 - Sept 30
+    if dowy < 274:
+      if orovilleAS > ((62*self.pump_max['swp']['pmax'][7] + 30*self.pump_max['swp']['pmax'][8] )* cfs_tafd)/self.export_ratio[wyt][8]:
+        swp_max = np.interp(d, self.pump_max['swp']['d'],self.pump_max['swp']['pmax']) * cfs_tafd
+      else:
+        swp_max = 0.0
+      
+      if (shastaAS + folsomAS) > (92*self.pump_max['cvp']['pmax'][5] * cfs_tafd)/self.export_ratio[wyt][8]: 
+        cvp_max = np.interp(d, self.pump_max['cvp']['d'],self.pump_max['cvp']['pmax']) * cfs_tafd
+      else:
+        cvp_max = 0.0
+    ##if its July 1, release enough to run pumps at capacity until there is no available storage left
+    else:
+      if orovilleAS > (np.interp(d, self.pump_max['swp']['d'],self.pump_max['swp']['pmax']) * cfs_tafd)/self.export_ratio[wyt][m-1]:
+        swp_max = np.interp(d, self.pump_max['swp']['d'],self.pump_max['swp']['pmax']) * cfs_tafd
+      else:
+        swp_max = max(orovilleAS,0)
+      
+      if (shastaAS + folsomAS) > (np.interp(d, self.pump_max['cvp']['d'],self.pump_max['cvp']['pmax']) * cfs_tafd)/self.export_ratio[wyt][m-1]: 
+        cvp_max = np.interp(d, self.pump_max['cvp']['d'],self.pump_max['cvp']['pmax']) * cfs_tafd
+      else:
+        cvp_max = max(shastaAS + folsomAS, 0)
+
     if min_rule > gains: # additional flow needed to meet delta reqmnt
       self.dmin[t] = min_rule - gains
       #self.sodd_cvp[t] = cvp_max / export_ratio
       #self.sodd_swp[t] = swp_max / export_ratio
-      self.sodd_cvp[t] = max(cvp_max/export_ratio - 0.75 * min_rule, 0)
-      self.sodd_swp[t] = max(swp_max/export_ratio - 0.25 * min_rule, 0)
-	  
+      self.sodd_cvp[t] = max(cvp_max/self.export_ratio[wyt][m-1] - 0.75 * min_rule, 0)
+      self.sodd_swp[t] = max(swp_max/self.export_ratio[wyt][m-1] - 0.25 * min_rule, 0)  
     else: # extra unstored water available
       #self.sodd_cvp[t] = max((cvp_max - 0.55*(gains - min_rule)) / export_ratio, 0)
       #self.sodd_swp[t] = max((swp_max - 0.45*(gains - min_rule)) / export_ratio, 0)
-      self.sodd_cvp[t] = max(cvp_max/export_ratio - 0.55 * gains,0)
-      self.sodd_swp[t] = max(swp_max/export_ratio - 0.45 * gains,0)
-    
+      self.sodd_cvp[t] = max(cvp_max/self.export_ratio[wyt][m-1] - 0.55 * gains,0)
+      self.sodd_swp[t] = max(swp_max/self.export_ratio[wyt][m-1] - 0.45 * gains,0)
+	
+    ##calculate folsom/shasta relative release contribution based on ratio of current available storage in each reservoir
+    if folsomAS > 0.0 and shastaAS > 0.0:
+      folsomSODDPCT = folsomAS/(folsomAS + shastaAS)
+    elif folsomAS < 0.0:
+      folsomSODDPCT = 0.0
+    else:
+      folsomSODDPCT = 1.0
+	
+    return folsomSODDPCT
 
   def step(self, t, cvp_flows, swp_flows):
     d = self.index.dayofyear[t]
@@ -94,9 +131,8 @@ class Delta():
     else:
       self.TRP_pump[t] = max(min((cvp_flows + 0.75 * self.gains[t]) * export_ratio, cvp_max),0)
       self.HRO_pump[t] = max(min((swp_flows + 0.25 * self.gains[t]) * export_ratio, swp_max),0)
-
-    self.outflow[t] = self.inflow[t] - self.TRP_pump[t] - self.HRO_pump[t]
-	
+    if d < 200:
+      self.outflow[t] = self.inflow[t] - self.TRP_pump[t] - self.HRO_pump[t]
     # if outflow < max(min_rule, (1-export_ratio)*inflow):
     #   print('DELTA PROBLEM: %d' % t)
     #   print('OUTFLOW: %f, MIN: %f, PUMP: %f' % (outflow / cfs_tafd, min_rule / cfs_tafd, self.TRP_pump[t] / cfs_tafd))

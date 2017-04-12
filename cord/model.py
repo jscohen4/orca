@@ -23,9 +23,16 @@ class Model():
       sumin = (self.shasta.Q[t] 
              + self.df.FOL_in[t] * cfs_tafd 
              + self.df.ORO_in[t] * cfs_tafd)
-			 
-      self.delta.calc_flow_bounds(t, sumin, self.shasta.nodd, self.folsom.nodd, self.oroville.nodd)
 	  
+      d = self.delta.index.dayofyear[t]
+      dowy = water_day(d)
+      wyt = self.delta.wyt[t]
+      ##find the available storage in each resevoir - needs to be before delta.calc_flow_bounds (where actual releases are calculated)
+      self.oroville.find_available_storage(t,self.oroville.exceedence[wyt])
+      self.folsom.find_available_storage(t,self.folsom.exceedence[wyt])
+      self.shasta.find_available_storage(t,self.shasta.exceedence[wyt])	  
+      self.folsom.sodd_pct_var = self.delta.calc_flow_bounds(t, sumin, self.shasta.nodd, self.folsom.nodd, self.oroville.nodd, self.oroville.available_storage[t], self.folsom.available_storage[t], self.shasta.available_storage[t])
+      self.shasta.sodd_pct_var = 1.0 - self.folsom.sodd_pct_var##set shasta/folsom contribution % (calculated together in delta class function)
       self.shasta.step(t, self.delta.dmin[t], self.delta.sodd_cvp[t])
       self.folsom.step(t, self.delta.dmin[t], self.delta.sodd_cvp[t])
       self.oroville.step(t, self.delta.dmin[t], self.delta.sodd_swp[t])
@@ -41,3 +48,11 @@ class Model():
     for x in [self.shasta, self.folsom, self.oroville, self.delta]:
       df = pd.concat([df, x.results_as_df(df.index)], axis=1)
     return df
+	
+  def create_flow_cdf(self, datafile, sd='10-01-1996'):
+    self.pdf_data = pd.read_csv(datafile, index_col=0, parse_dates=True)
+    self.shasta.find_release_func(self.pdf_data)
+    self.oroville.find_release_func(self.pdf_data)
+    self.folsom.find_release_func(self.pdf_data)
+	
+	
