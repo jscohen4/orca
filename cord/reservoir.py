@@ -13,6 +13,7 @@ class Reservoir():
     self.index = df.index
     self.key = key
     self.wyt = df.SR_WYT_rolling # 120 day MA lag
+    #self.wyt = self.SRIForecast
     for k,v in json.load(open('cord/data/%s_properties.json' % key)).items():
         setattr(self,k,v)
 
@@ -37,6 +38,7 @@ class Reservoir():
     self.oct_mar_obs = 0.0
     self.sodd_pct_var = self.sodd_pct
     self.calc_EOS_storage(0)
+    self.hist_releases = df['%s_out' % key].values * cfs_tafd
 
   def current_tocs(self,d,ix):
     for i,v in enumerate(self.tocs_rule['index']):
@@ -50,12 +52,12 @@ class Reservoir():
     return np.interp(ix, self.index_bounds, self.storage_bounds)
   
   def step(self, t, dmin=0.0, sodd=0.0):
-    d = self.index.dayofyear[t]
+    d = int(self.index.dayofyear[t])
     dowy = water_day(d)
-    m = self.index.month[t]
+    m = int(self.index.month[t])
     wyt = self.wyt[t]
 
-    envmin = self.env_min_flow[wyt][m-1] * cfs_tafd
+    envmin = max(self.env_min_flow[wyt][m-1], self.temp_releases[wyt][m-1]) * cfs_tafd
     nodd = np.interp(d, first_of_month, self.nodd)  
 	
     sodd *= self.sodd_pct_var
@@ -97,28 +99,27 @@ class Reservoir():
     ## (based on the water year type)
     if self.nodd_meets_envmin:
       for x in range(1,366):
-        m = self.index.month[x-1]
-        d = self.index.dayofyear[x-1]	  
-        self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd, np.interp(d, first_of_month, self.nodd))
-
+        m = int(self.index.month[x-1])
+        d = int(self.index.dayofyear[x-1])
+        self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd, np.interp(d, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd)
       for x in range(1,365):
-        m = self.index.month[x-1]
-        self.cum_min_release[x] = self.cum_min_release[x-1] - max(self.env_min_flow[wyt][m-1] * cfs_tafd , np.interp(x-1, first_of_month, self.nodd) )
+        m = int(self.index.month[x-1])
+        self.cum_min_release[x] = self.cum_min_release[x-1] - max(self.env_min_flow[wyt][m-1] * cfs_tafd , np.interp(x-1, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd )
     else:
       for x in range(1,366):
-        m = self.index.month[x-1]
-        d = self.index.dayofyear[x-1]	  
-        self.cum_min_release[0] += self.env_min_flow[wyt][m-1] * cfs_tafd + np.interp(d, first_of_month, self.nodd)
+        m = int(self.index.month[x-1])
+        d = int(self.index.dayofyear[x-1])
+        self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd + np.interp(d, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd)
 
       for x in range(1,365):
-        m = self.index.month[x-1]
-        self.cum_min_release[x] = self.cum_min_release[x-1] - self.env_min_flow[wyt][m-1] * cfs_tafd - np.interp(x-1, first_of_month, self.nodd)    
+        m = int(self.index.month[x-1])
+        self.cum_min_release[x] = max(self.cum_min_release[x-1] - self.env_min_flow[wyt][m-1] * cfs_tafd - np.interp(x-1, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd) 
 
   def find_available_storage(self, t, exceedence_level):
     ##this function uses the linear regression variables calculated in find_release_func (called before simulation loop) to figure out how
     ##much 'excess' storage is available to be released to the delta with the explicit intention of running the pumps.  This function is calculated
     ##each timestep before the reservoirs' individual step function is called
-    d = self.index.dayofyear[t-1]
+    d = int(self.index.dayofyear[t-1])
     dowy = water_day(d)
     current_snow = self.SNPK[t-1]
     wyt = self.wyt[t]
@@ -127,7 +128,7 @@ class Reservoir():
       self.calc_expected_min_release(t-1)##what do they expect to need to release for env. requirements through the end of september
       self.oct_mar_obs = 0.0##total observed flows in Oct-Mar, through the current day
       self.apr_jul_obs = 0.0##total observed flows in Apr-Jul, through the current day
-      self.exceedence_level = self.exceedence[wyt]##how conservative are they being about the flow forecasts (ie, 90% exceedence level, 75% exceedence level, etc)
+      self.exceedence_level = (self.SRIforecast[t-1] - 10.0)/3##how conservative are they being about the flow forecasts (ie, 90% exceedence level, 75% exceedence level, etc)
 
     if dowy < 182:
       self.oct_mar_obs += self.Q[t-1]##add to the total flow observations (only through March)
@@ -138,8 +139,8 @@ class Reservoir():
 
     if dowy < 182:
       oct_mar_forecast = self.snow_flow_regression[dowy][0]*self.oct_mar_obs + self.snow_flow_regression[dowy][1]##prediction based on total flow
-      self.oct_mar_forecast_adj[t] = oct_mar_forecast + self.flow_stds[dowy]*z_table_transform[exceedence_level]##correct for how conservative forecasts should be
-      self.apr_jul_forecast_adj[t] = apr_jul_forecast + self.snow_stds[dowy]*z_table_transform[exceedence_level]##correct for how conservative forecasts should be
+      self.oct_mar_forecast_adj[t] = oct_mar_forecast + self.flow_stds[dowy]*self.exceedence_level##correct for how conservative forecasts should be
+      self.apr_jul_forecast_adj[t] = apr_jul_forecast + self.snow_stds[dowy]*self.exceedence_level##correct for how conservative forecasts should be
       self.oct_mar_forecast_adj[t] -=  self.oct_mar_obs##remove flows already observed from the forecast (linear regression is for entire period)
       if self.oct_mar_forecast_adj[t] < 0.0:
         self.oct_mar_forecast_adj[t] = 0.0##forecasts cannot be negative (so if observed is greater than forecasts, the extra flow will just show up in the current storage levels)
@@ -158,11 +159,12 @@ class Reservoir():
 	
   def results_as_df(self, index):
     df = pd.DataFrame()
-    names = ['storage', 'out', 'target', 'out_to_delta', 'tocs']
-    things = [self.S, self.R, self.Rtarget, self.R_to_delta, self.tocs]
+    names = ['storage', 'out', 'target', 'out_to_delta', 'tocs', 'available_storage', 'apr_for', 'oct_for']
+    things = [self.S, self.R, self.Rtarget, self.R_to_delta, self.tocs, self.available_storage, self.apr_jul_forecast_adj, self.oct_mar_forecast_adj,]
     for n,t in zip(names,things):
       df['%s_%s' % (self.key,n)] = pd.Series(t, index=index)
     return df
+
 	
   def find_release_func(self, data):
     ##this function is used to make forecasts when calculating available storage for export releases from reservoir
@@ -184,11 +186,11 @@ class Reservoir():
     self.oct_mar_flows = np.zeros((365,(data.index.year[len(data)-1]-data.index.year[0])))
 	  
     for t in range(1,len(data)):
-      d = data.index.dayofyear[t-1]
+      d = int(data.index.dayofyear[t-1])
       dowy = water_day(d)
-      m = data.index.month[t-1]
-      y = data.index.year[t-1]
-      da = data.index.day[t-1]
+      m = int(data.index.month[t-1])
+      y = int(data.index.year[t-1])
+      da = int(data.index.day[t-1])
       if dowy == 1:
         current_year +=1
 	  
@@ -207,10 +209,10 @@ class Reservoir():
     	
     current_year = 0;
     for t in range(1,len(data)):
-      d = data.index.dayofyear[t-1]
+      d = int(data.index.dayofyear[t-1])
       dowy = water_day(d)
-      m = data.index.month[t-1]
-      y = data.index.year[t-1]
+      m = int(data.index.month[t-1])
+      y = int(data.index.year[t-1])
       #cum oct-mar inflows through each day(X vector in oct-mar lin regression - each day has a unique 21 value (year) vector giving us 365 seperate lin regressions)
       if dowy == 1:
         current_year += 1;
