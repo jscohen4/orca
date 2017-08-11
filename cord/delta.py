@@ -8,7 +8,8 @@ class Delta():
 
   def __init__(self, df, key):
     T = len(df)
-    self.index = df.index
+    self.dayofyear = df.index.dayofyear
+    self.month = df.index.month
     self.key = key
     self.wyt = df.SR_WYT_rolling
     self.netgains = df.netgains * cfs_tafd
@@ -27,12 +28,13 @@ class Delta():
     self.outflow = np.zeros(T)
 
   def calc_flow_bounds(self, t, nodds):
-    d = self.index.dayofyear[t]
-    m = self.index.month[t]
+    d = self.dayofyear[t]
+    m = self.month[t]
     wyt = self.wyt[t]
 
     sumnodds = sum([np.interp(d, first_of_month, n) for n in nodds])
-    gains = self.netgains[t] + sumnodds # because R_to_delta already subtracts nodd
+    # gains are calculated from (DeltaIn - sum of res. outflow)
+    gains = self.netgains[t] + sumnodds 
     self.gains[t] = gains 
 
     min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
@@ -55,7 +57,7 @@ class Delta():
       self.dmin[t] = min_rule - gains
       # amount of additional flow from reservoirs that does not need "export tax"
       # because dmin release helps to meet the export ratio requirement
-      Q = min_rule*(1/(1-export_ratio) - 1) 
+      Q = min_rule*export_ratio/(1-export_ratio) 
 
       if cvp_max + swp_max < Q:
         self.sodd_cvp[t] = cvp_max
@@ -65,8 +67,8 @@ class Delta():
         self.sodd_swp[t] = 0.25*Q + (swp_max - 0.25*Q)/export_ratio
 
   def step(self, t, cvp_flows, swp_flows, realinflow):
-    d = self.index.dayofyear[t]
-    m = self.index.month[t]
+    d = self.dayofyear[t]
+    m = self.month[t]
     wyt = self.wyt[t]
 
     self.inflow[t] = max(self.gains[t] + cvp_flows + swp_flows, 0) # realinflow * cfs_tafd

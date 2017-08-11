@@ -10,7 +10,8 @@ class Reservoir():
 
   def __init__(self, df, key):
     T = len(df)
-    self.index = df.index
+    self.dayofyear = df.index.dayofyear
+    self.month = df.index.month
     self.key = key
     self.wyt = df.SR_WYT_rolling # 120 day MA lag
     for k,v in json.load(open('cord/data/%s_properties.json' % key)).items():
@@ -34,9 +35,9 @@ class Reservoir():
     return np.interp(d, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
 
   def step(self, t, dmin=0.0, sodd=0.0):
-    d = self.index.dayofyear[t]
+    d = self.dayofyear[t]
     dowy = water_day(d)
-    m = self.index.month[t]
+    m = self.month[t]
     wyt = self.wyt[t]
 
     envmin = self.env_min_flow[wyt][m-1] * cfs_tafd

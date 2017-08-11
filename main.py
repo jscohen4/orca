@@ -6,7 +6,7 @@ from cord import *
 model = Model('cord/data/cord-data.csv', sd='10-01-1999')
 results = model.simulate() # takes a while... save results
 results.to_csv('cord/data/results.csv')
-# results = pd.read_csv('cord/data/results.csv', index_col=0, parse_dates=True)
+# # results = pd.read_csv('cord/data/results.csv', index_col=0, parse_dates=True)
 
 # calibration points (lists of pandas series)
 sim = [results['DEL_HRO_pump'] / cfs_tafd,
