@@ -4,22 +4,11 @@ import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from .util import *
 import seaborn as sns
-sns.set_style('whitegrid')
-
-def init_plotting():
-    sns.set_style('whitegrid')
-    plt.rcParams['figure.figsize'] = (12, 8)
-    plt.rcParams['font.size'] = 13
-    plt.rcParams['font.family'] = 'OfficinaSanITCBoo'
-    plt.rcParams['axes.labelsize'] = 1.1*plt.rcParams['font.size']
-    plt.rcParams['axes.titlesize'] = 1.1*plt.rcParams['font.size']
-    plt.rcParams['legend.fontsize'] = plt.rcParams['font.size']
-    plt.rcParams['xtick.labelsize'] = plt.rcParams['font.size']
-    plt.rcParams['ytick.labelsize'] = plt.rcParams['font.size']
 
 def compare(res,obs,freq='D'):
-  # input two series and a frequency
-  init_plotting()
+  # input two pandas series and a frequency
+  sns.set_style('whitegrid')
+  plt.rcParams['figure.figsize'] = (12, 8)
   res = res.resample(freq).mean()
   obs = obs.resample(freq).mean()
 
@@ -29,7 +18,7 @@ def compare(res,obs,freq='D'):
   ax0 = plt.subplot(gs[0])
   res.plot(ax=ax0, color='indianred')
   obs.plot(ax=ax0, color='k')
-  ax0.set_title('%s, %s' % (res.name, obs.name), family='OfficinaSanITCMedium', loc='left')
+  ax0.set_title('%s, %s' % (res.name, obs.name), loc='left') # family='sans-serif'
   ax0.legend(['Simulated', 'Observed'], ncol=3)
 
   ax1 = plt.subplot(gs[1])

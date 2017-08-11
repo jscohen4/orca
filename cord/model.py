@@ -27,7 +27,7 @@ class Model():
       self.oroville.step(t, self.delta.dmin[t], self.delta.sodd_swp[t])
       self.delta.step(t, 
                       self.shasta.R_to_delta[t] + self.folsom.R_to_delta[t],
-                      self.oroville.R_to_delta[t])
+                      self.oroville.R_to_delta[t], self.df.DeltaIn[t])
 
     return self.results_as_df()
 
