@@ -32,7 +32,7 @@ class Delta():
     wyt = self.wyt[t]
 
     sumnodds = sum([np.interp(d, first_of_month, n) for n in nodds])
-    gains = self.netgains[t] + sumnodds
+    gains = self.netgains[t] + sumnodds # because R_to_delta already subtracts nodd
     self.gains[t] = gains 
 
     min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
@@ -44,20 +44,32 @@ class Delta():
     swp_max = np.interp(d, self.pump_max['swp']['d'], 
                            self.pump_max['swp']['target']) * cfs_tafd
 
-    if min_rule > gains: # additional flow needed
+    # the sodd_* variables tell the reservoirs how much to release
+    # for south of delta demands only
+    # (dmin is the reservoir release needed to meet delta outflows)
+    if gains > min_rule: # extra unstored water available for pumping
+      # in this case dmin[t] is 0
+      self.sodd_cvp[t] = max((cvp_max - 0.55*(gains - min_rule)) / export_ratio, 0)
+      self.sodd_swp[t] = max((swp_max - 0.45*(gains - min_rule)) / export_ratio, 0)
+    else: # additional flow needed
       self.dmin[t] = min_rule - gains
-      self.sodd_cvp[t] = max(cvp_max / export_ratio - 0.75 * min_rule, 0)
-      self.sodd_swp[t] = max(swp_max / export_ratio - 0.25 * min_rule, 0)
-    else: # extra unstored water available
-      self.sodd_cvp[t] = max(cvp_max / export_ratio - 0.55 * gains, 0)
-      self.sodd_swp[t] = max(swp_max / export_ratio - 0.45 * gains, 0)
+      # amount of additional flow from reservoirs that does not need "export tax"
+      # because dmin release helps to meet the export ratio requirement
+      Q = min_rule*(1/(1-export_ratio) - 1) 
 
-  def step(self, t, cvp_flows, swp_flows):
+      if cvp_max + swp_max < Q:
+        self.sodd_cvp[t] = cvp_max
+        self.sodd_swp[t] = swp_max
+      else:
+        self.sodd_cvp[t] = 0.75*Q + (cvp_max - 0.75*Q)/export_ratio
+        self.sodd_swp[t] = 0.25*Q + (swp_max - 0.25*Q)/export_ratio
+
+  def step(self, t, cvp_flows, swp_flows, realinflow):
     d = self.index.dayofyear[t]
     m = self.index.month[t]
     wyt = self.wyt[t]
 
-    self.inflow[t] = self.gains[t] + cvp_flows + swp_flows
+    self.inflow[t] = max(self.gains[t] + cvp_flows + swp_flows, 0) # realinflow * cfs_tafd
 
     min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
     export_ratio = self.export_ratio[wyt][m-1]
@@ -67,19 +79,49 @@ class Delta():
     swp_max = np.interp(d, self.pump_max['swp']['d'], 
                            self.pump_max['swp']['pmax']) * cfs_tafd
 
-    surplus = self.gains[t] - min_rule
+
+    required_outflow = max(min_rule, (1-export_ratio)*self.inflow[t])
+    surplus = self.gains[t] - required_outflow
+
     if surplus > 0:
-      self.TRP_pump[t] = max(min((cvp_flows + 0.55 * self.gains[t]) * export_ratio, cvp_max), 0)
-      self.HRO_pump[t] = max(min((swp_flows + 0.45 * self.gains[t]) * export_ratio, swp_max), 0)
+      # gains cover both the min_rule and the export ratio requirement
+      # so, pump the full cvp/swp inflows
+      self.TRP_pump[t] = max(min(cvp_flows + 0.55 * surplus, cvp_max),0)
+      self.HRO_pump[t] = max(min(swp_flows + 0.45 * surplus, swp_max),0)
     else:
-      self.TRP_pump[t] = max(min((cvp_flows + 0.75 * self.gains[t]) * export_ratio, cvp_max), 0)
-      self.HRO_pump[t] = max(min((swp_flows + 0.25 * self.gains[t]) * export_ratio, swp_max), 0)
+      # deficit must be made up from cvp/swp flows. Assume 75/25 responsibility for these
+      # (including meeting the export ratio requirement)
+      deficit = -surplus
+      cvp_pump = max(cvp_flows - 0.75 * deficit, 0)
+      if cvp_pump == 0:
+        swp_pump = max(swp_flows - (deficit - cvp_flows), 0)
+      else:
+        swp_pump = max(swp_flows - 0.25 * deficit, 0)
+
+      self.TRP_pump[t] = max(min(cvp_pump, cvp_max),0)
+      self.HRO_pump[t] = max(min(swp_pump, swp_max),0)
 
     self.outflow[t] = self.inflow[t] - self.TRP_pump[t] - self.HRO_pump[t]
-    # if outflow < max(min_rule, (1-export_ratio)*inflow):
-    #   print('DELTA PROBLEM: %d' % t)
-    #   print('OUTFLOW: %f, MIN: %f, PUMP: %f' % (outflow / cfs_tafd, min_rule / cfs_tafd, self.TRP_pump[t] / cfs_tafd))
 
+    # if self.outflow[t] < min_rule:
+    #   print('\nmin_rule violation: %d' % t)
+    #   print('OUTFLOW: %0.2f' % (self.outflow[t] / cfs_tafd))
+    #   print('INFLOW: %0.2f' % (self.inflow[t] / cfs_tafd))
+    #   print('MIN_RULE: %0.2f' % (min_rule / cfs_tafd))
+    #   print('EXPORT_RATIO: %0.2f' % export_ratio)
+    #   print('TRACY: %0.2f' % (self.TRP_pump[t] / cfs_tafd))
+    #   print('BANKS: %0.2f' % (self.HRO_pump[t] / cfs_tafd))
+    #   print('GAINS: %0.2f' % (self.gains[t] / cfs_tafd))
+    
+    # if self.outflow[t] < (1-export_ratio)*(cvp_flows+swp_flows):
+    #   print('\nexport_ratio violation: %d' % t)
+      # print('OUTFLOW: %0.2f' % (self.outflow[t] / cfs_tafd))
+      # print('INFLOW: %0.2f' % (self.inflow[t] / cfs_tafd))
+      # print('MIN_RULE: %0.2f' % (min_rule / cfs_tafd))
+      # print('EXPORT_RATIO: %0.2f' % export_ratio)
+      # print('TRACY: %0.2f' % (self.TRP_pump[t] / cfs_tafd))
+      # print('BANKS: %0.2f' % (self.HRO_pump[t] / cfs_tafd))
+      # print('GAINS: %0.2f' % (self.gains[t] / cfs_tafd))
 
 
   def results_as_df(self, index):

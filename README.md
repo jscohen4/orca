@@ -6,18 +6,20 @@ A simulation model.
 
 Still in active development, not stable.
 
-### Current calibration r^2 values (4/7/17):
+### Current calibration r^2 values (8/11/17):
+These values will change as new input data is downloaded from CDEC, even if the model itself does not change.
 
 | Timestep:  | Daily | Weekly | Monthly | Water Year |
 | ---------- | ----- | ------ | ------- | ---------- |
-| HRO_pump | 0.30 | 0.35 | 0.43 | 0.77 |
-| TRP_pump | 0.40 | 0.45 | 0.59 | 0.81 |
-| SHA_stor | 0.79 | 0.79 | 0.79 | n/a |
-| SHA_out  | 0.60 | 0.69 | 0.79 | n/a |
-| FOL_stor | 0.72 | 0.73 | 0.73 | n/a |
-| FOL_out  | 0.81 | 0.86 | 0.91 | n/a |
-| ORO_stor | 0.91 | 0.91 | 0.91 | n/a |
-| ORO_out  | 0.64 | 0.72 | 0.84 | n/a |
+| HRO_pump | 0.23 | 0.27 | 0.34 | 0.84 |
+| TRP_pump | 0.34 | 0.40 | 0.49 | 0.80 |
+| Combined | 0.43 | 0.48 | 0.60 | 0.89 |
+| SHA_stor | 0.82 | 0.81 | 0.81 | n/a |
+| SHA_out  | 0.62 | 0.70 | 0.79 | n/a |
+| FOL_stor | 0.74 | 0.74 | 0.78 | n/a |
+| FOL_out  | 0.82 | 0.87 | 0.91 | n/a |
+| ORO_stor | 0.89 | 0.88 | 0.88 | n/a |
+| ORO_out  | 0.63 | 0.71 | 0.84 | n/a |
 | DEL_in   | 0.95 | 0.96 | 0.98 | n/a |
 | DEL_out  | 0.95 | 0.96 | 0.98 | n/a |
 
