@@ -30,5 +30,25 @@ def compare(res,obs,freq='D'):
   ax1.set_xlim([0.0, ax1.get_xlim()[1]])
   ax1.set_ylim([0.0, ax1.get_ylim()[1]])
 
-  plt.tight_layout()
-  # plt.show()
+  plt.tight_layout() 
+  #plt.show()
+
+def Rsquares(sim,obs):
+  text_file = open('cord/data/Rsquares.txt', 'w')
+  r2s = []
+  r2s.append(['Timestep','Daily','Weekly','Monthly','Water Year'])
+  for s,o in zip(sim,obs):
+    r2s_point = []
+    r2s_point.append('%s ' %s.name)
+    for i,f in enumerate(['D','W','M','AS-OCT']):
+      sim = s.resample(f).mean()
+      obs = o.resample(f).mean()
+      r = np.corrcoef(obs.values,sim.values)[0,1]
+      r2s_point.append('%.5s' %r**2)
+    r2s_point.append('\n')
+    r2s.append(r2s_point)
+  for line in r2s: 
+    text_file.write('{:<14} {:<12} {:<12} {:<12} {:<12}'.format(*line))
+    text_file.write(' \n')
+      #text_file.write('\n')
+  text_file.close()

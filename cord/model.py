@@ -17,15 +17,29 @@ class Model():
     self.reservoirs = [self.shasta, self.folsom, self.oroville]
     self.delta = Delta(self.df, 'DEL')
 
+    self.dayofyear = self.df.index.dayofyear
+    self.month = self.df.index.month
+    
+    self.wyt = self.df.SR_WYT_rolling
+
 
   def simulate(self):
+    self.sumnodds = np.zeros(367)
+    for d in range(0,365):
+      for r in self.reservoirs:
+        self.sumnodds[d] = sum([np.interp(d, first_of_month, r.nodd) for r in self.reservoirs])
 
     for t in range(1,self.T):
-      self.delta.calc_flow_bounds(t, [r.nodd for r in self.reservoirs])
-      self.shasta.step(t, self.delta.dmin[t], self.delta.sodd_cvp[t])
-      self.folsom.step(t, self.delta.dmin[t], self.delta.sodd_cvp[t])
-      self.oroville.step(t, self.delta.dmin[t], self.delta.sodd_swp[t])
-      self.delta.step(t, 
+      d = self.dayofyear[t]
+      m = self.month[t]
+      wyt = self.wyt[t]
+      dowy = water_day(d)
+
+      self.delta.calc_flow_bounds(t, d, m, wyt, self.sumnodds[d])
+      self.shasta.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t])
+      self.folsom.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t])
+      self.oroville.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_swp[t])
+      self.delta.step(t, d, m, wyt,
                       self.shasta.R_to_delta[t] + self.folsom.R_to_delta[t],
                       self.oroville.R_to_delta[t], self.df.DeltaIn[t])
 
