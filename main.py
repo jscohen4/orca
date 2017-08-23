@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 from cord import *
 
 model = Model('cord/data/cord-data.csv', sd='10-01-1999')
@@ -32,7 +32,6 @@ obs = [model.df['HRO_pump'],
        model.df['ORO_out'],
        model.df['DeltaIn'],
        model.df['DeltaOut']]
-
 plotter.Rsquares(sim,obs)
 
 for f in ['D','W','M','AS-OCT']:
@@ -42,8 +41,3 @@ for f in ['D','W','M','AS-OCT']:
     plt.savefig('cord/figs/%s%d.png' % (f,i), dpi=150)
     plt.close()
     i += 1
-
-
-
-
-

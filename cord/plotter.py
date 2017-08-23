@@ -30,8 +30,8 @@ def compare(res,obs,freq='D'):
   ax1.set_xlim([0.0, ax1.get_xlim()[1]])
   ax1.set_ylim([0.0, ax1.get_ylim()[1]])
 
-  plt.tight_layout() 
-  #plt.show()
+  plt.tight_layout()
+  # plt.show()
 
 def Rsquares(sim,obs):
   text_file = open('cord/data/Rsquares.txt', 'w')

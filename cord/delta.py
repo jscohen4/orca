@@ -8,7 +8,10 @@ class Delta():
 
   def __init__(self, df, key):
     T = len(df)
+    self.dayofyear = df.index.dayofyear
+    self.month = df.index.month
     self.key = key
+    self.wyt = df.SR_WYT_rolling
     self.netgains = df.netgains * cfs_tafd
 
     for k,v in json.load(open('cord/data/Delta_properties.json')).items():
@@ -38,7 +41,7 @@ class Delta():
                                 self.pump_max['cvp']['pmax']) * cfs_tafd
       self.swp_pmax[i] = np.interp(i, self.pump_max['swp']['d'], 
                                 self.pump_max['swp']['pmax']) * cfs_tafd
-
+    
   def calc_flow_bounds(self, t, d, m, wyt, sumnodds): 
     # gains are calculated from (DeltaIn - sum of res. outflow)
     gains = self.netgains[t] + sumnodds 
@@ -49,6 +52,7 @@ class Delta():
 
     cvp_max = self.cvp_target[d]
     swp_max = self.swp_target[d]
+
     # the sodd_* variables tell the reservoirs how much to release
     # for south of delta demands only
     # (dmin is the reservoir release needed to meet delta outflows)
@@ -69,16 +73,16 @@ class Delta():
         self.sodd_cvp[t] = 0.75*Q + (cvp_max - 0.75*Q)/export_ratio
         self.sodd_swp[t] = 0.25*Q + (swp_max - 0.25*Q)/export_ratio
 
-  
   def step(self, t, d, m, wyt, cvp_flows, swp_flows, realinflow):
 
     self.inflow[t] = max(self.gains[t] + cvp_flows + swp_flows, 0) # realinflow * cfs_tafd
+
     min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
     export_ratio = self.export_ratio[wyt][m-1]
-    
+
     cvp_max = self.cvp_pmax[d]
     swp_max = self.swp_pmax[d]
-
+    
     required_outflow = max(min_rule, (1-export_ratio)*self.inflow[t])
     surplus = self.gains[t] - required_outflow
 

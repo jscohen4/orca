@@ -1,5 +1,6 @@
 from __future__ import division
 import numpy as np 
+import matplotlib.pyplot as plt
 import pandas as pd
 import json
 from .util import *
@@ -9,8 +10,10 @@ class Reservoir():
 
   def __init__(self, df, key):
     T = len(df)
+    self.dayofyear = df.index.dayofyear
+    self.month = df.index.month
     self.key = key
-
+    self.wyt = df.SR_WYT_rolling # 120 day MA lag
     for k,v in json.load(open('cord/data/%s_properties.json' % key)).items():
         setattr(self,k,v)
 
@@ -25,10 +28,6 @@ class Reservoir():
     self.S[0] = df['%s_storage' % key].iloc[0]
     self.R[0] = 0
 
-    self.nodds = np.zeros(367)
-    for i in range(0,366):  
-        self.nodds[i] = np.interp(i, first_of_month, self.nodd)
-
     self.tocs_index = []
     for i,v in enumerate(self.tocs_rule['index']):        
         self.tocs_index.append(np.zeros(366))
@@ -42,11 +41,10 @@ class Reservoir():
             break
     return self.tocs_index[i][d]
 
-
   def step(self, t, d, m, wyt, dowy, dmin=0.0, sodd=0.0):
 
-    nodd = self.nodds[dowy]
     envmin = self.env_min_flow[wyt][m-1] * cfs_tafd
+    nodd = np.interp(d, first_of_month, self.nodd)
     sodd *= self.sodd_pct * self.sodd_curtail_pct[wyt]
     self.tocs[t] = self.current_tocs(dowy, self.fci[t])
     dout = dmin * self.delta_outflow_pct
