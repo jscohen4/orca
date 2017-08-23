@@ -31,9 +31,12 @@ class Reservoir():
     self.tocs_index = []
     for i,v in enumerate(self.tocs_rule['index']):        
         self.tocs_index.append(np.zeros(366))
-        for day in range(0, 366): 
+        for day in range(0, 366):  
             self.tocs_index[i][day] = np.interp(day, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
 
+    self.nodds = np.zeros(367)
+    for i in range(0,366):  
+        self.nodds[i] = np.interp(i, first_of_month, self.nodd)
 
   def current_tocs(self, d, ix):
     for i,v in enumerate(self.tocs_rule['index']):
@@ -44,7 +47,8 @@ class Reservoir():
   def step(self, t, d, m, wyt, dowy, dmin=0.0, sodd=0.0):
 
     envmin = self.env_min_flow[wyt][m-1] * cfs_tafd
-    nodd = np.interp(d, first_of_month, self.nodd)
+    #nodd = np.interp(d, first_of_month, self.nodd)
+    nodd = self.nodds[d]
     sodd *= self.sodd_pct * self.sodd_curtail_pct[wyt]
     self.tocs[t] = self.current_tocs(dowy, self.fci[t])
     dout = dmin * self.delta_outflow_pct
