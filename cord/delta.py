@@ -164,30 +164,30 @@ class Delta():
 
     return cvp_max, swp_max
  
-  def check_san_luis(self, tp, hp, t, update):
-    sls_stor = self.SL_S_stor[t-1] + hp - self.SL_S_out[t]
-    slf_stor = self.SL_F_stor[t-1] + tp - self.SL_F_out[t]
-    if sls_stor > self.sl_cap/2.0:
-      if slf_stor < self.sl_cap/2.0:
-        if sls_stor > (self.sl_cap - slf_stor):
-          hp -= sls_stor - (self.sl_cap - slf_stor)
-          sls_stor = self.sl_cap - slf_stor
-      else:
-        hp -= (sls_stor - self.sl_cap/2.0)
-        tp -= (slf_stor - self.sl_cap/2.0)
-        sls_stor = self.sl_cap/2.0
-        slf_stor = self.sl_cap/2.0
-    elif slf_stor > self.sl_cap - sls_stor:
-      tp -= slf_stor - (self.sl_cap - sls_stor)
-      slf_stor = self.sl_cap - sls_stor
-    
-    if update == 1:
-      self.SL_S_stor[t] = sls_stor
-      self.SL_F_stor[t] = slf_stor
-	  
-    tp = max(tp,0.0)
-    hp = max(hp,0.0)
-    return tp, hp	
+
+  def check_san_luis(self, tracy_pumping, harvey_pumping, t, update): # updates pumping values based on San Luis storage limits. 
+  # called in calc_weekly_storage release and step functions
+    swp_stor = self.SL_S_stor[t-1] + hp - self.SL_S_out[t] #update swp storage in San Luis
+    cvp_stor = self.SL_F_stor[t-1] + tp - self.SL_F_out[t] # update cvp storage in San Luis
+    if swp_stor > self.sl_cap/2.0: 
+      if cvp_stor < self.sl_cap/2.0: 
+        if swp_stor + cvp_stor > self.sl_cap: #updated storages put reservoir over capacity- modifications to pumping from harvey are needed
+          harvey_pumping -= swp_stor + cvp_stor - self.sl_cap #subtract swp storage that is over capacity from harvey pumping 
+          swp_stor = self.sl_cap - cvp_stor #update swp storage because of new harvey pumping value. SL reservoir is now at maximum capacity 
+
+      else: #updated storage values for both projects each take up more than half of the reservoirs capacity This loop alters the pumping 
+      #so that each project's storage takes up exactly half of the reservoirs capacity. Loop ends with SL reservoir at maximum capacity
+        harvey_pumping -= swp_stor - self.sl_cap/2.0 #subtract swp storage that is over 1/2 capacity from harvey pumping
+        tracy_pumping -= cvp_stor - self.sl_cap/2.0 #subtract cvp storage that is over 1/2 capacity from tracy pumping
+
+    if update == 1: #only in step function, where the pumping values are logged for the data analysis
+      self.SL_S_stor[t] = swp_stor
+      self.SL_F_stor[t] = cvp_stor
+ 
+	  harvey_pumping = max(harvey_pumping,0.0) # in case updated pumping values are negative
+    tracy_pumping = max(tracy_pumping,0.0)
+
+    return tracy_pumping, harvey_pumping	
   
   
   def meet_OMR_requirement(self, cvpm, swpm, t):
