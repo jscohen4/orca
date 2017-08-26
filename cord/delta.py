@@ -164,44 +164,45 @@ class Delta():
 
     return cvp_max, swp_max
  
-  def check_san_luis(self, tp, hp, t, update):
-    sls_stor = self.SL_S_stor[t-1] + hp - self.SL_S_out[t]
-    slf_stor = self.SL_F_stor[t-1] + tp - self.SL_F_out[t]
-    if sls_stor > self.sl_cap/2.0:
-      if slf_stor < self.sl_cap/2.0:
-        if sls_stor > (self.sl_cap - slf_stor):
-          hp -= sls_stor - (self.sl_cap - slf_stor)
-          sls_stor = self.sl_cap - slf_stor
-      else:
-        hp -= (sls_stor - self.sl_cap/2.0)
-        tp -= (slf_stor - self.sl_cap/2.0)
-        sls_stor = self.sl_cap/2.0
-        slf_stor = self.sl_cap/2.0
-    elif slf_stor > self.sl_cap - sls_stor:
-      tp -= slf_stor - (self.sl_cap - sls_stor)
-      slf_stor = self.sl_cap - sls_stor
-    
-    if update == 1:
-      self.SL_S_stor[t] = sls_stor
-      self.SL_F_stor[t] = slf_stor
+
+  def check_san_luis(self, Tracy, Harvey, t, update): # updates pumping values based on San Luis storage limits. 
+  # called in calc_weekly_storage release and step functions. Tracy Pumping Plant is for CVP, Harvey Pumping Plant is for SWP
+    SWP_stor = self.SL_S_stor[t-1] + Harvey - self.SL_S_out[t] #update swp storage in San Luis
+    CVP_stor = self.SL_F_stor[t-1] + Tracy - self.SL_F_out[t] # update cvp storage in San Luis
+    if SWP_stor > self.sl_cap/2.0: 
+      if CVP_stor < self.sl_cap/2.0: 
+        if SWP_stor + CVP_stor > self.sl_cap: #updated storages put reservoir over capacity- modifications to pumping from harvey are needed
+          Harvey -= SWP_stor + CVP_stor - self.sl_cap #subtract swp storage that is over capacity from harvey pumping 
+          SWP_stor = self.sl_cap - CVP_stor #update swp storage because of new harvey pumping value. SL reservoir is now at maximum capacity 
+
+      else: #updated storage values for both projects each take up more than half of the reservoirs capacity This loop alters the pumping 
+      #so that each project's storage takes up exactly half of the reservoirs capacity. Loop ends with SL reservoir at maximum capacity
+        Harvey -= SWP_stor - self.sl_cap/2.0 #subtract swp storage that is over 1/2 capacity from harvey pumping
+        Tracy -= SWP_stor - self.sl_cap/2.0 #subtract cvp storage that is over 1/2 capacity from tracy pumping
+    if update == 1: #only in step function, where the pumping values are logged for the data analysis
+      self.SL_S_stor[t] = SWP_stor
+      self.SL_F_stor[t] = CVP_stor
 	  
-    tp = max(tp,0.0)
-    hp = max(hp,0.0)
-    return tp, hp	
+    Tracy = max(Tracy,0.0)# in case updated pumping values are negative
+    Harvey = max(Harvey,0.0) 
+    
+    return Tracy, Harvey	
   
   
-  def meet_OMR_requirement(self, cvpm, swpm, t):
-    cvp_m = cvpm
-    swp_m = swpm
-    if cvp_m + swp_m > self.maxTotPump:
-      if cvp_m < self.maxTotPump*0.55:
-        swp_m = self.maxTotPump - cvp_m
-      elif swp_m < self.maxTotPump*0.45:
-        cvp_m = self.maxTotPump - swp_m
-      else:
-        swp_m = self.maxTotPump*0.45
-        cvp_m = self.maxTotPump*0.55
-    return cvp_m, swp_m
+  def meet_OMR_requirement(self, Tracy, Harvey, t): #old and middle river requirements (hence "OMR")
+    #cvp_m = cvpm
+    #swp_m = swpm
+    if Tracy + Harvey > self.maxTotPump: #maxTotPump is calculated in calc_weekly_storage, before this OMR function is called. 
+    #current simulated puming is more that the total allowed pumping based on Delta requirements
+    #Tracy (CVP) is allocated 55% of available flow for pumping, Harvey (SWP) is allocated 45%. (assuming Delta outflow is greater than it's requirement- I still need to look into where that's determined)
+      if Tracy < self.maxTotPump*0.55: #Tracy is pumping less that it's maximum allocated flow. Harvery should pump less flow now. 
+        Harvey = self.maxTotPump - Tracy 
+      elif Harvey < self.maxTotPump*0.45: #Harvey is pumping less that it's maximum allocated flow. Tracy should pump less flow now. 
+        Tracy = self.maxTotPump - Harvey
+      else: # in this case, both pumps would be taking their allocated percentage of flow, but the overall flow through the pumps is still greater than the maximum allowed
+        Harvey = self.maxTotPump*0.45
+        Tracy= self.maxTotPump*0.55
+    return Tracy, Harvey
 	
   def assign_flow(self, deltadata):
     self.hist_inflows = deltadata['TOT'].values * cfs_tafd

@@ -30,9 +30,11 @@ obs = [model.df['HRO_pump'][0:6209],
        model.df['ORO_storage'][0:6209],
        model.df['ORO_out'][0:6209]]
 
-for f in ['W','AS-OCT']:
-  i = 0
-  for s,o in zip(sim,obs):
-    plotter.compare(s, o, freq=f)
-    plt.savefig('cord/figs/%s%d.png' % (f,i), dpi=150)
-    i += 1
+# for f in ['W','AS-OCT']:
+#   i = 0
+#   for s,o in zip(sim,obs):
+#     plotter.compare(s, o, freq=f)
+#     plt.savefig('cord/figs/%s%d.png' % (f,i), dpi=150)
+#     i += 1
+
+plotter.Rsquares(sim,obs)
