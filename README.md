@@ -1,4 +1,4 @@
-## California Operation of Reservoirs & Delta
+## Operation of Reservoirs in California (ORCA)
 
 A simulation model. 
 
@@ -20,4 +20,4 @@ Still in active development, not stable.
 | ORO_out  | 0.64 | 0.71 | 0.85 | 0.95 |
 
 ### License
-Copyright (C) 2017 Jon Herman and HB Zeff. Released under the [MIT license](LICENSE.md).
+Copyright (C) 2017 CALFEWS Team. Released under the [MIT license](LICENSE.md).
