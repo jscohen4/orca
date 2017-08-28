@@ -14,7 +14,7 @@ class Delta():
     self.wyt = df.SR_WYT_rolling
     self.netgains = df.netgains * cfs_tafd
 
-    for k,v in json.load(open('cord/data/Delta_properties.json')).items():
+    for k,v in json.load(open('orca/data/Delta_properties.json')).items():
       setattr(self,k,v)
 
     # what vars to store/save here

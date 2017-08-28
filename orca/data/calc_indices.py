@@ -14,7 +14,7 @@ SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf']
 
 # don't change this data
-df = pd.read_csv('cord-data.csv', index_col=0, parse_dates=True)
+df = pd.read_csv('orca-data.csv', index_col=0, parse_dates=True)
 
 df['WY'] = pd.Series([water_year(d) for d in df.index], index=df.index)
 
@@ -114,4 +114,4 @@ HHL = 207.6 - df.HHL_storage
 HHL[HHL > 75] = 75
 df['FOL_fci'] = FMD + UNV + HHL
 
-df.to_csv('cord-data.csv')
+df.to_csv('orca-data.csv')

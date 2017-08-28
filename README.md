@@ -1,4 +1,4 @@
-## California Operation of Reservoirs & Delta
+## Operation of Reservoirs in California (ORCA)
 
 A simulation model. 
 
@@ -24,4 +24,4 @@ These values will change as new input data is downloaded from CDEC, even if the 
 | DEL_out  | 0.95 | 0.96 | 0.98 | n/a |
 
 ### License
-Copyright (C) 2017 Jon Herman and HB Zeff. Released under the [MIT license](LICENSE.md).
+Copyright (C) 2017 CALFEWS Team. Released under the [MIT license](LICENSE.md).
