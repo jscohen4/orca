@@ -6,7 +6,7 @@ from orca import *
 model = Model('orca/data/orca-data.csv', sd='10-01-1999')
 model.create_flow_cdf('orca/data/orca-release-cdf-data.csv', sd='10-01-1996')
 model.read_delta_inflow('orca/data/orca-delta-data.csv', sd = '10-01-1996')
-model.find_running_WYI(0, 0)
+model.find_running_WYI(0, 0) #hard to follow in model which data file it's using
 results = model.simulate() # takes a while... save results
 results.to_csv('orca/data/results.csv')
 results = pd.read_csv('orca/data/results.csv', index_col=0, parse_dates=True)

@@ -27,8 +27,8 @@ class Reservoir():
     self.Rtarget = np.zeros(T)
     self.R_to_delta = np.zeros(T)
     self.available_storage = np.zeros(T)
-    self.oct_mar_forecast_adj = np.zeros(T)
-    self.apr_jul_forecast_adj = np.zeros(T)
+    self.oct_mar_forecast_adjust = np.zeros(T)
+    self.apr_jul_forecast_adjust = np.zeros(T)
     self.storage_bounds = np.zeros(2)
     self.index_bounds = np.zeros(2)
     self.cum_min_release = np.zeros(366)
@@ -40,7 +40,9 @@ class Reservoir():
     self.calc_EOS_storage(0)
     self.hist_releases = df['%s_out' % key].values * cfs_tafd
 
-  def current_tocs(self,d,ix):
+  def current_tocs(self,d,ix): #for flood control
+  #I'm going to eventually take the interps out of this, so a list is made first and the indexed in the function. 
+  #for now I'll hold off on this until we have a gameplan with how we want to restructure this code, I'm thinking doing it now would add to more confusion. 
     for i,v in enumerate(self.tocs_rule['index']):
       if ix > v:
         break
@@ -51,7 +53,7 @@ class Reservoir():
     #return np.interp(d, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
     return np.interp(ix, self.index_bounds, self.storage_bounds)
   
-  def step(self, t, dmin=0.0, sodd=0.0):
+  def step(self, t, dmin=0.0, sodd=0.0): #pretty much the same as master, although there are opportunities to speed up this function by using pandas functions elsewhere
     d = int(self.index.dayofyear[t])
     dowy = water_day(d)
     m = int(self.index.month[t])
@@ -75,7 +77,7 @@ class Reservoir():
     W = self.S[t-1] + self.Q[t]
     # HB's idea for flood control relesae..
     # fcr = (W-self.tocs[t])*np.exp(4.5*10**-6 * (W-self.capacity))
-    fcr = 0.2*(W-self.tocs[t])
+    fcr = 0.2*(W-self.tocs[t]) 
     self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin))
 
     # then clip based on constraints
@@ -88,8 +90,8 @@ class Reservoir():
   def calc_EOS_storage(self,t):
     ##this function is called once per year in the find_available_storage function to calculate the target end-of-september storage
     ##at each reservoir which is used to determine how much excess storage is available for delta pumping releases
-    self.EOS_target = (self.S[t] - self.carryover_target[self.wyt[t]])*self.carryover_excess_use + self.carryover_target[self.wyt[t]]
-
+    self.EOS_target = (self.S[t] - self.carryover_target[self.wyt[t]])*self.carryover_excess_use + self.carryover_target[self.wyt[t]] #
+    #we might wan't to put this function somewhere else. In my opinion is just adding to some messiness with the object-oriented structure. 
   def calc_expected_min_release(self,t):
     ##this function calculates the total expected releases needed to meet environmental minimums used in the find_available_storage function
     ##this is only calculated once per year, at the beginning of the year
@@ -97,20 +99,19 @@ class Reservoir():
     wyt = self.wyt[t]
     ##the cum_min_release is the total expected environmental releases between the current day and the end of september in that water year
     ## (based on the water year type)
-    if self.nodd_meets_envmin:
+    if self.nodd_meets_envmin: #for Shasta and Oroville only 
       for x in range(1,366):
         m = int(self.index.month[x-1])
         d = int(self.index.dayofyear[x-1])
-        self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd, np.interp(d, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd)
+        self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd, np.interp(d, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd) #minimum yearly release on first day. Either environmental minimum flow, north of delta demands, or temperature release standards. 
       for x in range(1,365):
         m = int(self.index.month[x-1])
-        self.cum_min_release[x] = self.cum_min_release[x-1] - max(self.env_min_flow[wyt][m-1] * cfs_tafd , np.interp(x-1, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd )
-    else:
+        self.cum_min_release[x] = self.cum_min_release[x-1] - max(self.env_min_flow[wyt][m-1] * cfs_tafd , np.interp(x-1, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd ) #each day the yearly cumulative minimum release is decreased by that days minimum allowed flow. might be able to re-write this (and def take the interpolate out of the function to save time)
+    else: # same idea, but for folsom. env_min_flow and nodd are combined because flow for agricultural users is diverted before the flow reaches the Lower American River (where the env minimunm flows are to be met)
       for x in range(1,366):
         m = int(self.index.month[x-1])
         d = int(self.index.dayofyear[x-1])
         self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd + np.interp(d, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd)
-
       for x in range(1,365):
         m = int(self.index.month[x-1])
         self.cum_min_release[x] = max(self.cum_min_release[x-1] - self.env_min_flow[wyt][m-1] * cfs_tafd - np.interp(x-1, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd) 
@@ -139,28 +140,28 @@ class Reservoir():
 
     if dowy < 182:
       oct_mar_forecast = self.regression_ceoffs[dowy][0]*self.oct_mar_obs + self.regression_ceoffs[dowy][1]##prediction based on total flow
-      self.oct_mar_forecast_adj[t] = oct_mar_forecast + self.flow_stds[dowy]*self.exceedence_level##correct for how conservative forecasts should be
-      self.apr_jul_forecast_adj[t] = apr_jul_forecast + self.snow_stds[dowy]*self.exceedence_level##correct for how conservative forecasts should be
-      self.oct_mar_forecast_adj[t] -=  self.oct_mar_obs##remove flows already observed from the forecast (linear regression is for entire period)
-      if self.oct_mar_forecast_adj[t] < 0.0:
-        self.oct_mar_forecast_adj[t] = 0.0##forecasts cannot be negative (so if observed is greater than forecasts, the extra flow will just show up in the current storage levels)
+      self.oct_mar_forecast_adjust[t] = oct_mar_forecast + self.flow_stds[dowy]*self.exceedence_level##correct for how conservative forecasts should be
+      self.apr_jul_forecast_adjust[t] = apr_jul_forecast + self.snow_stds[dowy]*self.exceedence_level##correct for how conservative forecasts should be
+      self.oct_mar_forecast_adjust[t] -=  self.oct_mar_obs##remove flows already observed from the forecast (linear regression is for entire period)
+      if self.oct_mar_forecast_adjust[t] < 0.0:
+        self.oct_mar_forecast_adjust[t] = 0.0##forcasts cannot be negative (so if observed is greater than forecasts, the extra flow will just show up in the current storage levels)
 		
     else:
       oct_mar_forecast = 0.0##no oct-mar forecasts are made after march (already observed) 
-      self.oct_mar_forecast_adj[t] = 0.0
-      self.apr_jul_forecast_adj[t] = apr_jul_forecast + self.snow_stds[dowy]*z_table_transform[exceedence_level]##apr-jul forecasts keep being corrected after march (but little change b/c most of the information is already baked in by April 1)
-      self.apr_jul_forecast_adj[t] -= self.apr_jul_obs##remove flows already observed from the forecast (lineaer regression is for entire period)
-      if self.apr_jul_forecast_adj[t] < 0.0:
-        self.apr_jul_forecast_adj[t] = 0.0##forecasts cannot be negative
+      self.oct_mar_forecast_adjust[t] = 0.0
+      self.apr_jul_forecast_adjust[t] = apr_jul_forecast + self.snow_stds[dowy]*z_table_transform[exceedence_level]##apr-jul forecasts keep being corrected after march (but little change b/c most of the information is already baked in by April 1)
+      self.apr_jul_forecast_adjust[t] -= self.apr_jul_obs##remove flows already observed from the forecast (lineaer regression is for entire period)
+      if self.apr_jul_forecast_adjust[t] < 0.0:
+        self.apr_jul_forecast_adjust[t] = 0.0##forecasts cannot be negative
 	  
     #available storage is storage in reservoir in exceedence of end-of-september target plus forecast for oct-mar (adjusted for already observed flow)
 	#plus forecast for apr-jul (adjusted for already observed flow) minus the flow expected to be released for environmental requirements (at the reservoir, not delta)
-    self.available_storage[t] = self.S[t-1] - self.EOS_target + self.apr_jul_forecast_adj[t] + self.oct_mar_forecast_adj[t] - self.cum_min_release[dowy]
+    self.available_storage[t] = self.S[t-1] - self.EOS_target + self.apr_jul_forecast_adjust[t] + self.oct_mar_forecast_adjust[t] - self.cum_min_release[dowy]
 	
   def results_as_df(self, index):
     df = pd.DataFrame()
     names = ['storage', 'out', 'target', 'out_to_delta', 'tocs', 'available_storage', 'apr_for', 'oct_for']
-    things = [self.S, self.R, self.Rtarget, self.R_to_delta, self.tocs, self.available_storage, self.apr_jul_forecast_adj, self.oct_mar_forecast_adj,]
+    things = [self.S, self.R, self.Rtarget, self.R_to_delta, self.tocs, self.available_storage, self.apr_jul_forecast_adjust, self.oct_mar_forecast_adjust,]
     for n,t in zip(names,things):
       df['%s_%s' % (self.key,n)] = pd.Series(t, index=index)
     return df

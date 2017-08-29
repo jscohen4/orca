@@ -24,12 +24,12 @@ class Delta():
     self.HRO_pump = np.zeros(T)
     self.inflow = np.zeros(T)
     self.outflow = np.zeros(T)
-    self.SL_S_stor = np.zeros(T)
-    self.SL_F_stor = np.zeros(T)
-    self.SL_S_stor[0] = df.SLS_storage.iloc[0]
-    self.SL_F_stor[0] = df.SLF_storage.iloc[0]
-    self.SL_S_out = df.SLS_out
-    self.SL_F_out = df.SLF_out
+    self.SanLuis_SWP_stor = np.zeros(T)
+    self.SanLuis_CVP_stor = np.zeros(T)
+    self.SanLuis_SWP_stor[0] = df.SLS_storage.iloc[0]
+    self.SanLuis_CVP_stor[0] = df.SLF_storage.iloc[0]
+    self.SanLuis_SWP_out = df.SLS_out
+    self.SanLuis_CVP_out = df.SLF_out
     
 	
     self.hist_OMR = df.OMR * cfs_tafd
@@ -96,7 +96,7 @@ class Delta():
     	  
     return folsomSODDPCT
 
-  def step(self, t, cvp_flows, swp_flows):
+  def step(self, t, cvp_flows, swp_flows): #going to hold off on this alone until we discuss delta rules
     d = int(self.index.dayofyear[t])
     m = int(self.index.month[t])
     wyt = self.wyt[t]
@@ -152,10 +152,10 @@ class Delta():
 
     return cvp_max, swp_max
 	
-  def find_pumping(self, d, dowy, t, wyt):
-    swp_intake_max = np.interp(d, self.pump_max['swp']['d'], self.pump_max['swp']['intake_limit']) * cfs_tafd
-    cvp_intake_max = np.interp(d, self.pump_max['cvp']['d'],self.pump_max['cvp']['intake_limit']) * cfs_tafd
-    san_joaquin_adj = np.interp(dowy, self.san_joaquin_add['d'], self.san_joaquin_add['mult']) * max(self.sanjoaquin[t] - 1000.0 * cfs_tafd, 0.0)
+  def find_pumping(self, d, dowy, t, wyt): #we can do almost all of this interpolating outside of a loop- I'm predicting this entire function will be gone as we restructure
+    swp_intake_max = np.interp(d, self.pump_max['swp']['d'], self.pump_max['swp']['intake_limit']) * cfs_tafd  #limit to pumping 
+    cvp_intake_max = np.interp(d, self.pump_max['cvp']['d'],self.pump_max['cvp']['intake_limit']) * cfs_tafd #limit to pumping
+    san_joaquin_adj = np.interp(dowy, self.san_joaquin_add['d'], self.san_joaquin_add['mult']) * max(self.sanjoaquin[t] - 1000.0 * cfs_tafd, 0.0) #not following these variables
     san_joaquin_ie_amt = np.interp(self.sanjoaquin[t]*tafd_cfs, self.san_joaquin_export_ratio['flow'], self.san_joaquin_export_ratio['ratio']) * self.sanjoaquin[t]
     san_joaquin_ie_used = np.interp(dowy, self.san_joaquin_export_ratio['d'], self.san_joaquin_export_ratio['on_off'])
     san_joaquin_ie = san_joaquin_ie_amt * san_joaquin_ie_used
@@ -165,44 +165,44 @@ class Delta():
     return cvp_max, swp_max
  
 
-  def check_san_luis(self, Tracy, Harvey, t, update): # updates pumping values based on San Luis storage limits. 
-  # called in calc_weekly_storage release and step functions. Tracy Pumping Plant is for CVP, Harvey Pumping Plant is for SWP
-    SWP_stor = self.SL_S_stor[t-1] + Harvey - self.SL_S_out[t] #update swp storage in San Luis
-    CVP_stor = self.SL_F_stor[t-1] + Tracy - self.SL_F_out[t] # update cvp storage in San Luis
+  def check_san_luis(self, Tracy, Banks, t, update): # updates pumping values based on San Luis storage limits. 
+  # called in calc_weekly_storage release and step functions. Tracy Pumping Plant is for CVP, Banks Pumping Plant is for SWP
+    SWP_stor = self.SanLuis_SWP_stor[t-1] + Banks - self.SanLuis_SWP_out[t] #update swp storage in San Luis
+    CVP_stor = self.SanLuis_CVP_stor[t-1] + Tracy - self.SanLuis_CVP_out[t] # update cvp storage in San Luis
     if SWP_stor > self.sl_cap/2.0: 
       if CVP_stor < self.sl_cap/2.0: 
-        if SWP_stor + CVP_stor > self.sl_cap: #updated storages put reservoir over capacity- modifications to pumping from harvey are needed
-          Harvey -= SWP_stor + CVP_stor - self.sl_cap #subtract swp storage that is over capacity from harvey pumping 
-          SWP_stor = self.sl_cap - CVP_stor #update swp storage because of new harvey pumping value. SL reservoir is now at maximum capacity 
+        if SWP_stor + CVP_stor > self.sl_cap: #updated storages put reservoir over capacity- modifications to pumping from Banks are needed
+          Banks -= SWP_stor + CVP_stor - self.sl_cap #subtract swp storage that is over capacity from Banks pumping 
+          SWP_stor = self.sl_cap - CVP_stor #update swp storage because of new Banks pumping value. SL reservoir is now at maximum capacity 
 
       else: #updated storage values for both projects each take up more than half of the reservoirs capacity This loop alters the pumping 
       #so that each project's storage takes up exactly half of the reservoirs capacity. Loop ends with SL reservoir at maximum capacity
-        Harvey -= SWP_stor - self.sl_cap/2.0 #subtract swp storage that is over 1/2 capacity from harvey pumping
+        Banks -= SWP_stor - self.sl_cap/2.0 #subtract swp storage that is over 1/2 capacity from Banks pumping
         Tracy -= SWP_stor - self.sl_cap/2.0 #subtract cvp storage that is over 1/2 capacity from tracy pumping
     if update == 1: #only in step function, where the pumping values are logged for the data analysis
-      self.SL_S_stor[t] = SWP_stor
-      self.SL_F_stor[t] = CVP_stor
+      self.SanLuis_SWP_stor[t] = SWP_stor
+      self.SanLuis_CVP_stor[t] = CVP_stor
 	  
     Tracy = max(Tracy,0.0)# in case updated pumping values are negative
-    Harvey = max(Harvey,0.0) 
+    Banks = max(Banks,0.0) 
     
-    return Tracy, Harvey	
+    return Tracy, Banks	
   
   
-  def meet_OMR_requirement(self, Tracy, Harvey, t): #old and middle river requirements (hence "OMR")
+  def meet_OMR_requirement(self, Tracy, Banks, t): #old and middle river requirements (hence "OMR")
     #cvp_m = cvpm
     #swp_m = swpm
-    if Tracy + Harvey > self.maxTotPump: #maxTotPump is calculated in calc_weekly_storage, before this OMR function is called. 
+    if Tracy + Banks > self.maxTotPump: #maxTotPump is calculated in calc_weekly_storage, before this OMR function is called. 
     #current simulated puming is more that the total allowed pumping based on Delta requirements
-    #Tracy (CVP) is allocated 55% of available flow for pumping, Harvey (SWP) is allocated 45%. (assuming Delta outflow is greater than it's requirement- I still need to look into where that's determined)
+    #Tracy (CVP) is allocated 55% of available flow for pumping, Banks (SWP) is allocated 45%. (assuming Delta outflow is greater than it's requirement- I still need to look into where that's determined)
       if Tracy < self.maxTotPump*0.55: #Tracy is pumping less that it's maximum allocated flow. Harvery should pump less flow now. 
-        Harvey = self.maxTotPump - Tracy 
-      elif Harvey < self.maxTotPump*0.45: #Harvey is pumping less that it's maximum allocated flow. Tracy should pump less flow now. 
-        Tracy = self.maxTotPump - Harvey
+        Banks = self.maxTotPump - Tracy 
+      elif Banks < self.maxTotPump*0.45: #Banks is pumping less that it's maximum allocated flow. Tracy should pump less flow now. 
+        Tracy = self.maxTotPump - Banks
       else: # in this case, both pumps would be taking their allocated percentage of flow, but the overall flow through the pumps is still greater than the maximum allowed
-        Harvey = self.maxTotPump*0.45
+        Banks = self.maxTotPump*0.45
         Tracy= self.maxTotPump*0.55
-    return Tracy, Harvey
+    return Tracy, Banks
 	
   def assign_flow(self, deltadata):
     self.hist_inflows = deltadata['TOT'].values * cfs_tafd
