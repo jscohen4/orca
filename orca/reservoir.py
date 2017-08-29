@@ -40,7 +40,9 @@ class Reservoir():
     self.calc_EOS_storage(0)
     self.hist_releases = df['%s_out' % key].values * cfs_tafd
 
-  def current_tocs(self,d,ix):
+  def current_tocs(self,d,ix): #for flood control
+  #I'm going to eventually take the interps out of this, so a list is made first and the indexed in the function. 
+  #for now I'll hold off on this until we have a gameplan with how we want to restructure this code, I'm thinking doing it now would add to more confusion. 
     for i,v in enumerate(self.tocs_rule['index']):
       if ix > v:
         break
@@ -51,7 +53,7 @@ class Reservoir():
     #return np.interp(d, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
     return np.interp(ix, self.index_bounds, self.storage_bounds)
   
-  def step(self, t, dmin=0.0, sodd=0.0):
+  def step(self, t, dmin=0.0, sodd=0.0): #pretty much the same as master, although there are opportunities to speed up this function by using pandas functions elsewhere
     d = int(self.index.dayofyear[t])
     dowy = water_day(d)
     m = int(self.index.month[t])
@@ -75,7 +77,7 @@ class Reservoir():
     W = self.S[t-1] + self.Q[t]
     # HB's idea for flood control relesae..
     # fcr = (W-self.tocs[t])*np.exp(4.5*10**-6 * (W-self.capacity))
-    fcr = 0.2*(W-self.tocs[t])
+    fcr = 0.2*(W-self.tocs[t]) 
     self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin))
 
     # then clip based on constraints
@@ -88,8 +90,8 @@ class Reservoir():
   def calc_EOS_storage(self,t):
     ##this function is called once per year in the find_available_storage function to calculate the target end-of-september storage
     ##at each reservoir which is used to determine how much excess storage is available for delta pumping releases
-    self.EOS_target = (self.S[t] - self.carryover_target[self.wyt[t]])*self.carryover_excess_use + self.carryover_target[self.wyt[t]]
-
+    self.EOS_target = (self.S[t] - self.carryover_target[self.wyt[t]])*self.carryover_excess_use + self.carryover_target[self.wyt[t]] #
+    #we might wan't to put this function somewhere else. In my opinion is just adding to some messiness with the object-oriented structure. 
   def calc_expected_min_release(self,t):
     ##this function calculates the total expected releases needed to meet environmental minimums used in the find_available_storage function
     ##this is only calculated once per year, at the beginning of the year
