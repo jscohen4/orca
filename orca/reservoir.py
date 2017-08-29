@@ -144,7 +144,7 @@ class Reservoir():
       self.apr_jul_forecast_adjust[t] = apr_jul_forecast + self.snow_stds[dowy]*self.exceedence_level##correct for how conservative forecasts should be
       self.oct_mar_forecast_adjust[t] -=  self.oct_mar_obs##remove flows already observed from the forecast (linear regression is for entire period)
       if self.oct_mar_forecast_adjust[t] < 0.0:
-        self.oct_mar_forecast_adjust[t] = 0.0##forecasts cannot be negative (so if observed is greater than forecasts, the extra flow will just show up in the current storage levels)
+        self.oct_mar_forecast_adjust[t] = 0.0##forcasts cannot be negative (so if observed is greater than forecasts, the extra flow will just show up in the current storage levels)
 		
     else:
       oct_mar_forecast = 0.0##no oct-mar forecasts are made after march (already observed) 
