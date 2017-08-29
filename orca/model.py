@@ -61,11 +61,11 @@ class Model():
     for t in range(1,len(self.deltadf)):
       self.delta.find_gains(t,self.folsom.hist_releases[t-1], self.shasta.hist_releases[t-1], self.oroville.hist_releases[t-1])
 
-  def find_running_WYI(self,zscore1, zscore2):
-    self.fnf_SAC = self.df.BND_fnf.values * cfsd_mafd
-    self.fnf_FEA = self.df.ORO_fnf.values * cfsd_mafd
-    self.fnf_YUB = self.df.YRS_fnf.values * cfsd_mafd
-    self.fnf_AME = self.df.FOL_fnf.values * cfsd_mafd
+  def find_running_WYI(self,zscore1, zscore2): #water year type was calculated in scraper in master. I think we should determine wyt in a different script, just to keep model.py more concise. 
+    self.fnf_SAC = self.df.BND_fnf.values * cfsd_mafd #Sacramento River flow at Bend Bridge, which is south of Shasta
+    self.fnf_FEA = self.df.ORO_fnf.values * cfsd_mafd #Feather River flow, from Oroville
+    self.fnf_YUB = self.df.YRS_fnf.values * cfsd_mafd #Yuba River flow near Smartville. The Yuba River drains to the the Feather River downstream of Oroville
+    self.fnf_AME = self.df.FOL_fnf.values * cfsd_mafd #American River flow downstream of Folsom
     self.snow_SAC = self.df.SHA_snowpack.values
     self.snow_FEA = self.df.ORO_snowpack.values
     self.snow_AME = self.df.FOL_snowpack.values
