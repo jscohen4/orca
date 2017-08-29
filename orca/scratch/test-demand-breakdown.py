@@ -9,7 +9,7 @@ cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 def water_day(d):
   return d - 274 if d >= 274 else d + 91
 
-df = pd.read_csv('../data/cord-data.csv', index_col=0, parse_dates=True)
+df = pd.read_csv('../data/orca-data.csv', index_col=0, parse_dates=True)
 print df.keys()
 # # north of delta demand, in TAFD (CVP only)
 nodd = np.array([2,2,3,5,8,11,12,8,6,5,4,2]) #/ cfs_tafd

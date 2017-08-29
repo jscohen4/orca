@@ -14,7 +14,7 @@ class Reservoir():
     self.key = key
     self.wyt = df.SR_WYT_rolling # 120 day MA lag
     #self.wyt = self.SRIForecast
-    for k,v in json.load(open('cord/data/%s_properties.json' % key)).items():
+    for k,v in json.load(open('orca/data/%s_properties.json' % key)).items():
         setattr(self,k,v)
 
     self.Q = df['%s_in_fix'% key].values * cfs_tafd

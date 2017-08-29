@@ -9,7 +9,7 @@ cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 def water_day(d):
   return d - 274 if d >= 274 else d + 91
 
-df = pd.read_csv('../data/cord-data.csv', index_col=0, parse_dates=True)
+df = pd.read_csv('../data/orca-data.csv', index_col=0, parse_dates=True)
 
 # df = (df).resample('M').sum() * cfs_tafd
 # df['dowy'] = pd.Series([water_day(d) for d in df.index.dayofyear], index=df.index)
