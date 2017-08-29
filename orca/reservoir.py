@@ -97,20 +97,19 @@ class Reservoir():
     wyt = self.wyt[t]
     ##the cum_min_release is the total expected environmental releases between the current day and the end of september in that water year
     ## (based on the water year type)
-    if self.nodd_meets_envmin:
+    if self.nodd_meets_envmin: #for Shasta and Oroville only 
       for x in range(1,366):
         m = int(self.index.month[x-1])
         d = int(self.index.dayofyear[x-1])
-        self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd, np.interp(d, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd)
+        self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd, np.interp(d, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd) #minimum yearly release on first day. Either environmental minimum flow, north of delta demands, or temperature release standards. 
       for x in range(1,365):
         m = int(self.index.month[x-1])
-        self.cum_min_release[x] = self.cum_min_release[x-1] - max(self.env_min_flow[wyt][m-1] * cfs_tafd , np.interp(x-1, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd )
-    else:
+        self.cum_min_release[x] = self.cum_min_release[x-1] - max(self.env_min_flow[wyt][m-1] * cfs_tafd , np.interp(x-1, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd ) #each day the yearly cumulative minimum release is decreased by that days minimum allowed flow. might be able to re-write this (and def take the interpolate out of the function to save time)
+    else: # same idea, but for folsom. env_min_flow and nodd are combined because flow for agricultural users is diverted before the flow reaches the Lower American River (where the env minimunm flows are to be met)
       for x in range(1,366):
         m = int(self.index.month[x-1])
         d = int(self.index.dayofyear[x-1])
         self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd + np.interp(d, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd)
-
       for x in range(1,365):
         m = int(self.index.month[x-1])
         self.cum_min_release[x] = max(self.cum_min_release[x-1] - self.env_min_flow[wyt][m-1] * cfs_tafd - np.interp(x-1, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd) 
