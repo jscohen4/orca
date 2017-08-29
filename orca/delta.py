@@ -24,12 +24,12 @@ class Delta():
     self.HRO_pump = np.zeros(T)
     self.inflow = np.zeros(T)
     self.outflow = np.zeros(T)
-    self.SL_S_stor = np.zeros(T)
-    self.SL_F_stor = np.zeros(T)
-    self.SL_S_stor[0] = df.SLS_storage.iloc[0]
-    self.SL_F_stor[0] = df.SLF_storage.iloc[0]
-    self.SL_S_out = df.SLS_out
-    self.SL_F_out = df.SLF_out
+    self.SanLuis_SWP_stor = np.zeros(T)
+    self.SanLuis_CVP_stor = np.zeros(T)
+    self.SanLuis_SWP_stor[0] = df.SLS_storage.iloc[0]
+    self.SanLuis_CVP_stor[0] = df.SLF_storage.iloc[0]
+    self.SanLuis_SWP_out = df.SLS_out
+    self.SanLuis_CVP_out = df.SLF_out
     
 	
     self.hist_OMR = df.OMR * cfs_tafd
@@ -96,7 +96,7 @@ class Delta():
     	  
     return folsomSODDPCT
 
-  def step(self, t, cvp_flows, swp_flows):
+  def step(self, t, cvp_flows, swp_flows): #going to hold off on this alone until we discuss delta rules
     d = int(self.index.dayofyear[t])
     m = int(self.index.month[t])
     wyt = self.wyt[t]
@@ -152,10 +152,10 @@ class Delta():
 
     return cvp_max, swp_max
 	
-  def find_pumping(self, d, dowy, t, wyt):
-    swp_intake_max = np.interp(d, self.pump_max['swp']['d'], self.pump_max['swp']['intake_limit']) * cfs_tafd
-    cvp_intake_max = np.interp(d, self.pump_max['cvp']['d'],self.pump_max['cvp']['intake_limit']) * cfs_tafd
-    san_joaquin_adj = np.interp(dowy, self.san_joaquin_add['d'], self.san_joaquin_add['mult']) * max(self.sanjoaquin[t] - 1000.0 * cfs_tafd, 0.0)
+  def find_pumping(self, d, dowy, t, wyt): #we can do almost all of this interpolating outside of a loop- I'm predicting this entire function will be gone as we restructure
+    swp_intake_max = np.interp(d, self.pump_max['swp']['d'], self.pump_max['swp']['intake_limit']) * cfs_tafd  #limit to pumping 
+    cvp_intake_max = np.interp(d, self.pump_max['cvp']['d'],self.pump_max['cvp']['intake_limit']) * cfs_tafd #limit to pumping
+    san_joaquin_adj = np.interp(dowy, self.san_joaquin_add['d'], self.san_joaquin_add['mult']) * max(self.sanjoaquin[t] - 1000.0 * cfs_tafd, 0.0) #not following these variables
     san_joaquin_ie_amt = np.interp(self.sanjoaquin[t]*tafd_cfs, self.san_joaquin_export_ratio['flow'], self.san_joaquin_export_ratio['ratio']) * self.sanjoaquin[t]
     san_joaquin_ie_used = np.interp(dowy, self.san_joaquin_export_ratio['d'], self.san_joaquin_export_ratio['on_off'])
     san_joaquin_ie = san_joaquin_ie_amt * san_joaquin_ie_used
@@ -167,8 +167,8 @@ class Delta():
 
   def check_san_luis(self, Tracy, Banks, t, update): # updates pumping values based on San Luis storage limits. 
   # called in calc_weekly_storage release and step functions. Tracy Pumping Plant is for CVP, Banks Pumping Plant is for SWP
-    SWP_stor = self.SL_S_stor[t-1] + Banks - self.SL_S_out[t] #update swp storage in San Luis
-    CVP_stor = self.SL_F_stor[t-1] + Tracy - self.SL_F_out[t] # update cvp storage in San Luis
+    SWP_stor = self.SanLuis_SWP_stor[t-1] + Banks - self.SanLuis_SWP_out[t] #update swp storage in San Luis
+    CVP_stor = self.SanLuis_CVP_stor[t-1] + Tracy - self.SanLuis_CVP_out[t] # update cvp storage in San Luis
     if SWP_stor > self.sl_cap/2.0: 
       if CVP_stor < self.sl_cap/2.0: 
         if SWP_stor + CVP_stor > self.sl_cap: #updated storages put reservoir over capacity- modifications to pumping from Banks are needed
@@ -180,8 +180,8 @@ class Delta():
         Banks -= SWP_stor - self.sl_cap/2.0 #subtract swp storage that is over 1/2 capacity from Banks pumping
         Tracy -= SWP_stor - self.sl_cap/2.0 #subtract cvp storage that is over 1/2 capacity from tracy pumping
     if update == 1: #only in step function, where the pumping values are logged for the data analysis
-      self.SL_S_stor[t] = SWP_stor
-      self.SL_F_stor[t] = CVP_stor
+      self.SanLuis_SWP_stor[t] = SWP_stor
+      self.SanLuis_CVP_stor[t] = CVP_stor
 	  
     Tracy = max(Tracy,0.0)# in case updated pumping values are negative
     Banks = max(Banks,0.0) 
