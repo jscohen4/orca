@@ -27,8 +27,8 @@ class Reservoir():
     self.Rtarget = np.zeros(T)
     self.R_to_delta = np.zeros(T)
     self.available_storage = np.zeros(T)
-    self.oct_mar_forecast_adj = np.zeros(T)
-    self.apr_jul_forecast_adj = np.zeros(T)
+    self.oct_mar_forecast_adjust = np.zeros(T)
+    self.apr_jul_forecast_adjust = np.zeros(T)
     self.storage_bounds = np.zeros(2)
     self.index_bounds = np.zeros(2)
     self.cum_min_release = np.zeros(366)
@@ -140,28 +140,28 @@ class Reservoir():
 
     if dowy < 182:
       oct_mar_forecast = self.regression_ceoffs[dowy][0]*self.oct_mar_obs + self.regression_ceoffs[dowy][1]##prediction based on total flow
-      self.oct_mar_forecast_adj[t] = oct_mar_forecast + self.flow_stds[dowy]*self.exceedence_level##correct for how conservative forecasts should be
-      self.apr_jul_forecast_adj[t] = apr_jul_forecast + self.snow_stds[dowy]*self.exceedence_level##correct for how conservative forecasts should be
-      self.oct_mar_forecast_adj[t] -=  self.oct_mar_obs##remove flows already observed from the forecast (linear regression is for entire period)
-      if self.oct_mar_forecast_adj[t] < 0.0:
-        self.oct_mar_forecast_adj[t] = 0.0##forecasts cannot be negative (so if observed is greater than forecasts, the extra flow will just show up in the current storage levels)
+      self.oct_mar_forecast_adjust[t] = oct_mar_forecast + self.flow_stds[dowy]*self.exceedence_level##correct for how conservative forecasts should be
+      self.apr_jul_forecast_adjust[t] = apr_jul_forecast + self.snow_stds[dowy]*self.exceedence_level##correct for how conservative forecasts should be
+      self.oct_mar_forecast_adjust[t] -=  self.oct_mar_obs##remove flows already observed from the forecast (linear regression is for entire period)
+      if self.oct_mar_forecast_adjust[t] < 0.0:
+        self.oct_mar_forecast_adjust[t] = 0.0##forecasts cannot be negative (so if observed is greater than forecasts, the extra flow will just show up in the current storage levels)
 		
     else:
       oct_mar_forecast = 0.0##no oct-mar forecasts are made after march (already observed) 
-      self.oct_mar_forecast_adj[t] = 0.0
-      self.apr_jul_forecast_adj[t] = apr_jul_forecast + self.snow_stds[dowy]*z_table_transform[exceedence_level]##apr-jul forecasts keep being corrected after march (but little change b/c most of the information is already baked in by April 1)
-      self.apr_jul_forecast_adj[t] -= self.apr_jul_obs##remove flows already observed from the forecast (lineaer regression is for entire period)
-      if self.apr_jul_forecast_adj[t] < 0.0:
-        self.apr_jul_forecast_adj[t] = 0.0##forecasts cannot be negative
+      self.oct_mar_forecast_adjust[t] = 0.0
+      self.apr_jul_forecast_adjust[t] = apr_jul_forecast + self.snow_stds[dowy]*z_table_transform[exceedence_level]##apr-jul forecasts keep being corrected after march (but little change b/c most of the information is already baked in by April 1)
+      self.apr_jul_forecast_adjust[t] -= self.apr_jul_obs##remove flows already observed from the forecast (lineaer regression is for entire period)
+      if self.apr_jul_forecast_adjust[t] < 0.0:
+        self.apr_jul_forecast_adjust[t] = 0.0##forecasts cannot be negative
 	  
     #available storage is storage in reservoir in exceedence of end-of-september target plus forecast for oct-mar (adjusted for already observed flow)
 	#plus forecast for apr-jul (adjusted for already observed flow) minus the flow expected to be released for environmental requirements (at the reservoir, not delta)
-    self.available_storage[t] = self.S[t-1] - self.EOS_target + self.apr_jul_forecast_adj[t] + self.oct_mar_forecast_adj[t] - self.cum_min_release[dowy]
+    self.available_storage[t] = self.S[t-1] - self.EOS_target + self.apr_jul_forecast_adjust[t] + self.oct_mar_forecast_adjust[t] - self.cum_min_release[dowy]
 	
   def results_as_df(self, index):
     df = pd.DataFrame()
     names = ['storage', 'out', 'target', 'out_to_delta', 'tocs', 'available_storage', 'apr_for', 'oct_for']
-    things = [self.S, self.R, self.Rtarget, self.R_to_delta, self.tocs, self.available_storage, self.apr_jul_forecast_adj, self.oct_mar_forecast_adj,]
+    things = [self.S, self.R, self.Rtarget, self.R_to_delta, self.tocs, self.available_storage, self.apr_jul_forecast_adjust, self.oct_mar_forecast_adjust,]
     for n,t in zip(names,things):
       df['%s_%s' % (self.key,n)] = pd.Series(t, index=index)
     return df
