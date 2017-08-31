@@ -96,6 +96,154 @@ def rolling_fci(inflow, k, start):
 
   return pd.Series(x, index=inflow.index)
 
+
+
+
+
+############################################################################################################################################################
+############################################################################################################################################################
+############################################################################################################################################################
+############################################################################################################################################################
+############################################################################################################################################################
+############################################################################################################################################################
+
+
+
+def find_running_WYI(df,zscore1, zscore2): #water year type was calculated in scraper in master. I think we should determine wyt in a different script, just to keep model.py more concise. df is orca-data.csv
+  fnf_SAC = df.BND_fnf.values * cfsd_mafd #Sacramento River flow at Bend Bridge, which is south of Shasta (fnf is full natural flow)
+  fnf_FEA = df.ORO_fnf.values * cfsd_mafd #Feather River flow, from Oroville
+  fnf_YUB = df.YRS_fnf.values * cfsd_mafd #Yuba River flow near Smartville. The Yuba River drains to the the Feather River downstream of Oroville
+  fnf_AME = df.FOL_fnf.values * cfsd_mafd #American River flow downstream of Folsom
+  snow_SAC = df.SHA_snowpack.values  #culmulative snowpack values
+  snow_FEA = df.ORO_snowpack.values
+  snow_AME = df.FOL_snowpack.values
+  num_days = len(df)
+
+  d_array = np.zeros(num_days)
+  dowy_array = np.zeros(num_days)
+  m_array = np.zeros(num_days)
+  y_array = np.zeros(num_days)
+
+  for t in range(1,num_days):
+    d_array[t-1] = int(df.index.dayofyear[t-1]) 
+    dowy_array[t-1] = water_day(d_array[t-1])
+    m_array[t-1] = int(df.index.month[t-1])
+    y_array[t-1] = int(df.index.year[t-1])  
+
+  num_years = y_array[num_days-1] - y_array[0]
+
+  apr_jul_fnf = np.zeros(num_years) #length of vector is latest year in dataset - earliest year (#of years). Maybe there's a more consise way to get this that will save simulation time
+  oct_mar_fnf = np.zeros(num_years)
+  remaining_flow = np.zeros((365,num_years)) #365 x number of years
+  total_snowpack = np.zeros((365,num_years)) #365 x number of years
+  forecastWYI_expt = np.zeros(num_days) #expt vs. envr? (export vs. environmental?)   #wyi is water year index
+  forecastWYI_envr = np.zeros(num_days)
+
+
+  current_year = 0
+
+  for t in range(1,num_days): 
+    d = d_array[t-1]
+    dowy = dowy_array[t-1]
+    m = m_array[t-1]
+    if dowy == 1: #try 0 if worse
+      current_year = current_year + 1
+      oct_mar_fnf[current_year-1] = 0.0
+      apr_jul_fnf[current_year-1] = 0.0
+    if dowy < 182:    # oct-mar     #adding to flows for the three sections of the year.
+      oct_mar_fnf[current_year - 1] += fnf_SAC[t-1] + fnf_FEA[t-1] + fnf_YUB[t-1] + fnf_AME[t-1]
+      total_snowpack[dowy][current_year-1] = snow_SAC[t-1] + snow_FEA[t-1] + snow_AME[t-1]
+    elif dowy < 305:    #apr-jul
+      apr_jul_fnf[current_year - 1] += fnf_SAC[t-1] + fnf_FEA[t-1] + fnf_YUB[t-1] + fnf_AME[t-1]
+      total_snowpack[dowy][current_year-1] = snow_SAC[t-1] + snow_FEA[t-1] + snow_AME[t-1]
+    else: #aug-sept
+      total_snowpack[dowy][current_year-1] = snow_SAC[t-1] + snow_FEA[t-1] + snow_AME[t-1]
+  current_year = 0
+  complete_year = 0 
+
+  for t in range(1,num_years):   #for calculating october-march remaining flow?
+    d = d_array[t-1]  
+    dowy = dowy_array[t-1]
+    if dowy == 0:
+      current_year = current_year + 1
+      remaining_flow[dowy][current_year-1] = oct_mar_fnf[current_year-1]
+    elif dowy < 182: #oct-mar
+      remaining_flow[dowy][current_year-1] = remaining_flow[dowy-1][current_year-1] - (fnf_SAC[t-1] + fnf_FEA[t-1] + fnf_YUB[t-1] + fnf_AME[t-1])
+    else: #apr-jul
+      remaining_flow[dowy][current_year-1] = 0.0
+    
+    if dowy == 304: #stop at august
+      complete_year = complete_year + 1   
+
+  #this is where the regression comes in. 
+  snowfall_std = np.zeros(365)
+  earlyflow_std = np.zeros(365)
+  earlyflow_mean = np.zeros(365)
+  snowfallCoef = np.zeros((365,2))  
+  pred_devi = np.zeros(complete_year)
+  for x in range(1,365):
+    flow_each_year = remaining_flow[x-1]##this days set of  flow values, one value for each year(X vector) 
+    snow_each_year = total_snowpack[x-1] ##this days set of cumulative snowpack values (X vector)  one value for each year
+    coef = np.polyfit(snow_each_year[0:(complete_year-1)], apr_jul_fnf[0:(complete_year-1)],1)
+    snowfallCoef[x-1][0] = coef[0]
+    snowfallCoef[x-1][1] = coef[1]
+    for y in range(1,complete_year):
+      pred_devi[y-1] = apr_jul_fnf[y-1] - coef[0]*snow_each_year[y-1] - coef[1]
+  
+    snowfall_std[x-1] = np.std(pred_devi)
+    if x < 183:
+      earlyflow_std[x-1] = np.std(flow_each_year)
+    else:
+      earlyflow_std[x-1] = 0.0
+
+    earlyflow_mean[x-1] = np.mean(flow_each_year)
+
+  prevValue = 10.0
+  for t in range(1,len(self.df)):
+    d = int(self.df.index.dayofyear[t-1])   
+    dowy = water_day(d)
+    if dowy == 0:
+      current_mar_oct = 0.0
+      current_apr_jul = 0.0
+      if t > 1:
+        prevValue = min(self.forecastWYI_envr[t-2],10.0)
+    
+    if dowy < 182:
+      current_mar_oct += (self.fnf_SAC[t-1] + self.fnf_FEA[t-1] + self.fnf_YUB[t-1] + self.fnf_AME[t-1])
+    elif dowy < 305:
+      current_apr_jul += (self.fnf_SAC[t-1] + self.fnf_FEA[t-1] + self.fnf_YUB[t-1] + self.fnf_AME[t-1])
+    
+    snowpackEstimate = snowfallCoef[dowy][0]*(self.snow_SAC[t-1] + self.snow_FEA[t-1] + self.snow_AME[t-1]) + snowfallCoef[dowy][1]
+    self.forecastWYI_envr[t-1] = 0.3 * prevValue + 0.3 * (current_mar_oct + earlyflow_std[dowy]*zscore1 + earlyflow_mean[dowy]) + 0.4 *( current_apr_jul + max(snowpackEstimate + snowfall_std[dowy]*zscore1 - current_apr_jul,0.0) )
+    self.forecastWYI_expt[t-1] = 0.3 * prevValue + 0.3 * (current_mar_oct + earlyflow_std[dowy]*zscore2 + earlyflow_mean[dowy]) + 0.4 *( current_apr_jul + max(snowpackEstimate + snowfall_std[dowy]*zscore2 - current_apr_jul,0.0) )
+  self.shasta.SRIforecast = self.forecastWYI_expt
+  self.folsom.SRIforecast = self.forecastWYI_expt
+  self.oroville.SRIforecast = self.forecastWYI_expt
+  self.forecastWYT = []
+  for x in range(1,len(self.df)):
+    if self.forecastWYI_envr[x-1] <= 5.4:
+      self.forecastWYT.append("C")
+    elif self.forecastWYI_envr[x-1] <= 6.5:
+      self.forecastWYT.append("D")
+    elif self.forecastWYI_envr[x-1] <= 7.8:
+      self.forecastWYT.append("BN")
+    elif self.forecastWYI_envr[x-1] <= 9.2:
+      self.forecastWYT.append("AN")
+    else:
+      self.forecastWYT.append("W")
+  
+  self.shasta.wyt = self.forecastWYT  
+  self.oroville.wyt = self.forecastWYT
+  self.folsom.wyt = self.forecastWYT
+    
+############################################################################################################################################################
+############################################################################################################################################################
+############################################################################################################################################################
+############################################################################################################################################################
+############################################################################################################################################################
+
+
+
 df['SHA_fci'] = rolling_fci(df['SHA_in_fix'], k=0.95, start=100000)
 df.SHA_fci.fillna(method='bfill', inplace=True)
 
@@ -117,85 +265,3 @@ df['FOL_fci'] = FMD + UNV + HHL
 df.to_csv('orca-data.csv')
 
 
-
-
-  # def find_release_func(self, data): #still will need to work on this for the purposes of speeding things up- that'll be done when merging to master branch
-  #   ##this function is used to make forecasts when calculating available storage for export releases from reservoir
-  #   ##using data from 1996 to 2016 (b/c data is available for all inputs needed), calculate total flows in oct-mar period and apr-jul period
-  #   ##based on linear regression w/snowpack (apr-jul) and w/inflow (oct-mar)
-  #   ##this function is called before simulation loop, and the linear regression coefficient & standard deviation of linear regresion residuals
-  #   ##is used in the find_available_storage function
-  #   ## data used is from release-cdf-data.csv
-  #   self.cum_snow = data['%s_cdf_snow'% self.key].values##cumulative yearly snowpack on each dayin data set
-  #   self.daily_inflow = data['%s_cdf_inf'% self.key].values##cumulative oct-mar inflow (Based on how the data look, I'm inclined to think this is daily inflow- it matches that data in the master branch)
-  #   #time_of_year = 0;##1 is oct-mar, 2 is apr-jul, 3 is aug-sept
-  #   current_year = 0;
-  #   complete_year = 0;##complete year counts all the years that have complete oct-jul data (partial years not used for lin. regression)
-  #   self.oct_mar_cum_inflows = np.zeros(data.index.year[len(data)-1]-data.index.year[0]) #culmulative yearly october- march inflows (to be calculated), one per year
-  #   self.apr_jul_cum_inflows = np.zeros(data.index.year[len(data)-1]-data.index.year[0]) #culmulative yearly april-july inflows (to be calculated), one per year
-  #   self.regression_ceoffs = np.zeros((365,4))##coefficients for linear regression: 2 for oct-mar, 2 for apr-jul
-  #   self.snow_stds = np.zeros(365) #standard deviations for snowpack regressions
-  #   self.flow_stds = np.zeros(182) #standard deviations for oct-march flow regressions
-  #   self.cum_snow_matrix = np.zeros((365,(data.index.year[len(data)-1]-data.index.year[0]))) #will become matrix with cumulative snowpack for each date, structured by year (365 x # of years matrix)
-  #   self.daily_inflow_matrix = np.zeros((365,(data.index.year[len(data)-1]-data.index.year[0])))#will become matrix with daily inflows for each oct-mar date, structured by year (365 x # of years matrix) -only oct-mar inflows are included
-    
-  #   for t in range(1,len(data)): #I'll see if I can make this more consise, although I think it's good for now
-  #     d = int(data.index.dayofyear[t-1])
-  #     dowy = water_day(d)
-  #     m = int(data.index.month[t-1])
-  #     y = int(data.index.year[t-1])
-  #     day = int(data.index.day[t-1])
-  #     if dowy == 1:
-  #       current_year +=1
-    
-  #     if m == 10: #october- beggining of water year
-  #       time_of_year = "oct-mar"
-  #     elif m == 4: # april- start of summer
-  #       time_of_year = "apr-jul"
-  #     elif m == 8 and day == 1: # august- end of apr-july regression
-  #       time_of_year = "aug-sept"
-  #       complete_year += 1##if data exists through jul, counts as a 'complete year' for linear regression purposes
-      
-  #     if time_of_year == "oct-mar":
-  #       self.oct_mar_cum_inflows[current_year-1] += self.daily_inflow[t-1] * cfs_tafd##total oct-mar inflow (one value per year - Y vector in lin regression)
-  #     elif time_of_year == "apr-jul":
-  #       self.apr_jul_cum_inflows[current_year-1] += self.daily_inflow[t-1] * cfs_tafd##total apr-jul inflow (one value per year - Y vector in lin regression)
-      
-  #   current_year = 0;
-  #   for t in range(1,len(data)):
-  #     d = int(data.index.dayofyear[t-1])
-  #     dowy = water_day(d)
-  #     m = int(data.index.month[t-1])
-  #     y = int(data.index.year[t-1])
-  #     #cum oct-mar inflows through each day(X vector in oct-mar lin regression - each day has a unique 21 value (year) vector giving us 365 seperate lin regressions)
-  #     if dowy == 1:
-  #       current_year += 1;
-  #       self.daily_inflow_matrix[dowy-1][current_year-1] = self.daily_inflow[t-1] * cfs_tafd
-  #     elif dowy < 182:
-  #       self.daily_inflow_matrix[dowy-1][current_year-1] = self.daily_inflow_matrix[dowy-2][current_year-1] + self.daily_inflow[t-1] * cfs_tafd
-      
-  #     ##cum snowpack through each day (X vector in apr-jul lin regression - each day has a unique 21 value (year) vector giving us 365 sepearte lin regressions)    
-  #     self.cum_snow_matrix[dowy-1][current_year-1] = self.cum_snow[t-1]
-      
-  #   for x in range(1,182):
-  #     flow_each_year = self.daily_inflow_matrix[x-1]##this days set of cumulative flow values, one value for each year(X vector) #still not seeing why this is culmalative
-  #     coef = np.polyfit(flow_each_year[0:(complete_year-1)],self.oct_mar_cum_inflows[0:(complete_year-1)],1) #coef is the set of two regression coeffiients for this year's flow regression
-  #     self.regression_ceoffs[x-1][0] = coef[0]
-  #     self.regression_ceoffs[x-1][1] = coef[1]
-  #     pred_dev = np.zeros(complete_year)
-  #     for y in range(1,complete_year):
-  #       pred_dev[y-1] = self.oct_mar_cum_inflows[y-1] - coef[0]*flow_each_year[y-1] - coef[1]##how much was the linear regression off actual observations
-
-  #     self.flow_stds[x-1] = np.std(pred_dev)##standard deviations of linear regression residuals 
-  #     ##for conservative estimate, ie 90% exceedence is linear regression plus standard deviation * -1.28, z table in util.py
-  #   for x in range(1,365):
-  #     snow_each_year = self.cum_snow_matrix[x-1]##this days set of cumulative snowpack values (X vector)  one value for each year
-  #     coef = np.polyfit(snow_each_year[0:(complete_year-1)],self.apr_jul_cum_inflows[0:(complete_year-1)],1) #coef is the set of two regression coeffiients for this year's snowpack regression
-  #     self.regression_ceoffs[x-1][2] = coef[0]
-  #     self.regression_ceoffs[x-1][3] = coef[1]
-  #     pred_dev = np.zeros(complete_year)
-  #     for y in range(1,complete_year):
-  #       pred_dev[y-1] = self.apr_jul_cum_inflows[y-1] - coef[0]*snow_each_year[y-1] - coef[1]##how much was the linear regression off actual observations
-
-  #     self.snow_stds[x-1] = np.std(pred_dev)##standard deviations of linear regression residuals 
-  #     ##for conservative estimate, ie 90% exceedence is linear regression plus standard deviation * -1.28, z table in util.py
