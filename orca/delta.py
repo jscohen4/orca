@@ -11,7 +11,7 @@ class Delta():
     self.dayofyear = df.index.dayofyear
     self.month = df.index.month
     self.key = key
-    self.wyt = df.SR_WYT_rolling
+    self.wyt = df.WYT
     self.netgains = df.netgains * cfs_tafd
 
     for k,v in json.load(open('orca/data/Delta_properties.json')).items():

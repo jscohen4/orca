@@ -13,7 +13,7 @@ class Reservoir():
     self.dayofyear = df.index.dayofyear
     self.month = df.index.month
     self.key = key
-    self.wyt = df.SR_WYT_rolling # 120 day MA lag
+    self.wyt = df.WYT # 120 day MA lag
     for k,v in json.load(open('orca/data/%s_properties.json' % key)).items():
         setattr(self,k,v)
 

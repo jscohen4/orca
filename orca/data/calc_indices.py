@@ -120,7 +120,6 @@ def find_running_WYI(df,zscore1, zscore2): #water year type was calculated in sc
   snow_FEA = df.ORO_snowpack.values
   snow_AME = df.FOL_snowpack.values
   num_days = len(df)
-  print num_days
   d_array = np.zeros(num_days)
   dowy_array = np.zeros(num_days)
   m_array = np.zeros(num_days)
@@ -141,7 +140,7 @@ def find_running_WYI(df,zscore1, zscore2): #water year type was calculated in sc
 
   current_year = 0
 
-  for t in range(0,num_days): 
+  for t in range(1,6320): 
     dowy = int(dowy_array[t-1])
     m = m_array[t-1]
     if dowy == 0: #try 0 if worse
@@ -159,7 +158,7 @@ def find_running_WYI(df,zscore1, zscore2): #water year type was calculated in sc
   current_year = 0
   complete_year = 0 
 
-  for t in range(0,num_years):   #for calculating october-march remaining flow?
+  for t in range(1,num_days):   #for calculating october-march remaining flow?
     d = d_array[t-1]  
     dowy = int(dowy_array[t-1])
     if dowy == 0:
@@ -197,7 +196,7 @@ def find_running_WYI(df,zscore1, zscore2): #water year type was calculated in sc
     earlyflow_mean[x-1] = np.mean(flow_each_year)
 
   prevValue = 10.0
-  for t in range(1,num_days):
+  for t in range(1,6320):
     d = d_array[t-1]   
     dowy = int(dowy_array[t-1])
     if dowy == 0: #begin october
@@ -211,14 +210,14 @@ def find_running_WYI(df,zscore1, zscore2): #water year type was calculated in sc
     elif dowy < 305: #apr-jul
       current_apr_jul += (fnf_SAC[t-1] + fnf_FEA[t-1] + fnf_YUB[t-1] + fnf_AME[t-1])
     snowpackEstimate = snowfallCoef[dowy][0]*(snow_SAC[t-1] + snow_FEA[t-1] + snow_AME[t-1]) + snowfallCoef[dowy][1] #using regression for snow esitmate
-    forecastWYI_envr[t-1] = 0.3 * prevValue + 0.3 * (current_mar_oct + earlyflow_std[dowy]*zscore1 + earlyflow_mean[dowy]) + 0.4 *( current_apr_jul) #+ max(snowpackEstimate + snowfall_std[dowy]*zscore1 - current_apr_jul,0.0) ) #look more into this, why do we have zscores
-    forecastWYI_expt[t-1] = 0.3 * prevValue + 0.3 * (current_mar_oct + earlyflow_std[dowy]*zscore2 + earlyflow_mean[dowy]) + 0.4 *( current_apr_jul) #+ max(snowpackEstimate + snowfall_std[dowy]*zscore2 - current_apr_jul,0.0) )
+    forecastWYI_envr[t-1] = 0.3 * prevValue + 0.3 * (current_mar_oct + earlyflow_std[dowy]*zscore1 + earlyflow_mean[dowy]) + 0.4 *( current_apr_jul + max(snowpackEstimate + snowfall_std[dowy]*zscore1 - current_apr_jul,0.0) ) #look more into this, why do we have zscores
+    forecastWYI_expt[t-1] = 0.3 * prevValue + 0.3 * (current_mar_oct + earlyflow_std[dowy]*zscore2 + earlyflow_mean[dowy]) + 0.4 *( current_apr_jul + max(snowpackEstimate + snowfall_std[dowy]*zscore2 - current_apr_jul,0.0) )
   SRIforecast = forecastWYI_expt
   #self.shasta.SRIforecast = self.forecastWYI_expt
   #self.folsom.SRIforecast = self.forecastWYI_expt
   #self.oroville.SRIforecast = self.forecastWYI_expt
   forecastWYT = []
-  for x in range(0,num_days):
+  for x in range(1,num_days+1):
     if forecastWYI_envr[x-1] <= 5.4:
       forecastWYT.append("C")
     elif forecastWYI_envr[x-1] <= 6.5:
@@ -241,7 +240,7 @@ def find_running_WYI(df,zscore1, zscore2): #water year type was calculated in sc
 ############################################################################################################################################################
 
 
-df['WYT'] = pd.Series(find_running_WYI(df, 0, 0),index=df.index)
+df['WYT'] = pd.Series(find_running_WYI(df, 0,0),index=df.index)
 
 df['SHA_fci'] = rolling_fci(df['SHA_in_fix'], k=0.95, start=100000)
 df.SHA_fci.fillna(method='bfill', inplace=True)

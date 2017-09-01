@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from orca import *
 
-model = Model('orca/data/orca-data.csv', sd='10-01-1999')
+model = Model('orca/data/orca-data-HB.csv', sd='10-01-1999')
 results = model.simulate() # takes a while... save results
 results.to_csv('orca/data/results.csv')
 # results = pd.read_csv('orca/data/results.csv', index_col=0, parse_dates=True)
@@ -34,10 +34,10 @@ obs = [model.df['HRO_pump'],
        model.df['DeltaOut']]
 plotter.Rsquares(sim,obs)
 
-for f in ['D','W','M','AS-OCT']:
-  i = 0
-  for s,o in zip(sim,obs):
-    plotter.compare(s, o, freq=f)
-    plt.savefig('orca/figs/%s%d.png' % (f,i), dpi=150)
-    plt.close()
-    i += 1
+# for f in ['D','W','M','AS-OCT']:
+#   i = 0
+#   for s,o in zip(sim,obs):
+#     plotter.compare(s, o, freq=f)
+#     plt.savefig('orca/figs/%s%d.png' % (f,i), dpi=150)
+#     plt.close()
+#     i += 1
