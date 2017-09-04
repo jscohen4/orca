@@ -212,7 +212,7 @@ def find_running_WYI(df,zscore1, zscore2): #water year type was calculated in sc
     snowpackEstimate = snowfallCoef[dowy][0]*(snow_SAC[t-1] + snow_FEA[t-1] + snow_AME[t-1]) + snowfallCoef[dowy][1] #using regression for snow esitmate
     forecastWYI_envr[t-1] = 0.3 * prevValue + 0.3 * (current_mar_oct + earlyflow_std[dowy]*zscore1 + earlyflow_mean[dowy]) + 0.4 *( current_apr_jul + max(snowpackEstimate + snowfall_std[dowy]*zscore1 - current_apr_jul,0.0) ) #look more into this, why do we have zscores
     forecastWYI_expt[t-1] = 0.3 * prevValue + 0.3 * (current_mar_oct + earlyflow_std[dowy]*zscore2 + earlyflow_mean[dowy]) + 0.4 *( current_apr_jul + max(snowpackEstimate + snowfall_std[dowy]*zscore2 - current_apr_jul,0.0) )
-  SRIforecast = forecastWYI_expt
+  SRIforecast = forecastWYI_expt #sacramento river index
   #self.shasta.SRIforecast = self.forecastWYI_expt
   #self.folsom.SRIforecast = self.forecastWYI_expt
   #self.oroville.SRIforecast = self.forecastWYI_expt
@@ -228,7 +228,7 @@ def find_running_WYI(df,zscore1, zscore2): #water year type was calculated in sc
       forecastWYT.append("AN")
     else:
       forecastWYT.append("W")
-  return forecastWYT
+  return forecastWYT, SRIforecast
   #self.shasta.wyt = self.forecastWYT  
   #self.oroville.wyt = self.forecastWYT
   #self.folsom.wyt = self.forecastWYT
@@ -239,9 +239,8 @@ def find_running_WYI(df,zscore1, zscore2): #water year type was calculated in sc
 ############################################################################################################################################################
 ############################################################################################################################################################
 
-
-df['WYT'] = pd.Series(find_running_WYI(df, 0,0),index=df.index)
-
+df['WYT'] = pd.Series(find_running_WYI(df,0,0)[0],index=df.index) #wyt
+df['SRI'] = pd.Series(find_running_WYI(df,0,0)[1],index=df.index) #sacramento river index
 df['SHA_fci'] = rolling_fci(df['SHA_in_fix'], k=0.95, start=100000)
 df.SHA_fci.fillna(method='bfill', inplace=True)
 
