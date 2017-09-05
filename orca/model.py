@@ -10,7 +10,6 @@ class Model():
   def __init__(self, datafile, sd='10-01-1999'):
     self.df = pd.read_csv(datafile, index_col=0, parse_dates=True)
     self.T = len(self.df)
-
     self.shasta = Reservoir(self.df, 'SHA')
     self.folsom = Reservoir(self.df, 'FOL')
     self.oroville = Reservoir(self.df, 'ORO')
