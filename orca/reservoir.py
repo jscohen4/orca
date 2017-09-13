@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import json
-from .util import *
+from util import *
 
 
 class Reservoir():

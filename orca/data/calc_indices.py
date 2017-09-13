@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 from util import *
-
+import matplotlib.pyplot as plt
 sns.set_style('whitegrid')
 
 # calc WYT and 8RI. add columns to datafile from cdec_scraper.
@@ -134,7 +134,7 @@ def find_running_WYI(df,zscore1, zscore2): #water year type was calculated in sc
     m_array[t] = int(df.index.month[t])
     mowy_array[t] = water_month(m_array[t])
     y_array[t] = int(df.index.year[t])  
-  num_years = int(y_array[num_days-1] - y_array[0])
+  num_years = int(y_array[num_days-1] - y_array[0]) 
   jun_jul_fnf = np.zeros(num_years) #length of vector is latest year in dataset - earliest year (#of years). Maybe there's a more consise way to get this that will save simulation time
   oct_may_fnf = np.zeros(num_years)
   #remaining_flow = np.zeros((365,num_years)) #365 x number of years
@@ -149,7 +149,7 @@ def find_running_WYI(df,zscore1, zscore2): #water year type was calculated in sc
   monthly_snowpack = np.zeros((num_years,8)) #365 x number of years
   monthly_flow = np.zeros((num_years,10))
   current_year = 0
-  for t in range(1,num_days): 
+  for t in range(0,num_days): 
     dowy = int(dowy_array[t-1])
     mowy = int(mowy_array[t-1])
     daily_snow = snow_SAC[t-1] + snow_FEA[t-1] + snow_AME[t-1]
@@ -157,29 +157,47 @@ def find_running_WYI(df,zscore1, zscore2): #water year type was calculated in sc
     if dowy == 0: #try 0 if worse
       current_year += 1
     if mowy <= 7: #oct - may
-    	monthly_snowpack[current_year-1][mowy] += daily_snow
+    	monthly_snowpack[current_year-1][mowy-1] = daily_snow
     	monthly_flow[current_year-1][mowy] += daily_flow
     elif mowy <= 9:
     	monthly_flow[current_year-1][mowy] += daily_flow
- 
-  cum_snow = np.zeros((num_years,8))
-  for y in range(0, num_years):
+  cum_snow = np.zeros((num_years-1,8))
+  for y in range(0, num_years-1):
     for m in range(0, 7):
       cum_snow[y][m+1] = monthly_snowpack[y][m] + cum_snow[y][m]
 
-  oct_mar_remaining_flow = np.zeros((num_years,6))
-  for y in range(0,num_years):
+
+  oct_mar_remaining_flow = np.zeros((num_years-1,6))
+  for y in range(0,num_years-1):
     oct_mar_remaining_flow[y][0] = sum(monthly_flow[y][0:5])
     for m in range(1,6):
       oct_mar_remaining_flow[y][m] = oct_mar_remaining_flow[y][m-1] - monthly_flow[y][m-1]
 
-  apr_july_remaining_flow = np.zeros((num_years,4))
-  for y in range(0,num_years):
-    apr_july_remaining_flow[y][0] = sum(monthly_flow[y][6:9])
-    for m in range(1,4):
-      apr_july_remaining_flow[y][m] = apr_july_remaining_flow[y][m-1] - monthly_flow[y][m+5] 
+  apr_july_remaining_flow = np.zeros((num_years-1,8))
+  for y in range(0,num_years-1):
+    apr_july_remaining_flow[y][0] = sum(monthly_flow[y][5:8])
+    for m in range(1,6):
+    	apr_july_remaining_flow[y][m] = apr_july_remaining_flow[y][m-1] 
+    for m in range(6,8):
+      apr_july_remaining_flow[y][m] = apr_july_remaining_flow[y][m-1] - monthly_flow[y][m-1] 
 
-  print apr_july_remaining_flow
+  oct_mar_coefficients = np.zeros((2,4)) 
+  for r in range(1,5):
+  	coef = np.polyfit(cum_snow[:,r],oct_mar_remaining_flow[:,r],1) 
+  	oct_mar_coefficients[0,r-1] = coef[0]
+  	oct_mar_coefficients[1,r-1] = coef[1]
+
+  apr_july_coefficients = np.zeros((2,7))
+  for r in range(1,8):
+  	coef = np.polyfit(cum_snow[:,r],apr_july_remaining_flow[:,r],1)
+  	apr_july_coefficients[0,r-1] = coef[0]
+  	apr_july_coefficients[1,r-1] = coef[1]
+
+  oct_mar_flow_prediction = np.zeros((num_years-1,6)
+
+
+
+  	 
   # #this is where the regression comes in. 
   # snowfall_std = np.zeros(365)
   # earlyflow_std = np.zeros(365)
