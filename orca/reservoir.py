@@ -31,31 +31,30 @@ class Reservoir():
     self.tocs = np.zeros(T)
 
     #tocs rule variables
-    self.tocs = np.zeros(T)
-    self.tocs_storage_bounds = []
-    self.tocs_index_bounds = []
-    self.tocs_bounds = []
-    for i,v in enumerate(self.tocs_rule['index']):        
-      self.tocs_storage_bounds.append(np.zeros((366,2)))
-      self.tocs_index_bounds.append(np.zeros((366,2)))
-      self.tocs_bounds.append(np.zeros(366))
-      for day in range(0, 366): 
-        self.tocs_storage_bounds[i][day][1] = np.interp(day, self.tocs_rule['dowy'][i-1], self.tocs_rule['storage'][i-1])
-        self.tocs_storage_bounds[i][day][0] = np.interp(day, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
-        self.tocs_index_bounds[i][day][1] = self.tocs_rule['index'][i-1]
-        self.tocs_index_bounds[i][day][0] = self.tocs_rule['index'][i]
-        self.tocs_bounds[i][day] = np.interp(day, self.tocs_index_bounds[i][day], self.tocs_storage_bounds[i][day])
+    self.tocs_index = []
+     for i,v in enumerate(self.tocs_rule['index']):        
+        self.tocs_index.append(np.zeros(366))
+        for day in range(0, 366):  
+            self.tocs_index[i][day] = np.interp(day, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
 
     self.nodds = np.zeros(367)
     for i in range(0,366):  
-      self.nodds[i] = np.interp(i, first_of_month, self.nodd)
+        self.nodds[i] = np.interp(i, first_of_month, self.nodd)
+
+      # for day in range(0, 366): 
+        # self.tocs_storage_bounds[i][day][1] = np.interp(day, self.tocs_rule['dowy'][i-1], self.tocs_rule['storage'][i-1])
+        # self.tocs_storage_bounds[i][day][0] = np.interp(day, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
+        # self.tocs_index_bounds[i][day][1] = self.tocs_rule['index'][i-1]
+        # self.tocs_index_bounds[i][day][0] = self.tocs_rule['index'][i]
+        # self.tocs_bounds[i][day] = np.interp(day, self.tocs_index_bounds[i][day], self.tocs_storage_bounds[i][day])
 
 
-  def current_tocs(self,d,ix): #for flood control
+  def current_tocs(self, d, ix):
     for i,v in enumerate(self.tocs_rule['index']):
-      if ix > v:
-        break
-    return self.tocs_bounds[i][d]
+        if ix > v:
+            break
+    return self.tocs_index[i][d]
+
 
   
 
