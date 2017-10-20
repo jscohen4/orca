@@ -8,5 +8,3 @@ def water_day(d):
 
 def water_month(m):
   return m - 9 if m >= 9 else m + 3
-for m in range(1,12):
-	print water_month(m)

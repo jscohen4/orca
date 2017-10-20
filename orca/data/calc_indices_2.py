@@ -252,64 +252,79 @@ def get_forecast_WYI(df, zscore1, zscore2):
       WYI = np.NaN
     Qm.loc[index, 'WYI'] = WYI
   Qm.WYI = Qm.WYI.shift(periods=-1)
-################### plotting stats
-  fig, axes = plt.subplots(4,2) 
-  fig.subplots_adjust(hspace = 1)
-  month_val = []
-  titles = ['Oct','Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May']
-  month_ind = [10,11,12,1,2,3,4,5]
-  for ax, m, title in zip(axes.flat, month_ind, titles):
-    for index, row in Qm.iterrows():
-      ix = index.month
-      if ix == m: 
-        month_val.append(row['aprjul_cumulative'])
-    month_val.sort()
-    data_hist, bins = np.histogram(month_val)
-    (mu, sigma) = sp.norm.fit(month_val)
-    mean = np.mean(month_val)
-    median = np.median(month_val)
-    ax.set_title(title)
-    pdf = sp.norm.pdf(month_val, mu, sigma)
-    shape, loc, scale = sp.lognorm.fit(month_val)
-    logpdf = sp.lognorm.pdf(month_val, shape, loc, scale)
-    ax.plot(month_val,pdf)
-    ax.plot(month_val,logpdf, 'r--')
-    #ax.hist(month_val, edgecolor='black', linewidth=1.2, normed = 0)
-    ax.hist(month_val, edgecolor='black', linewidth=1.2, normed = 1, bins = 14)#, bins = 10)
-    ax.axvline(mean, color = 'm')
-    ax.axvline(median, color = 'y')
 
-    month_val = []
-    #################plotting wyi timeseries
+# ################### plotting stats
+#   fig, axes = plt.subplots(4,2) 
+#   fig.subplots_adjust(hspace = 1)
+#   month_val = []
+#   titles = ['Oct','Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May']
+#   month_ind = [10,11,12,1,2,3,4,5]
+#   for ax, m, title in zip(axes.flat, month_ind, titles):
+#     for index, row in Qm.iterrows():
+#       ix = index.month
+#       if ix == m: 
+#         month_val.append(row['aprjul_cumulative'])
+#     month_val.sort()
+#     data_hist, bins = np.histogram(month_val)
+#     (mu, sigma) = sp.norm.fit(month_val)
+#     mean = np.mean(month_val)
+#     median = np.median(month_val)
+#     ax.set_title(title)
+#     pdf = sp.norm.pdf(month_val, mu, sigma)
+#     shape, loc, scale = sp.lognorm.fit(month_val)
+#     logpdf = sp.lognorm.pdf(month_val, shape, loc, scale)
+#     ax.plot(month_val,pdf)
+#     ax.plot(month_val,logpdf, 'r--')
+#     #ax.hist(month_val, edgecolor='black', linewidth=1.2, normed = 0)
+#     ax.hist(month_val, edgecolor='black', linewidth=1.2, normed = 1, bins = 14)#, bins = 10)
+#     ax.axvline(mean, color = 'm')
+#     ax.axvline(median, color = 'y')
 
-  plt.figure()
-  Qm['Sac_WYT'] = Qm.WYI.apply(WYI_to_WYT,
-                               thresholds=[9.2, 7.8, 6.5, 5.4, 0.0], 
-                               values=['W', 'AN', 'BN', 'D', 'C'])
-  b120_wyi = pd.read_csv('wyi_data.csv', index_col=0, parse_dates=True)
-  print b120_wyi
-  Qm = Qm.join(b120_wyi.loc[:,['50%']])
-  #print b120_wyi
-  #print(Qm.to_string())
-  plt.axhline(9.2, color = 'g', label = 'Water Year Type Thresholds')
-  plt.axhline(7.8, color = 'g')
-  plt.axhline(6.5, color = 'g')
-  plt.axhline(5.4, color = 'g')
-  plt.plot(Qm['WYI'], 'b', label = 'Simulated Forecasts')#.plot()
-  plt.plot(Qm['50%'], 'r', label = 'Historical Forecasts')#.plot() 
-  plt.title('Sacramento Valley Water Year Type Index Forecasting',size = 18)
-  plt.xlabel('Date',size=16)
-  plt.ylabel('Water Year Type Index (million acre-ft)',size=16)
-  plt.legend(frameon=True,fontsize = 12)
-  df = df.join(Qm.loc[:,['WYI','Sac_WYT']])
-  df = df.fillna(method = 'bfill')
-  print Qm
+#     month_val = []
+#     #################plotting wyi timeseries
+
+#   plt.figure()
+#   Qm['Sac_WYT'] = Qm.WYI.apply(WYI_to_WYT,
+#                                thresholds=[9.2, 7.8, 6.5, 5.4, 0.0], 
+#                                values=['W', 'AN', 'BN', 'D', 'C'])
+#   b120_wyi = pd.read_csv('wyi_data.csv', index_col=0, parse_dates=True)
+#   print b120_wyi
+#   Qm = Qm.join(b120_wyi.loc[:,['50%']])
+#   #print b120_wyi
+#   #print(Qm.to_string())
+#   plt.axhline(9.2, color = 'g', label = 'Water Year Type Thresholds')
+#   plt.axhline(7.8, color = 'g')
+#   plt.axhline(6.5, color = 'g')
+#   plt.axhline(5.4, color = 'g')
+#   plt.plot(Qm['WYI'], 'b', label = 'Simulated Forecasts')#.plot()
+#   plt.plot(Qm['50%'], 'r', label = 'Historical Forecasts')#.plot() 
+#   plt.title('Sacramento Valley Water Year Type Index Forecasting',size = 18)
+#   plt.xlabel('Date',size=16)
+#   plt.ylabel('Water Year Type Index (million acre-ft)',size=16)
+#   plt.legend(frameon=True,fontsize = 12)
+#   df = df.join(Qm.loc[:,['WYI','Sac_WYT']])
+#   df = df.fillna(method = 'bfill')
+#   print Qm
 
 
-  #plt.plot(Qm['WYI'])
+#   #plt.plot(Qm['WYI'])
   
   plt.show()
+  df.to_csv('orca-data-HB.csv')
 get_forecast_WYI(df,0,0) #wyt
+
+def res_release_regression(df1, df2, zscore1, zscore2): 
+    res_ids = ['ORO','SHA','FOL']
+    for r in res_ids: 
+      cum_snow = df2['%s_cdf_snow'% r].values##cumulative yearly snowpack on each dayin data set
+      daily_inflow = df2['%s_cdf_inf'% r].values##cumulative oct-mar inflow (Based on how the data look, I'm inclined to think this is daily inflow- it matches that data in the master branch)
+
+    ##this function is used to make forecasts when calculating available storage for export releases from reservoir
+    ##using data from 1996 to 2016 (b/c data is available for all inputs needed), calculate total flows in oct-mar period and apr-jul period
+    ##based on linear regression w/snowpack (apr-jul) and w/inflow (oct-mar)
+    ##this function is called before simulation loop, and the linear regression coefficient & standard deviation of linear regresion residuals
+    ##is used in the find_available_storage function
+    ## data used is from release-cdf-data.csv
 
 ############################################################################################################################################################
 ############################################################################################################################################################
