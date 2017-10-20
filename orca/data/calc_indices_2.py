@@ -252,7 +252,33 @@ def get_forecast_WYI(df, zscore1, zscore2):
       WYI = np.NaN
     Qm.loc[index, 'WYI'] = WYI
   Qm.WYI = Qm.WYI.shift(periods=-1)
+  # Qm = Qm.drop(['aprjul_slope',
+  #         'aprjul_intercept', 
+  #         'aprjul_mean',
+  #         'aprjul_std', 
+  #         'octmar_mean',
+  #         'octmar_std', 
+  #         'octmar_intercept', 
+  #         'octmar_slope',
+  #         'aprjul_slope',
+  #         'aprjul_intercept', 
+  #         'aprjul_mean',
+  #         'aprjul_std', 
+  #         'octmar_mean',
+  #         'octmar_std', 
+  #         'octmar_intercept', 
+  #         'octmar_slope',
+  #         'octmar_cumulative',
+  #         'aprjul_cumulative',
+  #         'octmar_flow_to_date',
+  #         'aprjul_flow_to_date'], axis=1) 
+  Qm['SV_WYT'] = Qm.WYI.apply(WYI_to_WYT,
+                               thresholds=[9.2, 7.8, 6.5, 5.4, 0.0], 
+                               values=['W', 'AN', 'BN', 'D', 'C'])
+  Qm = Qm.fillna(method = 'ffill')
+  df = df.join(Qm.loc[:,['WYI','Sac_WYT']])
 
+  #print Qm
 # ################### plotting stats
 #   fig, axes = plt.subplots(4,2) 
 #   fig.subplots_adjust(hspace = 1)
@@ -302,7 +328,6 @@ def get_forecast_WYI(df, zscore1, zscore2):
 #   plt.xlabel('Date',size=16)
 #   plt.ylabel('Water Year Type Index (million acre-ft)',size=16)
 #   plt.legend(frameon=True,fontsize = 12)
-#   df = df.join(Qm.loc[:,['WYI','Sac_WYT']])
 #   df = df.fillna(method = 'bfill')
 #   print Qm
 
@@ -314,11 +339,11 @@ def get_forecast_WYI(df, zscore1, zscore2):
 get_forecast_WYI(df,0,0) #wyt
 
 def res_release_regression(df1, df2, zscore1, zscore2): 
-    res_ids = ['ORO','SHA','FOL']
-    for r in res_ids: 
-      cum_snow = df2['%s_cdf_snow'% r].values##cumulative yearly snowpack on each dayin data set
-      daily_inflow = df2['%s_cdf_inf'% r].values##cumulative oct-mar inflow (Based on how the data look, I'm inclined to think this is daily inflow- it matches that data in the master branch)
-
+  res_ids = ['ORO','SHA','FOL']
+  for r in res_ids: 
+    cum_snow = df2['%s_cdf_snow'% r].values##cumulative yearly snowpack on each dayin data set
+    daily_inflow = df2['%s_cdf_inf'% r].values##cumulative oct-mar inflow (Based on how the data look, I'm inclined to think this is daily inflow- it matches that data in the master branch) 
+    
     ##this function is used to make forecasts when calculating available storage for export releases from reservoir
     ##using data from 1996 to 2016 (b/c data is available for all inputs needed), calculate total flows in oct-mar period and apr-jul period
     ##based on linear regression w/snowpack (apr-jul) and w/inflow (oct-mar)
