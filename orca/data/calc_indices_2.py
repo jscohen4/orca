@@ -13,6 +13,7 @@ sns.set_style('whitegrid')
 # confirm against http://cdec.water.ca.gov/cgi-progs/iodir/WSIHIST
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 water_year = lambda d: d.year+1 if d.dayofyear >= 274 else d.year
+water_year_day = lambda d: d.dayofyear - 274 if d.dayofyear >= 274 else d.dayofyear + 91 
 winter = lambda y: (y.index.month >= 10) | (y.index.month <= 3)
 summer = lambda y: (y.index.month >= 4) & (y.index.month <= 7)
 SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
@@ -20,9 +21,10 @@ SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf']
 
 # don't change this data
 df = pd.read_csv('orca-data-HB.csv', index_col=0, parse_dates=True)
-
+df2 = pd.read_csv('orca-release-cdf-data.csv', index_col=0, parse_dates=True)
 df['WY'] = pd.Series([water_year(d) for d in df.index], index=df.index)
-
+df2['WY'] = pd.Series([water_year(d) for d in df2.index], index=df2.index)
+df2['DOWY'] = pd.Series([water_year_day(d) for d in df2.index], index=df2.index)
 # estimate delta inflow from this (ignores GCD and direct precip)
 # df.drop(['DeltaIn', 'netgains'], axis=1, inplace=True)
 df['DeltaIn'] = df['DeltaOut'] + df['HRO_pump'] + df['TRP_pump']
@@ -34,6 +36,7 @@ df.netgains.fillna(method='bfill', inplace=True)
 
 def water_month(m):
   return m - 9 if m >= 9 else m + 3
+
 
 def WYI_to_WYT(WYI, thresholds, values):
   for t,v in zip(thresholds,values):
@@ -115,7 +118,35 @@ def rolling_fci(inflow, k, start):
 ############################################################################################################################################################
 ############################################################################################################################################################
 
+def octmar_cumulative(x):
+  ix = (x.index.month >= 10) | (x.index.month <= 3)
+  octmar = (x[ix]. sum() - x[ix].cumsum())
+  ix = (x.index.month >= 4) & (x.index.month <= 7)
+  x[ix] = octmar[5]
+  aprjul = x[ix]
+  return pd.concat([octmar,aprjul])
 
+def aprjul_cumulative(x):
+  ix = (x.index.month >= 4) & (x.index.month <= 7)
+  aprjul = (x[ix].sum() - x[ix].cumsum())
+  ix = (x.index.month >= 10) | (x.index.month <= 3)
+  x[ix] = aprjul[0]
+  octmar = x[ix]
+  return pd.concat([octmar,aprjul]) 
+
+def octmar_flow_to_date(x):
+  ix = (x.index.month >= 10) | (x.index.month <= 3)
+  octmar = x[ix].cumsum()
+  ix = (x.index.month >= 4) & (x.index.month <= 7)
+  x[ix] = octmar[5]
+  aprjul =  x[ix]
+  return pd.concat([octmar,aprjul])
+  
+
+def aprjul_flow_to_date(x):
+  ix = (x.index.month >= 4) & (x.index.month <= 7)
+  aprjul =  x[ix].cumsum()
+  return pd.concat([aprjul])
 
 def get_forecast_WYI(df, zscore1, zscore2): 
   flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
@@ -129,35 +160,6 @@ def get_forecast_WYI(df, zscore1, zscore2):
 
   Qm['snow'] = df[snow_sites].sum(axis=1).resample('M').first()
 
-  def octmar_cumulative(x):
-    ix = (x.index.month >= 10) | (x.index.month <= 3)
-    octmar = (x[ix]. sum() - x[ix].cumsum())
-    ix = (x.index.month >= 4) & (x.index.month <= 7)
-    x[ix] = octmar[5]
-    aprjul = x[ix]
-    return pd.concat([octmar,aprjul])
-
-  def aprjul_cumulative(x):
-    ix = (x.index.month >= 4) & (x.index.month <= 7)
-    aprjul = (x[ix].sum() - x[ix].cumsum())
-    ix = (x.index.month >= 10) | (x.index.month <= 3)
-    x[ix] = aprjul[0]
-    octmar = x[ix]
-    return pd.concat([octmar,aprjul]) 
-
-  def octmar_flow_to_date(x):
-    ix = (x.index.month >= 10) | (x.index.month <= 3)
-    octmar = x[ix].cumsum()
-    ix = (x.index.month >= 4) & (x.index.month <= 7)
-    x[ix] = octmar[5]
-    aprjul =  x[ix]
-    return pd.concat([octmar,aprjul])
-  
-
-  def aprjul_flow_to_date(x):
-    ix = (x.index.month >= 4) & (x.index.month <= 7)
-    aprjul =  x[ix].cumsum()
-    return pd.concat([aprjul])
 
   # def octmar_tot_period_flow(x):
   #   ix = (x.index.month >= 10) | (x.index.month <= 3)
@@ -203,7 +205,7 @@ def get_forecast_WYI(df, zscore1, zscore2):
     aprjul_means[m-1] = np.mean(Qm.aprjul_cumulative[ix]) 
     aprjul_stds[m-1] =  np.std(Qm.aprjul_cumulative[ix])
     
-    flow_coeffs = np.polyfit(Qm.octmar_flow_to_date[oct_index], Qm.octmar_cumulative[ix], 1)
+    flow_coeffs = np.polyfit(Qm.octmar_flow_to_date[ix], Qm.octmar_cumulative[ix], 1)
     octmar_slopes[m-1] = flow_coeffs[0]
     octmar_intercepts[m-1] = flow_coeffs[1]
     octmar_means[m-1] = np.mean(Qm.octmar_cumulative[ix])
@@ -276,7 +278,15 @@ def get_forecast_WYI(df, zscore1, zscore2):
                                thresholds=[9.2, 7.8, 6.5, 5.4, 0.0], 
                                values=['W', 'AN', 'BN', 'D', 'C'])
   Qm = Qm.fillna(method = 'ffill')
-  df = df.join(Qm.loc[:,['WYI','Sac_WYT']])
+  #df['WYI','Sac_WYT'] = pd.Series(Qm['WYI','Sac_WYT'])
+  DWY = Qm[['WYI','SV_WYT']]
+
+
+  #df = df.join(DWY,how='right',rsuffix = '_new')
+  #print df
+  # df = df.fillna(method = 'bfill')
+
+ # print df
 
   #print Qm
 # ################### plotting stats
@@ -333,18 +343,175 @@ def get_forecast_WYI(df, zscore1, zscore2):
 
 
 #   #plt.plot(Qm['WYI'])
-  
-  plt.show()
-  df.to_csv('orca-data-HB.csv')
+  #df = df.join(DWY.loc[:,['WYI','SV_WYT']],how='right',rsuffix = '_new')
+  #df = 
+  #df = df.fillna(method = 'bfill')
+  df =  pd.concat([df, DWY], axis=1, join_axes=[df.index])
+
+  df[['WYI','WYI','SV_WYT']] = df[['WYI','SV_WYT']].fillna(method = 'bfill')
+  #plt.show()
+  df.to_csv('orca-data-HB-wyi-generate.csv')
 get_forecast_WYI(df,0,0) #wyt
 
-def res_release_regression(df1, df2, zscore1, zscore2): 
-  res_ids = ['ORO','SHA','FOL']
-  for r in res_ids: 
-    cum_snow = df2['%s_cdf_snow'% r].values##cumulative yearly snowpack on each dayin data set
-    daily_inflow = df2['%s_cdf_inf'% r].values##cumulative oct-mar inflow (Based on how the data look, I'm inclined to think this is daily inflow- it matches that data in the master branch) 
+
+
+def res_snow_inflow_regression(df1, df2, zscore1, zscore2): 
+  snow_cdfs = ['ORO_cdf_snow', 'SHA_cdf_snow', 'FOL_cdf_snow']
+  res_ids = ['SHA','ORO','FOL']
+  ORO_inf = (df2['ORO_cdf_inf'].to_frame(name='inf') * cfsd_mafd)
+  SHA_inf = (df2['SHA_cdf_inf'].to_frame(name='inf') * cfsd_mafd)
+  FOL_inf = (df2['FOL_cdf_inf'].to_frame(name='inf') * cfsd_mafd)
+
+  ORO_inf['snow_cdf'] = df2.ORO_cdf_snow
+  SHA_inf['snow_cdf'] = df2.SHA_cdf_snow
+  FOL_inf['snow_cdf'] = df2.FOL_cdf_snow
+
+  res_frames = [SHA_inf,ORO_inf,FOL_inf]
+
+  def octmar_flow_to_date(x):
+    ix = (x.index.month >= 10) | (x.index.month <= 3)
+    octmar = x[ix].cumsum()
+    ix = (x.index.month >= 4) & (x.index.month <= 9)
+    x[ix] = np.NaN #octmar[181]
+    aprjul = x[ix] 
+    return pd.concat([octmar,aprjul])
+  
+
+  def aprjul_flow_to_date(x):
+    ix = (x.index.month >= 10) | (x.index.month <= 3)
+    x[ix] = 0
+    octmar = x[ix]
+    ix = (x.index.month >= 4) & (x.index.month <= 7)
+    aprjul =  x[ix].cumsum()
+    ix = (x.index.month == 8) | (x.index.month == 9)
+    x[ix] = np.NaN
+    augsept = x[ix]
+    return pd.concat([octmar,aprjul,augsept])
+
+
+  for r,snow,res_id in zip(res_frames,snow_cdfs,res_ids):
     
-    ##this function is used to make forecasts when calculating available storage for export releases from reservoir
+    r['WY'] = df2.WY
+    r['DOWY'] = df2.DOWY
+    r['snow_cfd'] = df2[snow]
+    r = r[r.WY != r.WY[-1]] 
+
+    # r['octmar_cumulative'] = (r.groupby('WY').inf
+    #                           .apply(octmar_cumulative)
+    #                           .reset_index(level=0)
+    #                           .drop('WY', axis=1))     
+    
+    # r['aprjul_cumulative'] = (r.groupby('WY').inf
+    #                            .apply(aprjul_cumulative)
+    #                            .reset_index(level=0).drop('WY', axis=1))
+
+    r['octmar_flow_to_date'] = (r.groupby('WY').inf
+                               .apply(octmar_flow_to_date)
+                               .reset_index(level=0).drop('WY', axis=1))
+
+    r['aprjul_flow_to_date'] = (r.groupby('WY').inf
+                               .apply(aprjul_flow_to_date)
+                               .reset_index(level=0).drop('WY', axis=1)) 
+    #print r
+    r.octmar_flow_to_date.fillna(method='ffill', inplace=True)
+    r.aprjul_flow_to_date.fillna(method='ffill', inplace=True)
+    #print(r.to_string())
+
+    aprjul_slopes = np.zeros(365)
+    aprjul_intercepts = np.zeros(365)
+    aprjul_means = np.zeros(365)
+    aprjul_stds = np.zeros(365)
+    octmar_means = np.zeros(365)
+    octmar_stds = np.zeros(365)
+    octmar_slopes = np.zeros(365)
+    octmar_intercepts = np.zeros(365)
+
+    for d in range(1,182): # calendar months
+      #oct_index = (r.index.month == 10)
+      ix = (r.DOWY == d-1)
+      coeffs = np.polyfit(r.snow_cdf[ix],r.octmar_flow_to_date[ix],1)
+      octmar_slopes[d-1] = coeffs[0]
+      octmar_intercepts[d-1] = coeffs[1]
+      octmar_means[d-1] = np.mean(r.octmar_flow_to_date[ix])
+      octmar_stds[d-1] = np.std(r.octmar_flow_to_date[ix])
+    
+    for d in range(1,366):
+      ix = (r.DOWY == d-1)
+      coeffs = np.polyfit(r.snow_cdf[ix],r.aprjul_flow_to_date[ix],1)
+      aprjul_slopes[d-1] = coeffs[0]
+      aprjul_intercepts[d-1] = coeffs[1]
+      aprjul_means[d-1] = np.mean(r.aprjul_flow_to_date[ix]) 
+      aprjul_stds[d-1] = np.std(r.aprjul_flow_to_date[ix])
+    
+    stats =  {'%s_aprjul_slope'%res_id: aprjul_slopes,
+                      '%s_aprjul_intercept'%res_id: aprjul_intercepts, 
+                      '%s_aprjul_mean'%res_id: aprjul_means,
+                      '%s_aprjul_std'%res_id:  aprjul_stds, 
+                      '%s_octmar_mean'%res_id: octmar_means,
+                      '%s_octmar_std'%res_id:  octmar_stds, 
+                      '%s_octmar_intercept'%res_id: octmar_intercepts, 
+                      '%s_octmar_slope'%res_id: octmar_slopes}
+
+    stats = pd.DataFrame(stats, columns = ['%s_aprjul_slope'%res_id,
+                      '%s_aprjul_intercept'%res_id, 
+                      '%s_aprjul_mean'%res_id,
+                      '%s_aprjul_std'%res_id, 
+                      '%s_octmar_mean'%res_id,
+                      '%s_octmar_std'%res_id, 
+                      '%s_octmar_intercept'%res_id, 
+                      '%s_octmar_slope'%res_id])
+
+    for s in stats: 
+      r[s] = pd.Series(index=r.index)
+      for d in range(1,366):
+        r.loc[r.DOWY==d-1, s] = stats[s][d-1]
+    r.rename(columns = {'aprjul_flow_to_date':'%s_aprjul_flow_to_date'%res_id,'octmar_flow_to_date':'%s_octmar_flow_to_date'%res_id}, inplace=True)
+    r.drop(['inf','snow_cdf','WY','DOWY','snow_cfd'], axis=1, inplace=True)
+    df2 =  pd.concat([df2, r], axis=1, join_axes=[df2.index])
+  df2.to_csv('orca-data-cdf-generated.csv')
+
+res_snow_inflow_regression(df, df2,0 , 0)
+
+    #inf_snow.groupby(inf_snow.index.dayofyear).cumsum()
+
+  #       .to_frame(name='flow') * cfsd_mafd)
+          
+  # Qm = (df[flow_sites].sum(axis=1)
+  #       .resample('M').sum()
+  #       .to_frame(name='flow') * cfsd_mafd)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #cum_snow = df2['%s_cdf_snow'% r].values##cumulative yearly snowpack on each dayin data set
+    #daily_inflow = df2['%s_cdf_inf'% r].values##cumulative oct-mar inflow (Based on how the data look, I'm inclined to think this is daily inflow- it matches that data in the master branch) 
+    #res_data.append(cum_snow)
+    #res_data.append(daily_inflow)
+  # print res_data
+  # inf_snow = (df2[res_data])#.sum(axis=1)
+# for r in res_ids: 
+
+        # .resample('M').sum()
+        # .to_frame(name='flow') * cfsd_mafd)
+    # Qm['%s_cdf_snow'% r] = cum_snow
+    # Qm['%s_cdf_inf'% r] = daily_inflow
+
+
+#res_snow_inflow_regression(df,df2,0,0)
+  # Qm = (df2[flow_sites].sum(axis=1)
+  #       .resample('M').sum()
+  #       .to_frame(name='flow') * cfsd_mafd)
+  #   ##this function is used to make forecasts when calculating available storage for export releases from reservoir
     ##using data from 1996 to 2016 (b/c data is available for all inputs needed), calculate total flows in oct-mar period and apr-jul period
     ##based on linear regression w/snowpack (apr-jul) and w/inflow (oct-mar)
     ##this function is called before simulation loop, and the linear regression coefficient & standard deviation of linear regresion residuals
