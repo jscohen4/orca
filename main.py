@@ -2,7 +2,6 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from orca import *
-
 model = Model('orca/data/simulation_data.csv', sd='10-01-1999')
 results = model.simulate() # takes a while... save results
 results.to_csv('orca/data/results.csv')

@@ -17,7 +17,7 @@ class Model():
     self.delta = Delta(self.df, 'DEL')
     self.dayofyear = self.df.index.dayofyear
     self.month = self.df.index.month    
-    self.wyt = self.df.WYT
+    self.wyt = self.df.SV_WYT
 
   def simulate(self):
     self.sumnodds = np.zeros(367)
