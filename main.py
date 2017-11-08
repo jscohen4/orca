@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from orca import *
 
-model = Model('orca/data/orca-data-HB.csv', sd='10-01-1999')
+model = Model('orca/data/simulation_data.csv', sd='10-01-1999')
 results = model.simulate() # takes a while... save results
 results.to_csv('orca/data/results.csv')
 # results = pd.read_csv('orca/data/results.csv', index_col=0, parse_dates=True)
