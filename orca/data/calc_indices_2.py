@@ -351,7 +351,7 @@ def get_forecast_WYI(df, zscore1, zscore2):
   df[['WYI','WYI','SV_WYT']] = df[['WYI','SV_WYT']].fillna(method = 'bfill')
   #plt.show()
   df.to_csv('orca-data-HB-wyi-generate.csv')
-get_forecast_WYI(df,0,0) #wyt
+#get_forecast_WYI(df,0,0) #wyt
 
 
 
@@ -470,21 +470,178 @@ def res_snow_inflow_regression(df1, df2, zscore1, zscore2):
     df2 =  pd.concat([df2, r], axis=1, join_axes=[df2.index])
   df2.to_csv('orca-data-cdf-generated.csv')
 
-res_snow_inflow_regression(df, df2,0 , 0)
 
+
+def res_snow_inflow_regression_2(df1, df2, zscore1, zscore2): 
+  snow_cdfs = ['ORO_cdf_snow', 'SHA_cdf_snow', 'FOL_cdf_snow']
+  res_ids = ['SHA','ORO','FOL']
+  ORO_inf = (df2['ORO_cdf_inf'].to_frame(name='inf') * cfsd_mafd)
+  SHA_inf = (df2['SHA_cdf_inf'].to_frame(name='inf') * cfsd_mafd)
+  FOL_inf = (df2['FOL_cdf_inf'].to_frame(name='inf') * cfsd_mafd)
+
+  ORO_inf['snow_cdf'] = df2.ORO_cdf_snow
+  SHA_inf['snow_cdf'] = df2.SHA_cdf_snow
+  FOL_inf['snow_cdf'] = df2.FOL_cdf_snow
+
+  res_frames = [SHA_inf,ORO_inf,FOL_inf]
+
+  def flow_to_date(x):
+    ix = (x.index.month >= 1) 
+    cum_flow = x[ix].cumsum()
+    return cum_flow
+
+  def rem_flow(x):
+    ix = (x.index.month >= 1)
+    remaining_flow = (x[ix].sum() - x[ix].cumsum())
+    return remaining_flow
+
+
+  for r,snow,res_id in zip(res_frames,snow_cdfs,res_ids):
+    
+    r['WY'] = df2.WY
+    r['DOWY'] = df2.DOWY
+    r['snow_cfd'] = df2[snow]
+    r = r[r.WY != r.WY[-1]]
+
+    r['cum_flow_to_date'] = (r.groupby('WY').inf
+                               .apply(flow_to_date))
+    r['remaining_flow'] = (r.groupby('WY').inf
+                                .apply(rem_flow))
+    r.cum_flow_to_date.fillna(method='ffill', inplace=True)
+    slopes = np.zeros(365)
+    intercepts = np.zeros(365)
+    means = np.zeros(365)
+    stds = np.zeros(365)
+
+    # for d in range(1,182): # calendar months
+    #   #oct_index = (r.index.month == 10)
+    #   ix = (r.DOWY == d-1)
+    #   coeffs = np.polyfit(r.snow_cdf[ix],r.octmar_flow_to_date[ix],1)
+    #   octmar_slopes[d-1] = coeffs[0]
+    #   octmar_intercepts[d-1] = coeffs[1]
+    #   octmar_means[d-1] = np.mean(r.octmar_flow_to_date[ix])
+    #   octmar_stds[d-1] = np.std(r.octmar_flow_to_date[ix])
+    
+    for d in range(1,366):
+      ix = (r.DOWY == d-1)
+      coeffs = np.polyfit(r.snow_cdf[ix],r.remaining_flow[ix],1)
+      slopes[d-1] = coeffs[0]
+      intercepts[d-1] = coeffs[1]
+      means[d-1] = np.mean(r.remaining_flow[ix]) 
+      stds[d-1] = np.std(r.remaining_flow[ix])
+    
+    stats =  {'%s_slope'%res_id: slopes,
+                      '%s_intercept'%res_id: intercepts, 
+                      '%s_mean'%res_id: means,
+                      '%s_std'%res_id:  stds}
+
+
+    stats = pd.DataFrame(stats, columns = ['%s_slope'%res_id,
+                      '%s_intercept'%res_id, 
+                      '%s_mean'%res_id,
+                      '%s_std'%res_id]) 
+
+    for s in stats: 
+      r[s] = pd.Series(index=r.index)
+      for d in range(1,366):
+        r.loc[r.DOWY==d-1, s] = stats[s][d-1]
+    r.rename(columns = {'flow_to_date':'%sflow_to_date'%res_id}, inplace=True)
+    r.drop(['inf','snow_cdf','WY','DOWY','snow_cfd'], axis=1, inplace=True)
+    df2 =  pd.concat([df2, r], axis=1, join_axes=[df2.index])
+  df2.to_csv('orca-data-cdf-generated-new.csv')
+
+res_snow_inflow_regression_2(df, df2,0 , 0)
     #inf_snow.groupby(inf_snow.index.dayofyear).cumsum()
 
+def res_snow_inflow_regression_3(df1, df2, zscore1, zscore2): 
+  snow_cdfs = ['ORO_cdf_snow', 'SHA_cdf_snow', 'FOL_cdf_snow']
+  res_ids = ['SHA','ORO','FOL']
+  ORO_inf = (df2['ORO_cdf_inf'].resample('M').sum().to_frame(name='inf') * cfsd_mafd)
+  SHA_inf = (df2['SHA_cdf_inf'].resample('M').sum().to_frame(name='inf') * cfsd_mafd)
+  FOL_inf = (df2['FOL_cdf_inf'].resample('M').sum().to_frame(name='inf') * cfsd_mafd)
+  ORO_inf['snow_cdf'] = df2.ORO_cdf_snow
+  SHA_inf['snow_cdf'] = df2.SHA_cdf_snow
+  FOL_inf['snow_cdf'] = df2.FOL_cdf_snow
+
+  res_frames = [SHA_inf,ORO_inf,FOL_inf]
+
+  def flow_to_date(x):
+    ix = (x.index.month >= 1) 
+    cum_flow = x[ix].cumsum()
+
+    return cum_flow
+  
+
+
+
+  for r,snow,res_id in zip(res_frames,snow_cdfs,res_ids):
+    
+    r['WY'] = df2.WY
+    r['DOWY'] = df2.DOWY
+    r['snow_cfd'] = df2[snow]
+    r = r[r.WY != r.WY[-1]] 
+
+    r['cum_flow_to_date'] = (r.groupby('WY').inf
+                               .apply(flow_to_date))
+
+    r.cum_flow_to_date.fillna(method='ffill', inplace=True)
+
+    slopes = np.zeros(12)
+    intercepts = np.zeros(12)
+    means = np.zeros(12)
+    stds = np.zeros(12)
+
+    # for d in range(1,182): # calendar months
+    #   #oct_index = (r.index.month == 10)
+    #   ix = (r.DOWY == d-1)
+    #   coeffs = np.polyfit(r.snow_cdf[ix],r.octmar_flow_to_date[ix],1)
+    #   octmar_slopes[d-1] = coeffs[0]
+    #   octmar_intercepts[d-1] = coeffs[1]
+    #   octmar_means[d-1] = np.mean(r.octmar_flow_to_date[ix])
+    #   octmar_stds[d-1] = np.std(r.octmar_flow_to_date[ix])
+    
+    for m in range(1,13):
+      ix = (r.index.month == m)
+      coeffs = np.polyfit(r.snow_cdf[ix],r.cum_flow_to_date[ix],1)
+      slopes[m-1] = coeffs[0]
+      intercepts[m-1] = coeffs[1]
+      means[m-1] = np.mean(r.cum_flow_to_date[ix]) 
+      stds[m-1] = np.std(r.cum_flow_to_date[ix])
+    
+    stats =  {'%s_slope'%res_id: slopes,
+                      '%s_intercept'%res_id: intercepts, 
+                      '%s_mean'%res_id: means,
+                      '%s_std'%res_id:  stds}
+
+
+    stats = pd.DataFrame(stats, columns = ['%s_slope'%res_id,
+                      '%s_intercept'%res_id, 
+                      '%s_mean'%res_id,
+                      '%s_std'%res_id]) 
+
+    for s in stats: 
+      r[s] = pd.Series(index=r.index)
+      for m in range(2,14):
+        r.loc[r.index.month==m-1, s] = stats[s][m-2]
+    r.rename(columns = {'flow_to_date':'%sflow_to_date'%res_id}, inplace=True)
+    r.drop(['inf','snow_cdf','WY','DOWY','snow_cfd'], axis=1, inplace=True)
+    df2 =  pd.concat([df2, r], axis=1, join_axes=[df2.index])
+    df2[['%s_slope'%res_id,
+                      '%s_intercept'%res_id, 
+                      '%s_mean'%res_id,
+                      '%s_std'%res_id]] = df2[['%s_slope'%res_id,
+                      '%s_intercept'%res_id, 
+                      '%s_mean'%res_id,
+                      '%s_std'%res_id]].fillna(method = 'ffill')
+
+  df2.to_csv('orca-data-cdf-generated-monthly3.csv')
+
+# res_snow_inflow_regression_3(df, df2,0 , 0)
   #       .to_frame(name='flow') * cfsd_mafd)
           
   # Qm = (df[flow_sites].sum(axis=1)
   #       .resample('M').sum()
   #       .to_frame(name='flow') * cfsd_mafd)
-
-
-
-
-
-
 
 
 
