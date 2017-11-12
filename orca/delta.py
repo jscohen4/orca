@@ -11,7 +11,7 @@ class Delta():
     self.dayofyear = df.index.dayofyear
     self.month = df.index.month
     self.key = key
-    self.wyt = df.SR_WYT
+    self.wyt = df.SV_WYT
     self.netgains = df.netgains * cfs_tafd
 
     for k,v in json.load(open('orca/data/Delta_properties.json')).items():
@@ -154,7 +154,8 @@ class Delta():
         Banks = self.maxTotPump*0.45
         Tracy= self.maxTotPump*0.55
     return Tracy, Banks
-  def step(self, t, cvp_flows, swp_flows): #going to hold off on this alone until we discuss delta rules
+
+  def step(self, t, d, m, wyt, dowy, cvp_flows, swp_flows, realinflow): #going to hold off on this alone until we discuss delta rules
     d = int(self.dayofyear[t])
     m = int(self.month[t])
     wyt = self.wyt[t]
@@ -177,8 +178,8 @@ class Delta():
     if d < 200:
       self.outflow[t] = self.inflow[t] - self.TRP_pump[t] - self.HRO_pump[t]
       
-   self.TRP_pump[t], self.HRO_pump[t] = self.meet_OMR_requirement(self.TRP_pump[t], self.HRO_pump[t], t)
-   self.TRP_pump[t], self.HRO_pump[t] = self.check_san_luis(self.TRP_pump[t], self.HRO_pump[t], t, 1)
+    self.TRP_pump[t], self.HRO_pump[t] = self.meet_OMR_requirement(self.TRP_pump[t], self.HRO_pump[t], t)
+    self.TRP_pump[t], self.HRO_pump[t] = self.check_san_luis(self.TRP_pump[t], self.HRO_pump[t], t, 1)
   
     self.OMR[t] = self.hist_OMR[t] + self.hist_TRP_pump[t] + self.hist_HRO_pump[t] - self.TRP_pump[t] - self.HRO_pump[t]
 

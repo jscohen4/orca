@@ -13,7 +13,7 @@ class Reservoir():
     self.dayofyear = df.index.dayofyear
     self.month = df.index.month
     self.key = key
-    self.wyt = df.SR_WYT_rolling # 120 day MA lag
+    self.wyt = df.SV_WYT # 120 day MA lag
     for k,v in json.load(open('orca/data/%s_properties.json' % key)).items():
       setattr(self,k,v)
 
@@ -54,7 +54,7 @@ class Reservoir():
             break
     return self.tocs_index[i][d]
 
-  def step(self, t, dmin=0.0, sodd=0.0): #pretty much the same as master, although there are opportunities to speed up this function by using pandas functions elsewhere
+  def step(self, t, d, m, wyt, dowy,dmin=0.0, sodd=0.0): #pretty much the same as master, although there are opportunities to speed up this function by using pandas functions elsewhere
     d = self.dayofyear[t]
     dowy = water_day(d)
     m = self.month[t]
@@ -63,7 +63,7 @@ class Reservoir():
     envmin = max(self.env_min_flow[wyt][m-1], self.temp_releases[wyt][m-1]) * cfs_tafd
     nodd = np.interp(d, first_of_month, self.nodd)  
     
-    sodd *= self.sodd_pct_var
+    sodd *= self.sodd_pct
     ###the variable percentage calculates Folsom & Shasta's contribution to the total releases
     ###based on the current 'available storage' in each reservoir, not a fixed percentage based on the total storage of each reservoir
 
