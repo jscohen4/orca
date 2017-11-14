@@ -83,6 +83,37 @@ class Delta():
         self.sodd_cvp[t] = 0.75*Q + (cvp_max - 0.75*Q)/export_ratio
         self.sodd_swp[t] = 0.25*Q + (swp_max - 0.25*Q)/export_ratio
 
+  def calc_flow_bounds(self, t, d, m, wyt, sumnodds): 
+    # gains are calculated from (DeltaIn - sum of res. outflow)
+    gains = self.netgains[t] + sumnodds 
+    self.gains[t] = gains 
+
+    min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
+    export_ratio = self.export_ratio[wyt][m-1]
+
+    cvp_max = self.cvp_target[d]
+    swp_max = self.swp_target[d]
+
+    # the sodd_* variables tell the reservoirs how much to release
+    # for south of delta demands only
+    # (dmin is the reservoir release needed to meet delta outflows)
+    if gains > min_rule: # extra unstored water available for pumping
+      # in this case dmin[t] is 0
+      self.sodd_cvp[t] = max((cvp_max - 0.55*(gains - min_rule)) / export_ratio, 0)
+      self.sodd_swp[t] = max((swp_max - 0.45*(gains - min_rule)) / export_ratio, 0)
+    else: # additional flow needed
+      self.dmin[t] = min_rule - gains
+      # amount of additional flow from reservoirs that does not need "export tax"
+      # because dmin release helps to meet the export ratio requirement
+      Q = min_rule*export_ratio/(1-export_ratio) 
+
+      if cvp_max + swp_max < Q:
+        self.sodd_cvp[t] = cvp_max
+        self.sodd_swp[t] = swp_max
+      else:
+        self.sodd_cvp[t] = 0.75*Q + (cvp_max - 0.75*Q)/export_ratio
+        self.sodd_swp[t] = 0.25*Q + (swp_max - 0.25*Q)/export_ratio
+
   def find_release(self, dowy, d, t, wyt, orovilleAS, shastaAS, folsomAS):
     swp_intake_max = np.interp(d, self.pump_max['swp']['d'], self.pump_max['swp']['intake_limit']) * cfs_tafd
     cvp_intake_max = np.interp(d, self.pump_max['cvp']['d'],self.pump_max['cvp']['intake_limit']) * cfs_tafd
@@ -191,6 +222,8 @@ class Delta():
       self.outflow[t] = self.inflow[t] - self.TRP_pump[t] - self.HRO_pump[t]
     self.maxTotPump = self.hist_OMR[t] + self.hist_TRP_pump[t] + self.hist_HRO_pump[t]
   
+      
+
     self.TRP_pump[t], self.HRO_pump[t] = self.meet_OMR_requirement(self.TRP_pump[t], self.HRO_pump[t], t)
     self.TRP_pump[t], self.HRO_pump[t] = self.check_san_luis(self.TRP_pump[t], self.HRO_pump[t], t, 1)
   
