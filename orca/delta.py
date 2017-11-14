@@ -16,7 +16,7 @@ class Delta():
 
     for k,v in json.load(open('orca/data/Delta_properties.json')).items():
       setattr(self,k,v)
-
+    self.assign_flow(df)
     # what vars to store/save here
     self.dmin = np.zeros(T)
     self.gains = np.zeros(T)
@@ -31,6 +31,16 @@ class Delta():
     self.swp_target = np.zeros(367)
     self.cvp_pmax = np.zeros(367)
     self.swp_pmax = np.zeros(367)
+    self.hist_OMR = df.OMR * cfs_tafd
+    self.hist_TRP_pump = df.TRP_pump * cfs_tafd
+    self.hist_HRO_pump = df.HRO_pump * cfs_tafd
+    self.SanLuis_SWP_stor = np.zeros(T)
+    self.SanLuis_CVP_stor = np.zeros(T)
+    self.OMR = np.zeros(T)
+    self.SanLuis_SWP_stor[0] = df.SLS_storage.iloc[0]
+    self.SanLuis_CVP_stor[0] = df.SLF_storage.iloc[0]
+    self.SanLuis_SWP_out = df.SLS_out
+    self.SanLuis_CVP_out = df.SLF_out
 
     for i in range(0,365):  
       self.cvp_target[i] = np.interp(i, self.pump_max['cvp']['d'], 
@@ -106,12 +116,14 @@ class Delta():
   def find_pumping(self, d, dowy, t, wyt): #we can do almost all of this interpolating outside of a loop- I'm predicting this entire function will be gone as we restructure
     swp_intake_max = np.interp(d, self.pump_max['swp']['d'], self.pump_max['swp']['intake_limit']) * cfs_tafd  #limit to pumping 
     cvp_intake_max = np.interp(d, self.pump_max['cvp']['d'],self.pump_max['cvp']['intake_limit']) * cfs_tafd #limit to pumping
-    san_joaquin_adj = np.interp(dowy, self.san_joaquin_add['d'], self.san_joaquin_add['mult']) * max(self.sanjoaquin[t] - 1000.0 * cfs_tafd, 0.0) #not following these variables
-    san_joaquin_ie_amt = np.interp(self.sanjoaquin[t]*tafd_cfs, self.san_joaquin_export_ratio['flow'], self.san_joaquin_export_ratio['ratio']) * self.sanjoaquin[t]
-    san_joaquin_ie_used = np.interp(dowy, self.san_joaquin_export_ratio['d'], self.san_joaquin_export_ratio['on_off'])
-    san_joaquin_ie = san_joaquin_ie_amt * san_joaquin_ie_used
-    swp_max = min(max(swp_intake_max + san_joaquin_adj, san_joaquin_ie * 0.45), np.interp(d, self.pump_max['swp']['d'], self.pump_max['swp']['pmax']) * cfs_tafd)
-    cvp_max = min(max(cvp_intake_max, san_joaquin_ie * 0.55), np.interp(d, self.pump_max['cvp']['d'], self.pump_max['cvp']['pmax']) * cfs_tafd)
+    swp_max = swp_intake_max
+    cvp_max = cvp_intake_max
+    # san_joaquin_adj = np.interp(dowy, self.san_joaquin_add['d'], self.san_joaquin_add['mult']) * max(self.sanjoaquin[t] - 1000.0 * cfs_tafd, 0.0) #not following these variables
+    # san_joaquin_ie_amt = np.interp(self.sanjoaquin[t]*tafd_cfs, self.san_joaquin_export_ratio['flow'], self.san_joaquin_export_ratio['ratio']) * self.sanjoaquin[t]
+    # san_joaquin_ie_used = np.interp(dowy, self.san_joaquin_export_ratio['d'], self.san_joaquin_export_ratio['on_off'])
+    # san_joaquin_ie = san_joaquin_ie_amt * san_joaquin_ie_used
+    # swp_max = min(max(swp_intake_max + san_joaquin_adj, san_joaquin_ie * 0.45), np.interp(d, self.pump_max['swp']['d'], self.pump_max['swp']['pmax']) * cfs_tafd)
+    # cvp_max = min(max(cvp_intake_max, san_joaquin_ie * 0.55), np.interp(d, self.pump_max['cvp']['d'], self.pump_max['cvp']['pmax']) * cfs_tafd)
 
     return cvp_max, swp_max
  
@@ -177,7 +189,8 @@ class Delta():
       self.HRO_pump[t] = max(min((swp_flows + 0.25 * self.gains[t]) * export_ratio, swp_flows + 0.25 * surplus, swp_max),0)
     if d < 200:
       self.outflow[t] = self.inflow[t] - self.TRP_pump[t] - self.HRO_pump[t]
-      
+    self.maxTotPump = self.hist_OMR[t] + self.hist_TRP_pump[t] + self.hist_HRO_pump[t]
+  
     self.TRP_pump[t], self.HRO_pump[t] = self.meet_OMR_requirement(self.TRP_pump[t], self.HRO_pump[t], t)
     self.TRP_pump[t], self.HRO_pump[t] = self.check_san_luis(self.TRP_pump[t], self.HRO_pump[t], t, 1)
   
