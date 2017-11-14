@@ -34,7 +34,7 @@ class Model():
       self.shasta.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t])
       self.folsom.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t])
       self.oroville.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_swp[t])
-      self.delta.step(t, d, m, wyt,
+      self.delta.step(t, d, m, wyt, dowy,
                       self.shasta.R_to_delta[t] + self.folsom.R_to_delta[t],
                       self.oroville.R_to_delta[t], self.df.DeltaIn[t])
 
