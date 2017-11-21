@@ -30,6 +30,9 @@ class Model():
       dowy = water_day(d)
       m = self.month[t]
       wyt = self.wyt[t]
+      self.oroville.find_available_storage(t,self.oroville.exceedence[wyt])
+      self.folsom.find_available_storage(t,self.folsom.exceedence[wyt])
+      self.shasta.find_available_storage(t,self.shasta.exceedence[wyt])   
       self.delta.calc_flow_bounds(t, d, m, wyt, self.sumnodds[d])
       self.shasta.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t])
       self.folsom.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t])
