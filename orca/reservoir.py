@@ -35,6 +35,9 @@ class Reservoir():
     self.storage_bounds = np.zeros(2)
     self.index_bounds = np.zeros(2)
     self.tocs = np.zeros(T)
+    self.cum_min_release = np.zeros(366)
+    self.forecast = np.zeros(T)
+    self.available_storage = np.zeros(T)
 
     #tocs rule variables
     self.tocs_index = []
@@ -126,16 +129,19 @@ class Reservoir():
     ##each timestep before the reservoirs' individual step function is called
     d = int(self.dayofyear[t-1])
     dowy = water_day(d)
-    current_snow = self.SNPK[t-1]
+    # current_snow = self.SNPK[t-1]
     wyt = self.wyt[t]
     if dowy == 0:
-      self.EOS_target = (self.S[t] - self.carryover_target[self.wyt[t]])*self.carryover_excess_use + self.carryover_target[self.wyt[t]] #
+      # self.EOS_target = (self.S[t] - self.carryover_target[self.wyt[t]])*self.carryover_excess_use + self.carryover_target[self.wyt[t]] #
+      self.EOS_target = (self.S[t] - self.carryover_target[self.wyt[t]])*0.0 + self.carryover_target[self.wyt[t]] #
+
       self.calc_expected_min_release(t-1)##what do they expect to need to release for env. requirements through the end of september
       self.obs_flow = 0.0
       self.exceedence_level = (self.WYI[t-1] - 10.0)/3##how conservative are they being about the flow forecasts (ie, 90% exceedence level, 75% exceedence level, etc)
+      self.forecast[t] = 0
     elif dowy >= 0:
       self.obs_flow += self.Q[t-1]
-      self.forecast = max(self.slope[t] * obs_flow[t] + self.intercept[t], 0.0)
+      self.forecast[t] = max(self.slope[t] * obs_flow[t] + self.intercept[t], 0.0)
 
     #   apr_jul_forecast = self.regression_ceoffs[dowy][2]*current_snow + self.regression_ceoffs[dowy][3]##prediction based on snowpack
 
