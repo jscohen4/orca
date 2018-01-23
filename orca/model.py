@@ -3,6 +3,7 @@ import pandas as pd
 from .reservoir import Reservoir
 from .delta import Delta
 from .util import *
+import matplotlib.pyplot as plt
 
 
 class Model():
@@ -30,10 +31,12 @@ class Model():
       dowy = water_day(d)
       m = self.month[t]
       wyt = self.wyt[t]
-      self.oroville.find_available_storage(t,self.oroville.exceedence[wyt])
-      self.folsom.find_available_storage(t,self.folsom.exceedence[wyt])
-      self.shasta.find_available_storage(t,self.shasta.exceedence[wyt])   
-      self.delta.calc_flow_bounds(t, d, m, wyt, self.sumnodds[d])
+      self.oroville.find_available_storage(t,dowy,self.oroville.exceedence[wyt])
+      self.folsom.find_available_storage(t,dowy,self.folsom.exceedence[wyt])
+      self.shasta.find_available_storage(t,dowy,self.shasta.exceedence[wyt])   
+      self.delta.calc_flow_bounds(t, d, m, wyt, dowy, self.sumnodds[d], self.oroville.available_storage[t], self.shasta.available_storage[t], self.folsom.available_storage[t])
+      self.shasta.sodd_pct_var = self.delta.shastaSODDPCT
+      self.folsom.sodd_pct_var = self.delta.folsomSODDPCT
       self.shasta.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t])
       self.folsom.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t])
       self.oroville.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_swp[t])
