@@ -9,7 +9,7 @@ results.to_csv('orca/data/results.csv')
 
 # calibration points (lists of pandas series)
 sim = [results['DEL_HRO_pump'] / cfs_tafd,
-       results['DEL_TRP_pump'] / cfs_tafd,
+       results['DEL_TRP_pump'] / cfs_tafd, 
        (results['DEL_HRO_pump'] + results['DEL_TRP_pump']) / cfs_tafd,
        results['SHA_storage'], 
        results['SHA_out'] / cfs_tafd,
@@ -33,10 +33,10 @@ obs = [model.df['HRO_pump'],
        model.df['DeltaOut']]
 plotter.Rsquares(sim,obs)
 
-# for f in ['D','W','M','AS-OCT']:
-#   i = 0
-#   for s,o in zip(sim,obs):
-#     plotter.compare(s, o, freq=f)
-#     plt.savefig('orca/figs/%s%d.png' % (f,i), dpi=150)
-#     plt.close()
-#     i += 1
+for f in ['D','W','M','AS-OCT']:
+  i = 0
+  for s,o in zip(sim,obs):
+    plotter.compare(s, o, freq=f)
+    plt.savefig('orca/figs/%s%d.png' % (f,i), dpi=150)
+    plt.close()
+    i += 1
