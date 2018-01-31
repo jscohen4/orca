@@ -19,7 +19,7 @@ sim = [results['DEL_HRO_pump'] / cfs_tafd,
        results['ORO_out'] / cfs_tafd,
        results['DEL_in'] / cfs_tafd,
        results['DEL_out'] / cfs_tafd]
-
+ 
 obs = [model.df['HRO_pump'],
        model.df['TRP_pump'],
        (model.df['HRO_pump'] + model.df['TRP_pump']),
@@ -37,6 +37,6 @@ for f in ['D','W','M','AS-OCT']:
   i = 0
   for s,o in zip(sim,obs):
     plotter.compare(s, o, freq=f)
-    plt.savefig('orca/figs/%s%d.png' % (f,i), dpi=150)
+    plt.savefig('orca/figs/%s%d.pdf' % (f,i), dpi=150)
     plt.close()
     i += 1

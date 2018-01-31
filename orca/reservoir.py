@@ -89,8 +89,15 @@ class Reservoir():
     self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin))
 
     # then clip based on constraints
+
     self.R[t] = min(self.Rtarget[t], W - self.dead_pool)
+    # if m >= 8 and m < 10:
+    #     self.R[t] = min(self.R[t], self.carryover_release)
+    #     print('r')
+    #     print(self.R[t])
+    #     print(self.carryover_release)
     self.R[t] = min(self.R[t], self.max_outflow * cfs_tafd)
+
     self.R[t] +=  max(W - self.R[t] - self.capacity, 0) # spill
     self.S[t] = W - self.R[t] - self.E[t] # mass balance update
     self.R_to_delta[t] = max(self.R[t] - nodd, 0) # delta calcs need this
@@ -133,8 +140,10 @@ class Reservoir():
     self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]]/self.exceedence_level + self.forecast[t] - self.cum_min_release[dowy])
     # self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]] + self.forecast[t] - self.cum_min_release[dowy])
     # self.daily_carryover_target = max((self.carryover_target[self.wyt[t]]/self.exceedence_level-self.S[t-1])/(365-dowy),0)
+    # self.carryover_release = (self.S[t-1] + self.Q[t] - self.carryover_target[self.wyt[t]] - self.cum_min_release[dowy])/(dowy-180)
+    # self.carryover_release = (self.carryover_target[self.wyt[t]] - self.forecast[t] + self.cum_min_release[dowy])/(365-dowy)
 
-    self.daily_carryover_target = self.S[t-1] + max((self.carryover_target[self.wyt[t]]-self.S[t-1])/(365-dowy),0)
+    # self.daily_carryover_target = self.S[t-1] + max((self.carryover_target[self.wyt[t]]-self.S[t-1])/(365-dowy),0)
 
   def results_as_df(self, index):
     df = pd.DataFrame()
