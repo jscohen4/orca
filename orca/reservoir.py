@@ -87,11 +87,17 @@ class Reservoir():
     # fcr = (W-self.tocs[t])*np.exp(4.5*10**-6 * (W-self.capacity))
     fcr = 0.2*(W-self.tocs[t]) 
     self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin))
+    if m >= 5 and m < 10:
+        print('')
+        print(self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy))
+        print(self.carryover_target[wyt])
+
+        if self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy) < self.carryover_target[wyt]:
+            self.Rtarget[t] = self.Rtarget[t] * self.carryover_curtail[wyt]
 
     # then clip based on constraints
 
     self.R[t] = min(self.Rtarget[t], W - self.dead_pool)
-    # if m >= 8 and m < 10:
     #     self.R[t] = min(self.R[t], self.carryover_release)
     #     print('r')
     #     print(self.R[t])
