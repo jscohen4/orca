@@ -35,7 +35,7 @@ def compare(res,obs,freq='D'):
 
 
 def Rsquares(sim,obs):
-  text_file = open('orca/data/Rsquares_carry.txt', 'w')
+  text_file = open('orca/data/Rsquares.txt', 'w')
   r2s = []
   r2s.append(['Timestep','Daily','Weekly','Monthly','Water Year'])
   for s,o in zip(sim,obs):
