@@ -88,12 +88,9 @@ class Reservoir():
     fcr = 0.2*(W-self.tocs[t]) 
     self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin))
     if m >= 5 and m < 10:
-        print('')
-        print(self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy))
-        print(self.carryover_target[wyt])
-
         if self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy) < self.carryover_target[wyt]:
-            self.Rtarget[t] = self.Rtarget[t] * self.carryover_curtail[wyt]
+            self.carryover_curtail_pct = (self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy))/self.carryover_target[wyt]
+            self.Rtarget[t] = self.Rtarget[t] * max(self.carryover_curtail_pct,self.carryover_curtail[wyt])
 
     # then clip based on constraints
 
@@ -139,7 +136,7 @@ class Reservoir():
     d = int(self.dayofyear[t-1])
     dowy = water_day(d)
     wyt = self.wyt[t]
-    self.calc_expected_min_release(t-1)##what do they expect to need to release for env. requirements through the end of september
+    # self.calc_expected_min_release(t-1)##what do they expect to need to release for env. requirements through the end of september
     self.exceedence_level = (self.WYI[t-1] - 10.0)/3##how conservative are they being about the flow forecasts (ie, 90% exceedence level, 75% exceedence level, etc)
     self.forecast[t] = 0
     self.forecast[t] = max(self.slope[t] * self.obs_flow[t] + self.intercept[t], 0.0)
