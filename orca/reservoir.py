@@ -12,7 +12,7 @@ class Reservoir():
     self.dayofyear = df.index.dayofyear
     self.month = df.index.month
     self.key = key
-    self.wyt = df.SV_WYT# 120 day MA lag
+    self.wyt = df.WYT_sim# simulated (forecasted)wyi
     for k,v in json.load(open('orca/data/%s_properties.json' % key)).items():
       setattr(self,k,v)
     # self.sodd_pct_var = self.sodd_pct
@@ -23,7 +23,7 @@ class Reservoir():
     self.intercept = df['%s_intercept' % key].values
     self.mean = df['%s_mean' % key].values
     self.std = df['%s_std' % key].values  
-    self.WYI = df['WYI'].values
+    self.WYI = df['WYI_sim'].values
     self.obs_flow = df['%s_cum_flow_to_date' % key].values
     self.obs_snow = df['%s_snowpack' % key].values
     self.S = np.zeros(T)
@@ -136,6 +136,7 @@ class Reservoir():
     d = int(self.dayofyear[t-1])
     dowy = water_day(d)
     wyt = self.wyt[t]
+
     # self.calc_expected_min_release(t-1)##what do they expect to need to release for env. requirements through the end of september
     self.exceedence_level = (self.WYI[t-1] - 10.0)/3##how conservative are they being about the flow forecasts (ie, 90% exceedence level, 75% exceedence level, etc)
     self.forecast[t] = 0
