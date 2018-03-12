@@ -12,7 +12,7 @@ class Delta():
     self.month = df.index.month
     self.key = key
     self.wyt = df.WYT_sim
-    self.netgains = df.netgains * cfs_tafd
+    self.netgains = df.gains_sim.shift(periods = -60, freq = 'D') * cfs_tafd
 
     for k,v in json.load(open('orca/data/Delta_properties.json')).items():
       setattr(self,k,v)
@@ -56,7 +56,11 @@ class Delta():
 
     # gains are calculated from (DeltaIn - sum of res. outflow)
     gains = self.netgains[t] + sumnodds 
-    self.gains[t] = gains 
+    self.gains[t] = gains
+    if gains <= -30:
+      gains += 100
+    gains = max(gains, -25)
+    gains +=10
     min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
     export_ratio = self.export_ratio[wyt][m-1]
 
