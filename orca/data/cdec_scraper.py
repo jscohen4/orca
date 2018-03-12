@@ -9,16 +9,10 @@ from ulmo.cdec import historical as cd
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 
 df = pd.DataFrame()
-sd = '10-01-1999' # reliable start for CDEC daily data
-ids = ['BND', 'ORO', 'YRS', 'FOL', 'NML', 'TLG', 'MRC', 'MIL']
-       # 'GDW', 'MHB', 'MKM', 'NHG', 'SHA']
-data = cd.get_data(station_ids=ids, sensor_ids=[8], 
-                   resolutions=['daily'], start=sd)
-
-for k in ids:
-  df[k + '_fnf'] = data[k]['FULL NATURAL FLOW daily']['value']
+sd = '01-01-1990' # reliable start for CDEC daily data
 
 # flowrates: inflow / outflow / evap / pumping
+
 ids = ['SHA', 'ORO', 'FOL']#, 'CLE', 'NML', 'DNP', 'EXC', 'MIL', 'SNL']
 
 data = cd.get_data(station_ids=ids, sensor_ids=[15,23,74,76,94,45], 
@@ -33,6 +27,14 @@ for k in ids:
   df[k + '_precip'] = data[k]['PRECIPITATION, INCREMENTAL daily']['value']
   # fix mass balance problems in inflow
   df[k + '_in_fix'] = df[k+'_storage'].diff()/cfs_tafd + df[k+'_out'] + df[k+'_evap']
+
+ids = ['BND', 'ORO', 'YRS', 'FOL', 'NML', 'TLG', 'MRC', 'MIL','MKM', 'NHG','SHA']
+       # 'GDW', 'MHB', 'MKM', 'NHG', 'SHA']
+data = cd.get_data(station_ids=ids, sensor_ids=[8], #full natural flows
+                   resolutions=['daily'], start=sd)
+
+for k in ids:
+  df[k + '_fnf'] = data[k]['FULL NATURAL FLOW daily']['value']
 
 # observed delta outflow
 data = cd.get_data(['DTO'], [23], ['daily'], start=sd)
@@ -57,12 +59,21 @@ data = cd.get_data(station_ids=ids, sensor_ids=[15],
 for k in ids:
   df[k + '_storage'] = data[k]['RESERVOIR STORAGE daily']['value'] / 1000 # TAF
 
+# cleanup
+df[df < 0] = np.nan
+df.interpolate(inplace=True)
+
+snow_ids = ['GOL','CSL', 'HYS', 'SCN', 'RBB', 'CAP', 'RBP','KTL', 'HMB', 
+'FOR', 'RTL', 'GRZ','SDF', 'SNM', 'SLT', 'MED'] #snowpack station points
+data = cd.get_data(station_ids = snow_ids, sensor_ids=[3], resolutions=['daily'],start=sd) 
+for k in snow_ids:
+  df[k + '_swe'] = data[k]['SNOW, WATER CONTENT daily']['value']
+
+
+
 # oroville release from thermalito instead?
 # no -- there is a canal diversion that isn't accounted for.
 # data = cd.get_data(['THA'], [85], ['daily'], start=sd)
 # df['THA_out'] = data['THA']['DISCHARGE,CONTROL REGULATING daily']['value']
 
-# cleanup
-df[df < 0] = np.nan
-df.interpolate(inplace=True)
-df.to_csv('orca-data.csv')
+df.to_csv('cdec-data.csv')

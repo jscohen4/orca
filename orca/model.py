@@ -3,6 +3,7 @@ import pandas as pd
 from .reservoir import Reservoir
 from .delta import Delta
 from .util import *
+import matplotlib.pyplot as plt
 
 
 class Model():
@@ -10,7 +11,6 @@ class Model():
   def __init__(self, datafile, sd='10-01-1999'):
     self.df = pd.read_csv(datafile, index_col=0, parse_dates=True)
     self.T = len(self.df)
-
     self.shasta = Reservoir(self.df, 'SHA')
     self.folsom = Reservoir(self.df, 'FOL')
     self.oroville = Reservoir(self.df, 'ORO')
@@ -18,7 +18,7 @@ class Model():
     self.delta = Delta(self.df, 'DEL')
     self.dayofyear = self.df.index.dayofyear
     self.month = self.df.index.month    
-    self.wyt = self.df.SR_WYT_rolling
+    self.wyt = self.df.WYT_sim
 
   def simulate(self):
     self.sumnodds = np.zeros(367)
@@ -31,11 +31,18 @@ class Model():
       dowy = water_day(d)
       m = self.month[t]
       wyt = self.wyt[t]
-      self.delta.calc_flow_bounds(t, d, m, wyt, self.sumnodds[d])
+      self.oroville.find_available_storage(t,dowy,self.oroville.exceedence[wyt])
+      self.folsom.find_available_storage(t,dowy,self.folsom.exceedence[wyt])
+      self.shasta.find_available_storage(t,dowy,self.shasta.exceedence[wyt])   
+      self.delta.calc_flow_bounds(t, d, m, wyt, dowy, self.sumnodds[d], self.oroville.available_storage[t], self.shasta.available_storage[t], self.folsom.available_storage[t])
+      # self.delta.calc_flow_bounds(t, d, m, wyt, dowy, self.sumnodds[d])
+
+      # self.shasta.sodd_pct = self.delta.shastaSODDPCT
+      # self.folsom.sodd_pct = self.delta.folsomSODDPCT
       self.shasta.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t])
       self.folsom.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t])
       self.oroville.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_swp[t])
-      self.delta.step(t, d, m, wyt,
+      self.delta.step(t, d, m, wyt, dowy,
                       self.shasta.R_to_delta[t] + self.folsom.R_to_delta[t],
                       self.oroville.R_to_delta[t], self.df.DeltaIn[t])
 

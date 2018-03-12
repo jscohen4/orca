@@ -33,8 +33,9 @@ def compare(res,obs,freq='D'):
   plt.tight_layout()
   # plt.show()
 
+
 def Rsquares(sim,obs):
-  text_file = open('cord/data/Rsquares.txt', 'w')
+  text_file = open('orca/data/Rsquares.txt', 'w')
   r2s = []
   r2s.append(['Timestep','Daily','Weekly','Monthly','Water Year'])
   for s,o in zip(sim,obs):
