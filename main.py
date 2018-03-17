@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from orca import *
-model = Model('orca/data/orca-data.csv', sd='10-01-1999') #beacuse of rolling calc in gains, we start on 10th day of
+model = Model('orca/data/orca-data-forecasted.csv', sd='10-01-1999') #beacuse of rolling calc in gains, we start on 10th day of
 results = model.simulate() # takes a while... save results
 results.to_csv('orca/data/results.csv')
 # results = pd.read_csv('orca/data/results.csv', index_col=0, parse_dates=True)
@@ -13,7 +13,6 @@ sim = [results['DEL_HRO_pump'] / cfs_tafd,
        results['DEL_TRP_pump'] / cfs_tafd, 
        # (results['DEL_HRO_pump'] + results['DEL_TRP_pump']) / cfs_tafd,
        results['Combined_pump'] / cfs_tafd,
-
        results['SHA_storage'], 
        results['SHA_out'] / cfs_tafd,
        results['FOL_storage'],

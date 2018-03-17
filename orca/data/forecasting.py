@@ -161,14 +161,18 @@ df['WYT_sim'] = df.WYI_sim.apply(WYI_to_WYT,
 
 ### delta gains calculations
 dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','WYI_sim']] #gains datafile
-stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
+stations = ['MIL']#,'NML']#,'YRS','TLG','MRC','MKM','NHG']
+# dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','WYI_sim']] #gains datafile
+# stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
+
 for station in stations:
-	dfg['%s_fnf' %station] = df['%s_fnf' %station]
+	df['%s_fnf' %station] = df['%s_fnf' %station].shift(5)
+	dfg['%s_fnf' %station] = df['%s_fnf' %station].shift(4)
 	df['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
 	dfg['%s_rol' %station] = df['%s_rol' %station]
-	df['%s_prev' %station] = df['%s_fnf' %station].shift(1)
+	df['%s_prev' %station] = df['%s_fnf' %station].shift(3)
 	dfg['%s_prev' %station] = df['%s_prev' %station]
-	df['%s_prev2' %station] = df['%s_fnf' %station].shift(2)
+	df['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
 	dfg['%s_prev2' %station] = df['%s_prev2' %station]
 dfg = dfg.drop(pd.Timestamp('2012-07-01'), axis = 0)
 dfg = dfg.dropna()
@@ -182,7 +186,7 @@ for m in month_arr:
 	WYI = dfm.WYI_sim.values
 	X = np.vstack([WYI])
 	for station in stations:
-		V = np.vstack([dfm['%s_fnf' %station],dfm['%s_rol' %station].values, dfm['%s_prev' %station].values,dfm['%s_prev2' %station].values])
+		V = np.vstack([dfm['%s_fnf' %station]])#,dfm['%s_rol' %station].values, dfm['%s_prev' %station].values,dfm['%s_prev2' %station].values])
 		X = np.vstack([X,V])
 	X = X.T
 	reg = linear_model.LinearRegression()
@@ -201,12 +205,12 @@ for index, row in df.iterrows():
 	e = intercepts[m-1]
 	for station in stations:
 		X.append(df.loc[index,'%s_fnf' %station])
-		X.append(df.loc[index,'%s_rol' %station])
-		X.append(df.loc[index,'%s_prev' %station]) 
-		X.append(df.loc[index,'%s_prev2' %station])
+		# X.append(df.loc[index,'%s_rol' %station])
+		# X.append(df.loc[index,'%s_prev' %station]) 
+		# X.append(df.loc[index,'%s_prev2' %station])
 	X.append(df.loc[index,'WYI_sim'])
 	X = np.array(X)
-	gains = np.sum(X * b)*cfs_tafd + e
+	gains = (np.sum(X * b) + e) * cfs_tafd
 	df.loc[index, 'gains_sim'] = gains
 df['gains_sim'] = df.gains_sim.fillna(method = 'bfill') #fill in missing beggining values (because of rolling)
 # df[['netgains','gains_sim']].plot(legend = True)
