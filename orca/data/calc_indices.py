@@ -118,26 +118,34 @@ df.SHA_fci.fillna(method='bfill', inplace=True)
 df['ORO_fci'] = rolling_fci(df['ORO_precip'], k=0.97, start=0)
 df.ORO_fci.fillna(method='bfill', inplace=True)
 
+df['FOL_fci'] = rolling_fci(df['FOL_precip'], k=0.97, start=0)
+df.ORO_fci.fillna(method='bfill', inplace=True)
+
 # df.ORO_fci.plot()
 # plt.show()
 
-# folsom is different
-FMD = 136.4 - df.FMD_storage
-FMD[FMD > 45] = 45
-UNV = 266.4 - df.UNV_storage
-UNV[UNV > 80] = 80
-HHL = 207.6 - df.HHL_storage
-HHL[HHL > 75] = 75
-df['FOL_fci'] = FMD + UNV + HHL
+# df.SHA_fci.plot()
+# plt.show()
 
+# df.FOL_fci.plot()
+# plt.show()
 # folsom is different
-FMD = 136.4 - df.FMD_storage
-FMD[FMD > 45] = 45
-UNV = 266.4 - df.UNV_storage
-UNV[UNV > 80] = 80
-HHL = 207.6 - df.HHL_storage
-HHL[HHL > 75] = 75
-df['FOL_fci'] = FMD + UNV + HHL
+# FMD = 136.4 - df.FMD_storage
+# FMD[FMD > 45] = 45
+# UNV = 266.4 - df.UNV_storage
+# UNV[UNV > 80] = 80
+# HHL = 207.6 - df.HHL_storage
+# HHL[HHL > 75] = 75
+# df['FOL_fci'] = FMD + UNV + HHL
+
+# # folsom is different
+# FMD = 136.4 - df.FMD_storage
+# FMD[FMD > 45] = 45
+# UNV = 266.4 - df.UNV_storage
+# UNV[UNV > 80] = 80
+# HHL = 207.6 - df.HHL_storage
+# HHL[HHL > 75] = 75
+# df['FOL_fci'] = FMD + UNV + HHL
 
 ##clean up snowpack data and resample monthly 
 snow_ids = ['GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','CAP_swe','RBP_swe','KTL_swe',
