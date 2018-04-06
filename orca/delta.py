@@ -6,14 +6,17 @@ from .util import *
 
 class Delta():
 
-  def __init__(self, df, key):
+  def __init__(self, df, key, sim_gains = False):
     T = len(df)
     self.dayofyear = df.index.dayofyear
     self.month = df.index.month
     self.key = key
-    self.wyt = df.WYT_sim
-    self.netgains = df.gains_sim* cfs_tafd#.shift(periods = -30, freq = 'D')  * cfs_tafd
-
+    self.wyt = df.WYT_sim 
+    self.sim_gains = sim_gains
+    if self.sim_gains:
+      self.netgains = df.gains_sim #.shift(periods = -30, freq = 'D')  * cfs_tafd
+    elif not self.sim_gains:
+      self.netgains = df.netgains 
 
     for k,v in json.load(open('orca/data/Delta_properties.json')).items():
       setattr(self,k,v)

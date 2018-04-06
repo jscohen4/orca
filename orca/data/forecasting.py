@@ -238,7 +238,7 @@ for index, row in df.iterrows():
 		if ix == 8:
 			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] + d*0.55 -20
 	# if (ix >= 9) & (ix <= 12):
-	# 	df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] + 5
+	# 	df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] + 10
 
 
 	# df['gains_sim'] = df['gains_sim']+0.004
