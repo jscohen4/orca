@@ -119,7 +119,24 @@ df['ORO_fci'] = rolling_fci(df['ORO_precip'], k=0.97, start=0)
 df.ORO_fci.fillna(method='bfill', inplace=True)
 
 df['FOL_fci'] = rolling_fci(df['FOL_precip'], k=0.97, start=0)
-df.ORO_fci.fillna(method='bfill', inplace=True)
+df.FOL_fci.fillna(method='bfill', inplace=True)
+
+# def get_evap(tas,storage,coeffs,intercept):
+#   T = len(storage)
+#   y = np.zeros(T)
+#   for i,(t,s) in enumerate(zip(tas,storage)):
+#     X = [t,s,t*s,t**2,s**2]
+#     y[i] = coeffs * X + intercept
+#   return pd.Series(x, index=tas.index)
+# print(df.SHA_tas)
+# df['SHA_evap_sim'] = get_evap(df['SHA_tas'],df['SHA_storage'],[-6.12695687e+00,-5.56242336e-02,1.24250417e-03,5.85546703e-02,2.44535628e-06],175.162983004)
+# df.SHA_fci.fillna(method='bfill', inplace=True)
+
+# df['ORO_evap_sim'] = rolling_fci(df['ORO_precip'], k=0.97, start=0)
+# df.ORO_fci.fillna(method='bfill', inplace=True)
+
+# df['FOL_evap_sim'] = rolling_fci(df['FOL_precip'], k=0.97, start=0)
+# df.ORO_fci.fillna(method='bfill', inplace=True)
 
 # df.ORO_fci.plot()
 # plt.show()
