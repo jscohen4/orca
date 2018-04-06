@@ -57,10 +57,10 @@ class Delta():
 
     # gains are calculated from (DeltaIn - sum of res. outflow)
     gains = self.netgains[t] + sumnodds 
-    if (m >= 3) & (m <= 9):
-      gains = gains * 0.2
-    if (m >= 5) & (m <= 8):
-      gains = gains - 5
+    # if (m >= 3) & (m <= 9):
+    #   gains = gains * 0.2
+    # if (m >= 5) & (m <= 8):
+    #   gains = gains - 5
     self.gains[t] = gains 
 
     # if m ==3:
