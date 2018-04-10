@@ -8,6 +8,8 @@ from sklearn.linear_model import (
 
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
+# pd.set_option('display.max_columns', None)
+pd.set_option('display.max_rows', None)
 
 def WYI_to_WYT(WYI, thresholds, values):
   for t,v in zip(thresholds,values):
@@ -55,11 +57,10 @@ def get_forecast_WYI(df, zscore1, zscore2):
 	flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 	snow_sites = ['BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 
-	Qm = (df[flow_sites].sum(axis=1).resample('M').sum().to_frame(name='flow') * cfsd_mafd)
+	Qm = (df[flow_sites].sum(axis=1).resample('MS').sum().to_frame(name='flow') * cfsd_mafd)
 
-	Qm['WY'] = df.WY.resample('M').first() # need this for grouping
-
-	Qm['snow'] = df[snow_sites].sum(axis=1).resample('M').first()
+	Qm['WY'] = df.WY.resample('MS').first() # need this for grouping
+	Qm['snow'] = df[snow_sites].sum(axis=1).resample('MS').first()
 	Qm = Qm[Qm.WY != Qm.WY[-1]] 
 	Qm['octmar_cumulative'] = (Qm.groupby('WY').flow
 	                          .apply(octmar_cumulative)
@@ -166,14 +167,14 @@ stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
 # stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
 
 for station in stations:
-	df['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
-	dfg['%s_fnf' %station] = df['%s_fnf' %station]
-	df['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
-	dfg['%s_rol' %station] = df['%s_rol' %station]
-	df['%s_prev' %station] = df['%s_fnf' %station].shift(3)
-	dfg['%s_prev' %station] = df['%s_prev' %station]
-	df['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
-	dfg['%s_prev2' %station] = df['%s_prev2' %station]
+	# df['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
+	dfg['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
+	# df['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
+	dfg['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
+	# df['%s_prev' %station] = df['%s_fnf' %station].shift(3)
+	dfg['%s_prev' %station] = df['%s_fnf' %station].shift(3)
+	# df['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
+	dfg['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
 dfg = dfg.drop(pd.Timestamp('2012-07-01'), axis = 0)
 dfg = dfg.dropna()
 month_arr = np.arange(1,13)
@@ -217,7 +218,6 @@ for index, row in df.iterrows():
 	df.loc[index, 'gains_sim'] = gains
 df['gains_sim'] = df.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
 df['netgains'] = df.netgains.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
-
 for index, row in df.iterrows():
 	ix = index.month
 	d = index.day
@@ -237,17 +237,7 @@ for index, row in df.iterrows():
 			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] - 20
 		if ix == 8:
 			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] + d*0.55 -20
-	# if (ix >= 9) & (ix <= 12):
-	# 	df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] + 10
 
-
-	# df['gains_sim'] = df['gains_sim']+0.004
-
-# plt.plot(df.gains_sim,label = 'Simulated gains')
-# plt.show()
-# df[['netgains','gains_sim']].plot(legend = True)
-# plt.grid()
-# plt.show()			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] + d*0.55 -20
 
 
 ###making forcasts for reservoir carryover:
@@ -265,7 +255,7 @@ def rem_flow(x):
 snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
 res_ids = ['SHA','ORO','FOL']
 
-SHA_inf = (df['BND_fnf'].to_frame(name='inf') * cfsd_mafd)  
+SHA_inf = (df['SHA_fnf'].to_frame(name='inf') * cfsd_mafd)  
 ORO_inf = (df['ORO_fnf'].to_frame(name='inf') * cfsd_mafd)
 FOL_inf = (df['FOL_fnf'].to_frame(name='inf') * cfsd_mafd)
 
@@ -273,7 +263,6 @@ FOL_inf = (df['FOL_fnf'].to_frame(name='inf') * cfsd_mafd)
 res_frames = [SHA_inf,ORO_inf,FOL_inf]
 
 for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
-
 	r['WY'] = df.WY
 	r['DOWY'] = df.DOWY
 	r['snowpack'] = df[swe]
@@ -292,13 +281,13 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 	snowpack = r.snowpack
 	remaining_flow = r.remaining_flow
 	DOWY = r.DOWY
-	for d in range(1,366):
-		ix = (DOWY == d-1)
+	for d in range(1,365):
+		ix = (DOWY == d)
 		coeffs = np.polyfit(snowpack[ix],remaining_flow[ix],1)
-		slopes[d-1] = coeffs[0]
-		intercepts[d-1] = coeffs[1]
-		means[d-1] = np.mean(remaining_flow[ix]) 
-		stds[d-1] = np.std(remaining_flow[ix])
+		slopes[d] = coeffs[0]
+		intercepts[d] = coeffs[1]
+		means[d] = np.mean(remaining_flow[ix]) 
+		stds[d] = np.std(remaining_flow[ix])
 	
 
 	stat_types =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
@@ -310,12 +299,12 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 
 
 	stats = pd.DataFrame(stats, columns = [stat_types])
-
 	stats = stats.values.T
 	for i,s in enumerate(stats):
 		stat = stats[i]
-		v = np.append(stat,[stat[364]]) #2000 WY
-		for y in range(4): # 18 years
+		v = np.append(stat,np.tile(stat, 3)) #1997-2000 WY
+		v = np.append(v,[stat[364]]) #leap year
+		for y in range(4): # 14 more years
 			v = np.append(v,np.tile(stat, 4))
 			v = np.append(v,[stat[364]]) #leap year
 		v = np.append(v,np.tile(stat, 1)) #2017 WY
@@ -323,7 +312,6 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 	r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
 	r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)
 	r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)
-
 	r.drop(['inf','WY','DOWY'], axis=1, inplace=True)
 	df = pd.concat([df, r], axis=1, join_axes=[df.index])
 df.to_csv('orca-data-forecasted.csv')

@@ -9,7 +9,7 @@ from ulmo.cdec import historical as cd
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 
 df = pd.DataFrame()
-sd = '01-01-1990' # reliable start for CDEC daily data
+sd = '01-01-1996' # reliable start for CDEC daily data
 
 # flowrates: inflow / outflow / evap / pumping
 
@@ -27,16 +27,6 @@ for k in ids:
   df[k + '_precip'] = data[k]['PRECIPITATION, INCREMENTAL daily']['value']
   # fix mass balance problems in inflow
   df[k + '_in_fix'] = df[k+'_storage'].diff()/cfs_tafd + df[k+'_out'] + df[k+'_evap']
-
-temp_ids = ['SHS','OWS','ADR']
-
-data = cd.get_data(station_ids=temp_ids, sensor_ids=[30,31,32], 
-                   resolutions=['daily'], start=sd)
-for k,t in zip(ids,temp_ids):
-  df['%s_tas'%k] = data[t]['TEMPERATURE, AIR AVERAGE daily']['value']
-  df['%s_tasmax'%k] = data[t]['TEMPERATURE, AIR MAXIMUM daily']['value']
-  df['%s_tasmin'%k] = data[t]['TEMPERATURE, AIR MINIMUM daily']['value']
-
 
 ids = ['BND', 'ORO', 'YRS', 'FOL', 'NML', 'TLG', 'MRC', 'MIL','MKM', 'NHG','SHA']
        # 'GDW', 'MHB', 'MKM', 'NHG', 'SHA']
