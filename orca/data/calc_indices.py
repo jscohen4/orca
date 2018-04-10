@@ -171,7 +171,7 @@ for r in res_ids:
 	XY = temp*storage
 	reg = linear_model.LinearRegression()
 	X = np.vstack([temp, storage,XY,temp2, storage2])
-	# reg.fit(X.T , evap)
+	reg.fit(X.T , evap)
 	# R2 = reg.score(X.T, evap)
 	# print('R2: %f' %(R2))
 	coeffs = reg.coef_
