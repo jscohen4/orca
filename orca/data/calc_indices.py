@@ -11,6 +11,8 @@ from sklearn.linear_model import (
     LinearRegression, TheilSenRegressor, RANSACRegressor, HuberRegressor)
 from sklearn.metrics import mean_squared_error, r2_score
 import matplotlib.mlab as mlab
+from write_json import modify
+
 sns.set_style('whitegrid')
 # pd.set_option('display.max_columns', None)
 pd.set_option('display.max_rows', None)
@@ -135,29 +137,6 @@ df.ORO_fci.fillna(method='bfill', inplace=True)
 df['FOL_fci'] = rolling_fci(df['FOL_precip'], k=0.97, start=0)
 df.ORO_fci.fillna(method='bfill', inplace=True)
 
-res_ids = ['SHA','ORO','FOL']
-for r in res_ids:
-	dfe = df[['%s_storage'%r,'%s_evap'%r,'%s_tas'%r]]
-	dfe[['storage','evap','tas']] = dfe[['%s_storage'%r,'%s_evap'%r,'%s_tas'%r]]
-	dfe = dfe.dropna(axis = 0)
-
-	storage = dfe.storage.values
-	evap = dfe.evap.values
-	temp = dfe.tas.values
-	storage2 = storage**2
-	temp2 = temp**2
-	X2Y2 = (temp**2)*(storage**2)
-	XY = temp*storage
-	reg = linear_model.LinearRegression()
-	X = np.vstack([temp, storage,XY,temp2, storage2])
-	reg.fit(X.T , evap)
-	# R2 = reg.score(X.T, evap)
-	# print('R2: %f' %(R2))
-	coeffs = reg.coef_
-	intercept = reg.intercept_
-	# print(intercept)
-	# print('Coefficients: \n', reg.coef_)
-
 # folsom is different
 # FMD = 136.4 - df.FMD_storage
 # FMD[FMD > 45] = 45
@@ -192,11 +171,14 @@ for r in res_ids:
 	XY = temp*storage
 	reg = linear_model.LinearRegression()
 	X = np.vstack([temp, storage,XY,temp2, storage2])
-	reg.fit(X.T , evap)
+	# reg.fit(X.T , evap)
 	# R2 = reg.score(X.T, evap)
 	# print('R2: %f' %(R2))
 	coeffs = reg.coef_
 	intercept = reg.intercept_
+	modify('evap_regression.json',"%s_evap_coeffs" %r, coeffs.tolist())
+	modify('evap_regression.json',"%s_evap_int"%r, intercept)
+
 	# print(intercept)
 	# print('Coefficients: \n', reg.coef_)
 
