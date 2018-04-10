@@ -19,7 +19,19 @@ cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 
 water_year = lambda d: d.year+1 if d.dayofyear >= 274 else d.year
-water_year_day = lambda d: d.dayofyear - 274 if d.dayofyear >= 274 else d.dayofyear + 91 
+def water_year_day(d): 
+  if d.is_leap_year:
+    if d.dayofyear >= 275:
+      return d.dayofyear - 274
+    elif d.dayofyear <= 274 and d.dayofyear >= 59:  
+      return d.dayofyear + 92
+    else:
+      return d.dayofyear + 92
+  elif not d.is_leap_year:
+    if d.dayofyear >= 274:
+      return d.dayofyear - 273
+    else:
+      return d.dayofyear + 92
 winter = lambda y: (y.index.month >= 10) | (y.index.month <= 3)
 summer = lambda y: (y.index.month >= 4) & (y.index.month <= 7)
 SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']

@@ -76,50 +76,14 @@ def get_forecast_WYI(df, zscore1, zscore2):
 	                           .apply(aprjul_flow_to_date)
 	                           .reset_index(level=0).drop('WY', axis=1)) 
 
-	aprjul_slopes = np.zeros(12)
-	aprjul_intercepts = np.zeros(12)
-	aprjul_means = np.zeros(12)
-	aprjul_stds = np.zeros(12)
-	octmar_means = np.zeros(12)
-	octmar_stds = np.zeros(12)
-	octmar_slopes = np.zeros(12)
-	octmar_intercepts = np.zeros(12)
 	month = Qm.index.month
 	snow_ind = Qm.snow
 	aprjul_cumulative_ind = Qm.aprjul_cumulative
-	for m in range(1,13): # calendar months
-		oct_index = (month == 10)
-		ix = (month == m)
-		coeffs = np.polyfit(snow_ind[ix],aprjul_cumulative_ind[ix],1)
-		aprjul_slopes[m-1] = coeffs[0]
-		aprjul_intercepts[m-1] = coeffs[1]
-		aprjul_means[m-1] = np.mean(aprjul_cumulative_ind[ix]) 
-		aprjul_stds[m-1] =  np.std(aprjul_cumulative_ind[ix])
 	octmar_flow_to_date_ind = Qm.octmar_flow_to_date	
 	octmar_cumulative_ind = Qm.octmar_cumulative
-	for m in list(range(10,13))+list(range(1,3)):  
-		flow_coeffs = np.polyfit(octmar_flow_to_date_ind[oct_index], octmar_cumulative_ind[ix], 1)
-		octmar_slopes[m-1] = flow_coeffs[0]
-		octmar_intercepts[m-1] = flow_coeffs[1]
-		octmar_means[m-1] = np.mean(octmar_cumulative_ind[ix])
-		octmar_stds[m-1] = np.std(octmar_cumulative_ind[ix])
-	stats =  {'aprjul_slope': aprjul_slopes,
-                    'aprjul_intercept': aprjul_intercepts, 
-                    'aprjul_mean': aprjul_means,
-                    'aprjul_std':  aprjul_stds, 
-                    'octmar_mean': octmar_means,
-                    'octmar_std':  octmar_stds, 
-                    'octmar_intercept': octmar_intercepts, 
-                    'octmar_slope': octmar_slopes}
 
-	stats = pd.DataFrame(stats, columns = ['aprjul_slope',
-                    'aprjul_intercept', 
-                    'aprjul_mean',
-                    'aprjul_std', 
-                    'octmar_mean',
-                    'octmar_std', 
-                    'octmar_intercept', 
-                    'octmar_slope'])
+	stats = pd.read_csv('WYI_forcasting_regression_stats.csv', index_col=0, parse_dates=True)
+
 	for s in stats: 
 		df[s] = pd.Series(index=df.index)
 		for m in range(1,13):
@@ -160,47 +124,31 @@ df['WYT_sim'] = df.WYI_sim.apply(WYI_to_WYT,
                                values=['W', 'AN', 'BN', 'D', 'C'])
 
 ### delta gains calculations
-dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','WYI_sim']] #gains datafile
+dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','WYI_sim']] #gains datafile
 stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
 # dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','WYI_sim']] #gains datafile
 # stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
 
 for station in stations:
-	df['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
-	dfg['%s_fnf' %station] = df['%s_fnf' %station]
-	df['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
-	dfg['%s_rol' %station] = df['%s_rol' %station]
-	df['%s_prev' %station] = df['%s_fnf' %station].shift(3)
-	dfg['%s_prev' %station] = df['%s_prev' %station]
-	df['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
-	dfg['%s_prev2' %station] = df['%s_prev2' %station]
-dfg = dfg.drop(pd.Timestamp('2012-07-01'), axis = 0)
+	# df['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
+	dfg['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
+	# df['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
+	dfg['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
+	# df['%s_prev' %station] = df['%s_fnf' %station].shift(3)
+	dfg['%s_prev' %station] = df['%s_fnf' %station].shift(3)
+	# df['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
+	dfg['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
+
 dfg = dfg.dropna()
 month_arr = np.arange(1,13)
 R2_arr = np.zeros(12)
 coeffs = []
 intercepts = []
-for m in month_arr:
-	dfm = dfg[dfg.index.month==m] #for each month
-	gains = dfm.netgains.values
-	WYI = dfm.WYI_sim.values
-	X = np.vstack([WYI])
-	# print(stations[1:])
-	# for station in [stations[0]]:
-		# X = np.vstack([dfm['%s_fnf' %station].values,dfm['%s_rol' %station].values, dfm['%s_prev' %station].values,dfm['%s_prev2' %station].values])
-	for station in stations:
-		V = np.vstack([dfm['%s_fnf' %station]])#.values,dfm['%s_rol' %station].values])#, dfm['%s_prev' %station].values,dfm['%s_prev2' %station].values])
-		X = np.vstack([X,V])
-	X = X.T
-	reg = linear_model.LinearRegression()
-	reg.fit(X, gains.T)
-	# R2 = reg.score(X, gains.T)
-	# R2_arr[m-1] = R2
-	# print('Coefficients: \n', reg.coef_)
-	coeffs.append(reg.coef_)
-	intercepts.append(reg.intercept_)
 
 df['gains_sim'] = pd.Series(index=df.index)
+f = open('gains_coefficients.txt', 'r')
+f = f.read()
+print(f)
 for index, row in df.iterrows():
 	m = index.month
 	X=[]
@@ -208,9 +156,6 @@ for index, row in df.iterrows():
 	e = intercepts[m-1]
 	for station in stations:
 		X.append(df.loc[index,'%s_fnf' %station])
-		# X.append(df.loc[index,'%s_rol' %station])
-		# X.append(df.loc[index,'%s_prev' %station]) 
-		# X.append(df.loc[index,'%s_prev2' %station])
 	X.append(df.loc[ index,'WYI_sim'])
 	X = np.array(X)
 	gains = (np.sum(X * b) + e) * cfs_tafd

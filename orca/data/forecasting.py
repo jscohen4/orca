@@ -5,7 +5,7 @@ import pandas as pd
 from sklearn import linear_model
 from sklearn.linear_model import (
     LinearRegression, TheilSenRegressor, RANSACRegressor, HuberRegressor)
-
+from write_json import modify
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 # pd.set_option('display.max_columns', None)
@@ -121,6 +121,7 @@ def get_forecast_WYI(df, zscore1, zscore2):
                     'octmar_std', 
                     'octmar_intercept', 
                     'octmar_slope'])
+	stats.to_csv('WYI_forcasting_regression_stats.csv')
 	for s in stats: 
 		df[s] = pd.Series(index=df.index)
 		for m in range(1,13):
@@ -198,8 +199,19 @@ for m in month_arr:
 	# R2 = reg.score(X, gains.T)
 	# R2_arr[m-1] = R2
 	# print('Coefficients: \n', reg.coef_)
+
 	coeffs.append(reg.coef_)
 	intercepts.append(reg.intercept_)
+i = 0
+for c in coeffs:
+	i += 1
+	modify('gains_regression.json',"month_%s" %i, c.tolist())
+modify('gains_regression.json',"intercepts", intercepts)
+
+# for coeff,station in zip(coeffs,stations):
+# 	f.write("%s\n" % station)
+# 	f.write("%s\n" % coeff)
+# f.write("intercepts \n")
 
 df['gains_sim'] = pd.Series(index=df.index)
 for index, row in df.iterrows():
@@ -299,6 +311,7 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 
 
 	stats = pd.DataFrame(stats, columns = [stat_types])
+	stats.to_csv('carryover_regression_statistics.csv')
 	stats = stats.values.T
 	for i,s in enumerate(stats):
 		stat = stats[i]
