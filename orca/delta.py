@@ -77,8 +77,11 @@ class Delta():
     min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
     export_ratio = self.export_ratio[wyt][m-1]
 
-    self.cvp_max = self.cvp_target[d]
-    self.swp_max = self.swp_target[d]
+    self.cvp_max = self.cvp_target[d-1]
+    self.swp_max = self.swp_target[d-1]
+    if d == 366:
+      cvp_max = self.cvp_target[d-2]
+      swp_max = self.swp_target[d-2]
     # omrNat = self.hist_OMR[t] + self.hist_TRP_pump[t] + self.hist_HRO_pump[t]
     # fish_trigger_adj = np.interp(t, self.omr_reqr['t'], self.omr_reqr['adjustment']) * cfs_tafd
     # maxTotPumpInt = omrNat - np.interp(dowy, self.omr_reqr['d'], self.omr_reqr['flow']) * cfs_tafd - fish_trigger_adj
@@ -136,8 +139,11 @@ class Delta():
     export_ratio = self.export_ratio[wyt][m-1]
     # self.calc_weekly_storage_release(t,gains,min_rule,orovilleAS,folsomAS,shastaAS)
 
-    cvp_max = self.cvp_pmax[d]
-    swp_max = self.swp_pmax[d]
+    cvp_max = self.cvp_pmax[d-1]
+    swp_max = self.swp_pmax[d-1]
+    if d == 366:
+      cvp_max = self.cvp_pmax[d-2]
+      swp_max = self.swp_pmax[d-2]
     # cvp_max, swp_max = self.find_pumping(d, dowy, t, wyt)
 
     required_outflow = max(min_rule, (1-export_ratio)*self.inflow[t])
