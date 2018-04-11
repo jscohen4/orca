@@ -3,12 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from orca import *
 
-scenario = True
-
-if not scenario:
-  model = Model('orca/data/orca-data-forecasted.csv', 'orca/data/orca-data-forecasted.csv',sd='10-01-1999',scenario = False, sim_gains = True) #beacuse of rolling calc in gains, we start on 10th day of
-  results = model.simulate() # takes a while... save results
-  results.to_csv('orca/data/results.csv')
+scenario = False
 
 if scenario:
   model = Model('orca/data/orca-data-climate-forecasted.csv', 'orca/data/results.csv',sd='10-01-1999',scenario = True, sim_gains = True) #climate scenario test
@@ -34,11 +29,28 @@ if scenario:
   for f in ['D','W','M','AS-OCT']:
     for s,c in zip(sim,calibr_pts):
       plotter.plotting(s, freq=f)
-      plt.savefig('orca/figs/%s_%s.pdf' % (f,c), dpi=150)
+      plt.savefig('orca/figs/%s_%s_proj.pdf' % (f,c), dpi=150)
       plt.close()
 
 
 if not scenario:
+  model = Model('orca/data/orca-data-forecasted.csv', 'orca/data/orca-data-forecasted.csv',sd='10-01-1999',scenario = False, sim_gains = True) #beacuse of rolling calc in gains, we start on 10th day of
+  results = model.simulate() # takes a while... save results
+  results.to_csv('orca/data/results.csv')
+
+  results['Combined_pump'] = results['DEL_HRO_pump'] + results['DEL_TRP_pump']
+  sim = [results['DEL_HRO_pump'] / cfs_tafd,
+       results['DEL_TRP_pump'] / cfs_tafd, 
+       # (results['DEL_HRO_pump'] + results['DEL_TRP_pump']) / cfs_tafd,
+       results['Combined_pump'] / cfs_tafd,
+       results['SHA_storage'], 
+       results['SHA_out'] / cfs_tafd,
+       results['FOL_storage'],
+       results['FOL_out'] / cfs_tafd,
+       results['ORO_storage'],
+       results['ORO_out'] / cfs_tafd,
+       results['DEL_in'] / cfs_tafd,
+       results['DEL_out'] / cfs_tafd]
   obs = [model.df['HRO_pump'],
          model.df['TRP_pump'],
          (model.df['HRO_pump'] + model.df['TRP_pump']),
@@ -56,7 +68,7 @@ if not scenario:
   for f in ['D','W','M','AS-OCT']:
     for s,o,c in zip(sim,obs,calibr_pts):
       plotter.compare(s, o, freq=f)
-      plt.savefig('orca/figs/%s_%s.pdf' % (f,c), dpi=150)
+      plt.savefig('orca/figs/%s_%s_hist.pdf' % (f,c), dpi=150)
       plt.close()
 
 # elif scenario:
