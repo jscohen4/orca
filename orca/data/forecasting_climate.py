@@ -233,15 +233,16 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 	stat_types =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
 
 	stats = pd.read_csv('carryover_regression_statistics.csv', index_col = 0)
-
 	stats = stats.values.T
 	for i,s in enumerate(stats):
 		stat = stats[i]
-		v = np.append(stat,np.tile(stat, 4)) #2017 WY
-		for y in range(26): # 18 years
+		v = np.append(stat,np.tile(stat, 1)) #2000 WY
+		v = np.append(v,[stat[364]]) #leap year
+		for y in range(24): # 2001-2096 WYs
 			v = np.append(v,np.tile(stat, 4))
 			v = np.append(v,[stat[364]]) #leap year
-		v = np.append(v,np.tile(stat, 3)) #2017 WY
+		v = np.append(v,np.tile(stat, 2)) #2097-2099 WY
+
 		r[stat_types[i]] = pd.Series(v,index=r.index)
 	r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
 	r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)
