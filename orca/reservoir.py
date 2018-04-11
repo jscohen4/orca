@@ -15,6 +15,9 @@ class Reservoir():
     self.wyt = df.WYT_sim# simulated (forecasted)wyi
     for k,v in json.load(open('orca/data/%s_properties.json' % key)).items():
       setattr(self,k,v)
+    self.evap_reg = json.load(open('orca/data/evap_regression.json'))
+    self.evap_coeffs = self.evap_reg['%s_evap_coeffs' % key]
+    self.evap_int = self.evap_reg['%s_evap_int' % key]
     # self.sodd_pct_var = self.sodd_pct
     self.Q = df['%s_in_fix'% key].values * cfs_tafd
     self.E = df['%s_evap'% key].values * cfs_tafd
@@ -23,6 +26,7 @@ class Reservoir():
     self.intercept = df['%s_intercept' % key].values
     self.mean = df['%s_mean' % key].values
     self.std = df['%s_std' % key].values  
+    self.tas = df['%s_tas' % key].values
     self.WYI = df['WYI_sim'].values
     self.obs_flow = df['%s_cum_flow_to_date' % key].values
     self.obs_snow = df['%s_snowpack' % key].values
@@ -58,12 +62,12 @@ class Reservoir():
     return self.tocs_index[i][d]
 
 
-  def step(self, t, d, m, wyt, dowy, dmin=0.0, sodd=0.0): #pretty much the same as master, although there are opportunities to speed up this function by using pandas functions elsewhere
+  def step(self, t, d, m, wyt, dowy, dmin=0.0, sodd=0.0, scenario = False): #pretty much the same as master, although there are opportunities to speed up this function by using pandas functions elsewhere
     d = self.dayofyear[t]
     dowy = water_day(d)
     m = self.month[t]
     wyt = self.wyt[t]
-
+    self.scenario = scenario
     # envmin = max(self.env_min_flow[wyt][m-1], self.temp_releases[wyt][m-1]) * cfs_tafd
     envmin = self.env_min_flow[wyt][m-1] * cfs_tafd
 
@@ -100,8 +104,21 @@ class Reservoir():
     #     print(self.R[t])
     #     print(self.carryover_release)
     self.R[t] = min(self.R[t], self.max_outflow * cfs_tafd)
-
     self.R[t] +=  max(W - self.R[t] - self.capacity, 0) # spill
+
+    #getting evap
+    if self.scenario:
+        X=[]
+        storage = self.S[t-1]
+        temp = self.tas[t]
+        X.append(temp)
+        X.append(storage)
+        X.append(temp*storage)
+        X.append(temp**2)
+        X.append(storage**2)
+        print(X)
+        self.E[t] = (np.sum(X * self.evap_int) + self.evap_int) 
+
     self.S[t] = W - self.R[t] - self.E[t] # mass balance update
     self.R_to_delta[t] = max(self.R[t] - nodd, 0) # delta calcs need this
 
