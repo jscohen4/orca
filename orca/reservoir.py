@@ -10,7 +10,6 @@ class Reservoir():
   def __init__(self, df, dfh, key, scenario = False):
     T = len(df)
     self.scenario = scenario
-    print(self.scenario)
     self.dayofyear = df.index.dayofyear
     self.month = df.index.month
     self.key = key
@@ -18,9 +17,12 @@ class Reservoir():
     for k,v in json.load(open('orca/data/%s_properties.json' % key)).items():
       setattr(self,k,v)
     self.evap_reg = json.load(open('orca/data/evap_regression.json'))
-    self.evap_coeffs = self.evap_reg['%s_evap_coeffs' % key]
+    self.evap_coeffs = np.asarray(self.evap_reg['%s_evap_coeffs' % key])
     self.evap_int = self.evap_reg['%s_evap_int' % key]
     # self.sodd_pct_var = self.sodd_pct
+    if self.scenario:
+        self.Q = df['%s_fnf'% key].values * cfs_tafd
+        self.E = np.zeros(T)
     if not self.scenario:
         self.Q = df['%s_in_fix'% key].values * cfs_tafd
         self.E = df['%s_evap'% key].values * cfs_tafd
@@ -118,8 +120,7 @@ class Reservoir():
         X.append(temp*storage)
         X.append(temp**2)
         X.append(storage**2)
-        print(X)
-        self.E[t] = (np.sum(X * self.evap_int) + self.evap_int) 
+        self.E[t] = (np.sum(X * self.evap_coeffs) + self.evap_int) * cfs_tafd
 
     self.S[t] = W - self.R[t] - self.E[t] # mass balance update
     self.R_to_delta[t] = max(self.R[t] - nodd, 0) # delta calcs need this

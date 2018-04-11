@@ -36,11 +36,12 @@ class Delta():
     self.cvp_pmax = np.zeros(367)
     self.swp_pmax = np.zeros(367)
     # self.hist_OMR = df.OMR * cfs_tafd
-    self.hist_TRP_pump = df.TRP_pump * cfs_tafd
-    self.hist_HRO_pump = df.HRO_pump * cfs_tafd
-    self.SanLuis_SWP_stor = np.zeros(T)
-    self.SanLuis_CVP_stor = np.zeros(T)
-    self.OMR = np.zeros(T)
+    if not self.sim_gains:
+      self.hist_TRP_pump = df.TRP_pump * cfs_tafd
+      self.hist_HRO_pump = df.HRO_pump * cfs_tafd
+      self.SanLuis_SWP_stor = np.zeros(T)
+      self.SanLuis_CVP_stor = np.zeros(T)
+      self.OMR = np.zeros(T)
     # self.SanLuis_SWP_stor[0] = df.SLS_storage.iloc[0]
     # self.SanLuis_CVP_stor[0] = df.SLF_storage.iloc[0]
     # self.SanLuis_SWP_out = df.SLS_out
@@ -131,7 +132,7 @@ class Delta():
 
     return cvp_max, swp_max
    
-  def step(self, t, d, m, wyt, dowy, cvp_flows, swp_flows, realinflow):
+  def step(self, t, d, m, wyt, dowy, cvp_flows, swp_flows):
 
     self.inflow[t] = max(self.gains[t] + cvp_flows + swp_flows, 0) # realinflow * cfs_tafd
 

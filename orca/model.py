@@ -18,7 +18,7 @@ class Model():
     self.folsom = Reservoir(self.df, self.dfh, 'FOL', self.scenario)
     self.oroville = Reservoir(self.df, self.dfh, 'ORO', self.scenario)
     self.reservoirs = [self.shasta, self.folsom, self.oroville]
-    self.delta = Delta(self.df, 'DEL',self.sim_gains)
+    self.delta = Delta(self.df, 'DEL', self.sim_gains)
     self.dayofyear = self.df.index.dayofyear
     self.month = self.df.index.month    
     self.wyt = self.df.WYT_sim
@@ -47,7 +47,7 @@ class Model():
       self.oroville.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_swp[t], self.scenario)
       self.delta.step(t, d, m, wyt, dowy,
                       self.shasta.R_to_delta[t] + self.folsom.R_to_delta[t],
-                      self.oroville.R_to_delta[t], self.df.DeltaIn[t])
+                      self.oroville.R_to_delta[t])
 
     return self.results_as_df()
 

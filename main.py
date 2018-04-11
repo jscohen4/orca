@@ -16,8 +16,8 @@ if scenario:
 
 # calibration points (lists of pandas series)
 # results = pd.read_csv('orca/data/results.csv', index_col=0, parse_dates=True)
-results['Combined_pump'] = results['DEL_HRO_pump'] + results['DEL_TRP_pump']
-sim = [results['DEL_HRO_pump'] / cfs_tafd,
+  results['Combined_pump'] = results['DEL_HRO_pump'] + results['DEL_TRP_pump']
+  sim = [results['DEL_HRO_pump'] / cfs_tafd,
        results['DEL_TRP_pump'] / cfs_tafd, 
        # (results['DEL_HRO_pump'] + results['DEL_TRP_pump']) / cfs_tafd,
        results['Combined_pump'] / cfs_tafd,
@@ -29,6 +29,15 @@ sim = [results['DEL_HRO_pump'] / cfs_tafd,
        results['ORO_out'] / cfs_tafd,
        results['DEL_in'] / cfs_tafd,
        results['DEL_out'] / cfs_tafd]
+
+  calibr_pts = ['HRO_pump','TRP_pump','Combined_pump','SHA_storage','SHA_out','FOL_storage','FOL_out','ORO_storage','ORO_out','DeltaIn','DeltaOut']
+  for f in ['D','W','M','AS-OCT']:
+    for s,c in zip(sim,calibr_pts):
+      plotter.plotting(s, freq=f)
+      plt.savefig('orca/figs/%s_%s.pdf' % (f,c), dpi=150)
+      plt.close()
+
+
 if not scenario:
   obs = [model.df['HRO_pump'],
          model.df['TRP_pump'],
