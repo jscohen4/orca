@@ -5,9 +5,10 @@ import pandas as pd
 from sklearn import linear_model
 from sklearn.linear_model import (
     LinearRegression, TheilSenRegressor, RANSACRegressor, HuberRegressor)
-
+import json
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
+gains_reg = json.load(open('gains_regression.json'))
 
 def WYI_to_WYT(WYI, thresholds, values):
   for t,v in zip(thresholds,values):
@@ -146,14 +147,12 @@ coeffs = []
 intercepts = []
 
 df['gains_sim'] = pd.Series(index=df.index)
-f = open('gains_coefficients.txt', 'r')
-f = f.read()
-print(f)
+
 for index, row in df.iterrows():
 	m = index.month
 	X=[]
-	b = coeffs[m-1]
-	e = intercepts[m-1]
+	b = gains_reg['month_%s' %m]
+	e = gains_reg['intercepts'][m-1]
 	for station in stations:
 		X.append(df.loc[index,'%s_fnf' %station])
 	X.append(df.loc[ index,'WYI_sim'])
@@ -161,7 +160,7 @@ for index, row in df.iterrows():
 	gains = (np.sum(X * b) + e) * cfs_tafd
 	df.loc[index, 'gains_sim'] = gains
 df['gains_sim'] = df.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
-df['netgains'] = df.netgains.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
+# df['netgains'] = df.netgains.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
 
 for index, row in df.iterrows():
 	ix = index.month
@@ -230,40 +229,19 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 	r['remaining_flow'] = (r.groupby('WY').inf
 	                            .apply(rem_flow))
 	r.cum_flow_to_date.fillna(method='ffill', inplace=True)
-	slopes = np.zeros(365)
-	intercepts = np.zeros(365)
-	means = np.zeros(365)
-	stds = np.zeros(365)
-	snowpack = r.snowpack
-	remaining_flow = r.remaining_flow
-	DOWY = r.DOWY
-	for d in range(1,366):
-		ix = (DOWY == d-1)
-		coeffs = np.polyfit(snowpack[ix],remaining_flow[ix],1)
-		slopes[d-1] = coeffs[0]
-		intercepts[d-1] = coeffs[1]
-		means[d-1] = np.mean(remaining_flow[ix]) 
-		stds[d-1] = np.std(remaining_flow[ix])
-	
 
 	stat_types =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
 
-	stats =  {stat_types[0]: slopes,
-	                  stat_types[1]: intercepts, 
-	                  stat_types[2]: means,
-	                  stat_types[3]:  stds}
-
-
-	stats = pd.DataFrame(stats, columns = [stat_types])
+	stats = pd.read_csv('carryover_regression_statistics.csv', index_col = 0)
 
 	stats = stats.values.T
 	for i,s in enumerate(stats):
 		stat = stats[i]
-		v = np.append(stat,[stat[364]]) #2000 WY
-		for y in range(4): # 18 years
+		v = np.append(stat,np.tile(stat, 4)) #2017 WY
+		for y in range(26): # 18 years
 			v = np.append(v,np.tile(stat, 4))
 			v = np.append(v,[stat[364]]) #leap year
-		v = np.append(v,np.tile(stat, 1)) #2017 WY
+		v = np.append(v,np.tile(stat, 3)) #2017 WY
 		r[stat_types[i]] = pd.Series(v,index=r.index)
 	r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
 	r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)

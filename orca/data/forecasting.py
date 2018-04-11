@@ -273,7 +273,7 @@ FOL_inf = (df['FOL_fnf'].to_frame(name='inf') * cfsd_mafd)
 
 
 res_frames = [SHA_inf,ORO_inf,FOL_inf]
-
+stats_file = pd.DataFrame()
 for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 	r['WY'] = df.WY
 	r['DOWY'] = df.DOWY
@@ -311,7 +311,7 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 
 
 	stats = pd.DataFrame(stats, columns = [stat_types])
-	stats.to_csv('carryover_regression_statistics.csv')
+	stats_file.to_csv('carryover_regression_statistics.csv')
 	stats = stats.values.T
 	for i,s in enumerate(stats):
 		stat = stats[i]

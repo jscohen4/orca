@@ -16,6 +16,7 @@ class Model():
     self.oroville = Reservoir(self.df, 'ORO')
     self.reservoirs = [self.shasta, self.folsom, self.oroville]
     self.sim_gains = sim_gains
+    self.scenario = scenario
     self.delta = Delta(self.df, 'DEL',self.sim_gains)
     self.dayofyear = self.df.index.dayofyear
     self.month = self.df.index.month    
@@ -40,9 +41,9 @@ class Model():
 
       # self.shasta.sodd_pct = self.delta.shastaSODDPCT
       # self.folsom.sodd_pct = self.delta.folsomSODDPCT
-      self.shasta.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t])
-      self.folsom.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t])
-      self.oroville.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_swp[t])
+      self.shasta.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t], self.scenario)
+      self.folsom.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t], self.scenario)
+      self.oroville.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_swp[t], self.scenario)
       self.delta.step(t, d, m, wyt, dowy,
                       self.shasta.R_to_delta[t] + self.folsom.R_to_delta[t],
                       self.oroville.R_to_delta[t], self.df.DeltaIn[t])

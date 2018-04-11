@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from orca import *
+
 model = Model('orca/data/orca-data-forecasted.csv', sd='10-01-1999',scenario = False, sim_gains = True) #beacuse of rolling calc in gains, we start on 10th day of
 results = model.simulate() # takes a while... save results
 results.to_csv('orca/data/results.csv')
