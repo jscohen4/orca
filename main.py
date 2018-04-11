@@ -42,3 +42,6 @@ if not scenario:
       plotter.compare(s, o, freq=f)
       plt.savefig('orca/figs/%s_%s.pdf' % (f,c), dpi=150)
       plt.close()
+
+# elif scenario:
+  
