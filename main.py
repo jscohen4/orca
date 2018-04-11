@@ -22,23 +22,23 @@ sim = [results['DEL_HRO_pump'] / cfs_tafd,
        results['ORO_out'] / cfs_tafd,
        results['DEL_in'] / cfs_tafd,
        results['DEL_out'] / cfs_tafd]
- 
-obs = [model.df['HRO_pump'],
-       model.df['TRP_pump'],
-       (model.df['HRO_pump'] + model.df['TRP_pump']),
-       model.df['SHA_storage'],
-       model.df['SHA_out'],
-       model.df['FOL_storage'],
-       model.df['FOL_out'],
-       model.df['ORO_storage'],
-       model.df['ORO_out'],
-       model.df['DeltaIn'],
-       model.df['DeltaOut']]
-plotter.Rsquares(sim,obs)
+if not scenario:
+  obs = [model.df['HRO_pump'],
+         model.df['TRP_pump'],
+         (model.df['HRO_pump'] + model.df['TRP_pump']),
+         model.df['SHA_storage'],
+         model.df['SHA_out'],
+         model.df['FOL_storage'],
+         model.df['FOL_out'],
+         model.df['ORO_storage'],
+         model.df['ORO_out'],
+         model.df['DeltaIn'],
+         model.df['DeltaOut']]
+  plotter.Rsquares(sim,obs)
 
-calibr_pts = ['HRO_pump','TRP_pump','Combined_pump','SHA_storage','SHA_out','FOL_storage','FOL_out','ORO_storage','ORO_out','DeltaIn','DeltaOut']
-for f in ['D','W','M','AS-OCT']:
-  for s,o,c in zip(sim,obs,calibr_pts):
-    plotter.compare(s, o, freq=f)
-    plt.savefig('orca/figs/%s_%s.pdf' % (f,c), dpi=150)
-    plt.close()
+  calibr_pts = ['HRO_pump','TRP_pump','Combined_pump','SHA_storage','SHA_out','FOL_storage','FOL_out','ORO_storage','ORO_out','DeltaIn','DeltaOut']
+  for f in ['D','W','M','AS-OCT']:
+    for s,o,c in zip(sim,obs,calibr_pts):
+      plotter.compare(s, o, freq=f)
+      plt.savefig('orca/figs/%s_%s.pdf' % (f,c), dpi=150)
+      plt.close()

@@ -133,6 +133,7 @@ stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
 for station in stations:
 	# df['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
 	dfg['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
+
 	# df['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
 	dfg['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
 	# df['%s_prev' %station] = df['%s_fnf' %station].shift(3)
@@ -140,22 +141,22 @@ for station in stations:
 	# df['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
 	dfg['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
 
-dfg = dfg.dropna()
+# dfg = dfg.dropna()
+dfg = dfg.fillna(method = 'bfill')
 month_arr = np.arange(1,13)
 R2_arr = np.zeros(12)
 coeffs = []
 intercepts = []
 
 df['gains_sim'] = pd.Series(index=df.index)
-
 for index, row in df.iterrows():
 	m = index.month
 	X=[]
 	b = gains_reg['month_%s' %m]
 	e = gains_reg['intercepts'][m-1]
 	for station in stations:
-		X.append(df.loc[index,'%s_fnf' %station])
-	X.append(df.loc[ index,'WYI_sim'])
+		X.append(dfg.loc[index,'%s_fnf' %station])
+	X.append(df.loc[index,'WYI_sim'])
 	X = np.array(X)
 	gains = (np.sum(X * b) + e) * cfs_tafd
 	df.loc[index, 'gains_sim'] = gains
