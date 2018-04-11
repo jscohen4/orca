@@ -33,6 +33,20 @@ def compare(res,obs,freq='D'):
   plt.tight_layout()
   # plt.show()
 
+def plotting(res,freq='D'):
+  # input two pandas series and a frequency
+  sns.set_style('whitegrid')
+  plt.rcParams['figure.figsize'] = (12, 8)
+  res = res.resample(freq).mean()
+
+  fig = plt.figure(figsize=(12, 3)) 
+  gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1]) 
+
+  ax0 = plt.subplot(gs[0])
+  res.plot(ax=ax0, color='indianred')
+  ax0.set_title('%s' % (res.name), loc='left') # family='sans-serif'
+  ax0.legend(['Simulated'], ncol=3)
+  plt.tight_layout()
 
 def Rsquares(sim,obs):
   text_file = open('orca/data/Rsquares.txt', 'w')

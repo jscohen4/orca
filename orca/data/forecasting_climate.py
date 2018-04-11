@@ -133,6 +133,7 @@ stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
 for station in stations:
 	# df['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
 	dfg['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
+
 	# df['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
 	dfg['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
 	# df['%s_prev' %station] = df['%s_fnf' %station].shift(3)
@@ -140,22 +141,22 @@ for station in stations:
 	# df['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
 	dfg['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
 
-dfg = dfg.dropna()
+# dfg = dfg.dropna()
+dfg = dfg.fillna(method = 'bfill')
 month_arr = np.arange(1,13)
 R2_arr = np.zeros(12)
 coeffs = []
 intercepts = []
 
 df['gains_sim'] = pd.Series(index=df.index)
-
 for index, row in df.iterrows():
 	m = index.month
 	X=[]
 	b = gains_reg['month_%s' %m]
 	e = gains_reg['intercepts'][m-1]
 	for station in stations:
-		X.append(df.loc[index,'%s_fnf' %station])
-	X.append(df.loc[ index,'WYI_sim'])
+		X.append(dfg.loc[index,'%s_fnf' %station])
+	X.append(df.loc[index,'WYI_sim'])
 	X = np.array(X)
 	gains = (np.sum(X * b) + e) * cfs_tafd
 	df.loc[index, 'gains_sim'] = gains
@@ -233,6 +234,7 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 	stat_types =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
 
 	stats = pd.read_csv('carryover_regression_statistics.csv', index_col = 0)
+	stats = stats[stat_types]
 	stats = stats.values.T
 	for i,s in enumerate(stats):
 		stat = stats[i]
@@ -242,7 +244,6 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 			v = np.append(v,np.tile(stat, 4))
 			v = np.append(v,[stat[364]]) #leap year
 		v = np.append(v,np.tile(stat, 2)) #2097-2099 WY
-
 		r[stat_types[i]] = pd.Series(v,index=r.index)
 	r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
 	r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)
