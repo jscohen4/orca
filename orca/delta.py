@@ -6,7 +6,7 @@ from .util import *
 
 class Delta():
 
-  def __init__(self, df, key, sim_gains = False):
+  def __init__(self, df, key, sim_gains):
     T = len(df)
     self.dayofyear = df.index.dayofyear
     self.month = df.index.month

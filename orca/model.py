@@ -8,15 +8,16 @@ import matplotlib.pyplot as plt
 
 class Model():
 
-  def __init__(self, datafile, sd='10-01-1999',scenario = False, sim_gains = False):
+  def __init__(self, datafile, hist_datafile, sd='10-01-1999',scenario = False, sim_gains = False):
     self.df = pd.read_csv(datafile, index_col=0, parse_dates=True)
-    self.T = len(self.df)
-    self.shasta = Reservoir(self.df, 'SHA')
-    self.folsom = Reservoir(self.df, 'FOL')
-    self.oroville = Reservoir(self.df, 'ORO')
-    self.reservoirs = [self.shasta, self.folsom, self.oroville]
+    self.dfh = pd.read_csv(hist_datafile, index_col=0, parse_dates=True)
     self.sim_gains = sim_gains
     self.scenario = scenario
+    self.T = len(self.df)
+    self.shasta = Reservoir(self.df, self.dfh, 'SHA', self.scenario)
+    self.folsom = Reservoir(self.df, self.dfh, 'FOL', self.scenario)
+    self.oroville = Reservoir(self.df, self.dfh, 'ORO', self.scenario)
+    self.reservoirs = [self.shasta, self.folsom, self.oroville]
     self.delta = Delta(self.df, 'DEL',self.sim_gains)
     self.dayofyear = self.df.index.dayofyear
     self.month = self.df.index.month    

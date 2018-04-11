@@ -9,7 +9,7 @@ from write_json import modify
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 # pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
+# pd.set_option('display.max_rows', None)
 
 def WYI_to_WYT(WYI, thresholds, values):
   for t,v in zip(thresholds,values):
@@ -311,7 +311,12 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 
 
 	stats = pd.DataFrame(stats, columns = [stat_types])
-	stats_file.to_csv('carryover_regression_statistics.csv')
+
+	if res_id == 'SHA':
+		stats_file = stats
+	else:
+		stats_file[stat_types] = stats
+
 	stats = stats.values.T
 	for i,s in enumerate(stats):
 		stat = stats[i]
@@ -327,4 +332,6 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 	r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)
 	r.drop(['inf','WY','DOWY'], axis=1, inplace=True)
 	df = pd.concat([df, r], axis=1, join_axes=[df.index])
+
+stats_file.to_csv('carryover_regression_statistics.csv')
 df.to_csv('orca-data-forecasted.csv')

@@ -3,12 +3,19 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from orca import *
 
-model = Model('orca/data/orca-data-forecasted.csv', sd='10-01-1999',scenario = False, sim_gains = True) #beacuse of rolling calc in gains, we start on 10th day of
-results = model.simulate() # takes a while... save results
-results.to_csv('orca/data/results.csv')
-# results = pd.read_csv('orca/data/results.csv', index_col=0, parse_dates=True)
+scenario = True
+
+if not scenario:
+  model = Model('orca/data/orca-data-forecasted.csv', 'orca/data/orca-data-forecasted.csv',sd='10-01-1999',scenario = False, sim_gains = True) #beacuse of rolling calc in gains, we start on 10th day of
+  results = model.simulate() # takes a while... save results
+  results.to_csv('orca/data/results.csv')
+
+if scenario:
+  model = Model('orca/data/orca-data-climate-forecasted.csv', 'orca/data/results.csv',sd='10-01-1999',scenario = True, sim_gains = True) #climate scenario test
+  results = model.simulate() # takes a while... save results
 
 # calibration points (lists of pandas series)
+# results = pd.read_csv('orca/data/results.csv', index_col=0, parse_dates=True)
 results['Combined_pump'] = results['DEL_HRO_pump'] + results['DEL_TRP_pump']
 sim = [results['DEL_HRO_pump'] / cfs_tafd,
        results['DEL_TRP_pump'] / cfs_tafd, 
