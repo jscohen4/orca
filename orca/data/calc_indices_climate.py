@@ -39,7 +39,7 @@ SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf']
 
 # don't change this data
 
-df = pd.read_csv('access1-0_rcp45_r1i1p1_input_data.csv', index_col=0, parse_dates=True) #climate projection datafile
+df = pd.read_csv('climate_input_data.csv', index_col=0, parse_dates=True) #climate projection datafile
 df = df[(df.index > '1996-09-30')]
 df['WY'] = pd.Series([water_year(d) for d in df.index], index=df.index)
 df['DOWY'] = pd.Series([water_year_day(d) for d in df.index], index=df.index)
@@ -52,6 +52,46 @@ def WYI_to_WYT(WYI, thresholds, values):
   for t,v in zip(thresholds,values):
     if WYI > t:
       return v
+### bias corrections and unit conversions
+
+#streamflows
+# df['TLG_fnf'] = df['TLG_fnf'] no correction
+# df['BND_fnf'] = df['BND_fnf'] no correction
+# df['NML_fnf'] = df['NML_fnf'] no correction
+# df['MIL_fnf'] = df['MIL_fnf'] no correction
+
+df['SHA_fnf'] = df['SHA_fnf'] * 0.95 #0.95
+df['ORO_fnf'] = df['ORO_fnf'] * 1.1
+df['FOL_fnf'] = df['FOL_fnf'] * 0.8 #0.8
+df['MRC_fnf'] = df['MRC_fnf'] * 0.9
+df['MKM_fnf'] = df['MKM_fnf'] * 0.9
+df['NHG_fnf'] = df['NHG_fnf'] * 0.25
+df['YRS_fnf'] = df['YRS_fnf'] * 0.85
+
+#snow convert to inches
+snow_ids = ['MED_swe','SDF_swe','SLT_swe','BKL_swe','HMB_swe','FOR_swe','RTL_swe',
+                'GRZ_swe','GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','RBP_swe','CAP_swe']
+for sn in snow_ids:
+  df[sn] = df[sn]/25.4
+#snow bias correction ( none for RBP and CAP)
+df['MED_swe'] = df['MED_swe'] * 8.0
+df['SDF_swe'] = df['SDF_swe'] * 0.6
+df['SLT_swe'] = df['SLT_swe'] * 2.7
+df['BKL_swe'] = df['BKL_swe'] * 0.6
+df['HMB_swe'] = df['HMB_swe'] * 3.2
+df['FOR_swe'] = df['FOR_swe'] * 4.8
+df['RTL_swe'] = df['RTL_swe'] * 2.3
+df['GRZ_swe'] = df['GRZ_swe'] * 1.8
+df['GOL_swe'] = df['GOL_swe'] * 2.0
+df['CSL_swe'] = df['CSL_swe'] * 1.2
+df['HYS_swe'] = df['HYS_swe'] * 0.85
+df['SCN_swe'] = df['SCN_swe'] * 1.7
+df['RBB_swe'] = df['RBB_swe'] * 1.7
+
+#temp conversion and bias correction
+df['SHA_tas'] = (df['SHA_tas'] * 9/5 + 32) * 1.06
+df['ORO_tas'] = (df['ORO_tas'] * 9/5 + 32) * 1.01
+df['FOL_tas'] = (df['FOL_tas'] * 9/5 + 32) * 0.98
 
 # Sacramento Water Year Index (historical)
 get_SR_WYI = lambda x,p: 0.3*x[winter(x)].sum() + 0.4*x[summer(x)].sum() + 0.3*p
@@ -140,7 +180,6 @@ dfs = dfs.resample('M').mean()
 df = df.drop(df[snow_ids],axis = 1)
 df = df.join(dfs).fillna(method = 'ffill') #snow stations now cleaned up and back in main datafile 
 
-# df = df[(df.index > '1999-09-30')]#start at 2000 water year
 df = df[(df.index > '1999-09-30')]#start at 2000 water year
 
 #sum of stations for each basins

@@ -38,8 +38,6 @@ class Model():
       self.folsom.find_available_storage(t,dowy,self.folsom.exceedence[wyt])
       self.shasta.find_available_storage(t,dowy,self.shasta.exceedence[wyt])   
       self.delta.calc_flow_bounds(t, d, m, wyt, dowy, self.sumnodds[d], self.oroville.available_storage[t], self.shasta.available_storage[t], self.folsom.available_storage[t])
-      # self.delta.calc_flow_bounds(t, d, m, wyt, dowy, self.sumnodds[d])
-
       # self.shasta.sodd_pct = self.delta.shastaSODDPCT
       # self.folsom.sodd_pct = self.delta.folsomSODDPCT
       self.shasta.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t], self.scenario)

@@ -1,12 +1,12 @@
 Timestep       Daily        Weekly       Monthly      Water Year   
-DEL_HRO_pump   0.102        0.126        0.158        0.425        
-DEL_TRP_pump   0.130        0.149        0.172        0.683        
-Combined_pump  0.221        0.258        0.306        0.626        
-SHA_storage    0.730        0.730        0.728        0.552        
-SHA_out        0.635        0.723        0.853        0.932        
-FOL_storage    0.711        0.712        0.717        0.733        
-FOL_out        0.788        0.878        0.912        0.990        
-ORO_storage    0.862        0.862        0.861        0.838        
-ORO_out        0.641        0.724        0.804        0.965        
-DEL_in         0.401        0.527        0.683        0.845        
-DEL_out        0.387        0.512        0.671        0.815        
+DEL_HRO_pump   0.144        0.171        0.213        0.519        
+DEL_TRP_pump   0.160        0.184        0.212        0.676        
+Combined_pump  0.222        0.250        0.289        0.648        
+SHA_storage    0.811        0.813        0.812        0.802        
+SHA_out        0.612        0.700        0.813        0.935        
+FOL_storage    0.723        0.725        0.732        0.827        
+FOL_out        0.791        0.880        0.915        0.986        
+ORO_storage    0.806        0.807        0.808        0.824        
+ORO_out        0.628        0.714        0.785        0.961        
+DEL_in         0.942        0.959        0.984        0.996        
+DEL_out        0.939        0.957        0.985        0.998        

@@ -9,8 +9,8 @@ def compare(res,obs,freq='D'):
   # input two pandas series and a frequency
   sns.set_style('whitegrid')
   plt.rcParams['figure.figsize'] = (12, 8)
-  res = res.resample(freq).mean()
-  obs = obs.resample(freq).mean()
+  res = res.resample(freq).sum()
+  obs = obs.resample(freq).sum()
 
   fig = plt.figure(figsize=(12, 3)) 
   gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1]) 
@@ -56,8 +56,8 @@ def Rsquares(sim,obs):
     r2s_point = []
     r2s_point.append('%s ' %s.name)
     for i,f in enumerate(['D','W','M','AS-OCT']):
-      sim = s.resample(f).mean()
-      obs = o.resample(f).mean()
+      sim = s.resample(f).sum()
+      obs = o.resample(f).sum()
       r = np.corrcoef(obs.values,sim.values)[0,1]
       r2s_point.append('%.5s' %r**2)
     r2s_point.append('\n')

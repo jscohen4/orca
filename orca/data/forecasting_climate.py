@@ -166,36 +166,33 @@ df['gains_sim'] = df.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in miss
 for index, row in df.iterrows():
 	ix = index.month
 	d = index.day
-
-	if (ix >= 3) & (ix <= 8):
-		if ix == 3:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.4
-		else:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.2
-	if (ix >= 5) & (ix <= 8):
-		d = index.day
-		if ix == 5: 
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] - 12- d*0.4
-		if ix ==6:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] - 20
-		if ix ==7:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] - 20
-		if ix == 8:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] + d*0.55 -20
-	# if (ix >= 9) & (ix <= 12):
-	# 	df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] + 5
-
-
-	# df['gains_sim'] = df['gains_sim']+0.004
-
-# plt.plot(df.gains_sim,label = 'Simulated gains')
-# plt.show()
-# df[['netgains','gains_sim']].plot(legend = True)
-# plt.grid()
-# plt.show()			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] + d*0.55 -20
-
-
-###making forcasts for reservoir carryover:
+	if ix == 10:
+		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 35
+	if ix == 11:
+		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 4.5
+	if ix == 12:
+			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] *3.5
+	if ix == 1:
+		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.4	
+	if (ix == 2):
+		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.5
+	if ix == 3:
+			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.2
+	if ix == 4:
+			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] 
+	if ix == 5: 
+		df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 12- d*0.4)*0.5 -20
+	if ix ==6:
+		df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 15)*0.5
+	if ix ==7:
+		df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim']) * 3 +15
+	if (ix == 8):
+			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.2 + d*0.55 -10
+	if ix == 9:
+		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * -40 -6
+		# if (df.loc[index, 'gains_sim'] >= -3.45) and (df.loc[index, 'gains_sim'] <= -2.3):
+			# df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * -2
+	df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim']*0.9
 
 def flow_to_date(x):
 	ix = (x.index.month >= 1) 

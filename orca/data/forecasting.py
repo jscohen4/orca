@@ -187,9 +187,6 @@ for m in month_arr:
 	gains = dfm.netgains.values
 	WYI = dfm.WYI_sim.values
 	X = np.vstack([WYI])
-	# print(stations[1:])
-	# for station in [stations[0]]:
-		# X = np.vstack([dfm['%s_fnf' %station].values,dfm['%s_rol' %station].values, dfm['%s_prev' %station].values,dfm['%s_prev2' %station].values])
 	for station in stations:
 		V = np.vstack([dfm['%s_fnf' %station]])#.values,dfm['%s_rol' %station].values])#, dfm['%s_prev' %station].values,dfm['%s_prev2' %station].values])
 		X = np.vstack([X,V])
@@ -207,11 +204,6 @@ for c in coeffs:
 	i += 1
 	modify('gains_regression.json',"month_%s" %i, c.tolist())
 modify('gains_regression.json',"intercepts", intercepts)
-
-# for coeff,station in zip(coeffs,stations):
-# 	f.write("%s\n" % station)
-# 	f.write("%s\n" % coeff)
-# f.write("intercepts \n")
 
 df['gains_sim'] = pd.Series(index=df.index)
 for index, row in df.iterrows():
@@ -233,23 +225,33 @@ df['netgains'] = df.netgains.fillna(method = 'bfill') * cfs_tafd #fill in missin
 for index, row in df.iterrows():
 	ix = index.month
 	d = index.day
-
-	if (ix >= 3) & (ix <= 8):
-		if ix == 3:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.4
-		else:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.2
-	if (ix >= 5) & (ix <= 8):
-		d = index.day
-		if ix == 5: 
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] - 12- d*0.4
-		if ix ==6:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] - 20
-		if ix ==7:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] - 20
-		if ix == 8:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] + d*0.55 -20
-
+	if ix == 10:
+		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 35
+	if ix == 11:
+		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 4.5
+	if ix == 12:
+			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] *3.5
+	if ix == 1:
+		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.4	
+	if (ix == 2):
+		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.5
+	if ix == 3:
+			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.2
+	if ix == 4:
+			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] 
+	if ix == 5: 
+		df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 12- d*0.4)*0.5 -20
+	if ix ==6:
+		df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 15)*0.5
+	if ix ==7:
+		df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim']) * 3 -20
+	if (ix == 8):
+			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.2 + d*0.55 -10
+	if ix == 9:
+		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * -40 -6
+		# if (df.loc[index, 'gains_sim'] >= -3.45) and (df.loc[index, 'gains_sim'] <= -2.3):
+			# df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * -2
+	df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim']*0.9
 
 
 ###making forcasts for reservoir carryover:
