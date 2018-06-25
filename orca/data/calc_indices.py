@@ -12,8 +12,7 @@ cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 pd.options.mode.chained_assignment = None  # default='warn'
 
 water_year = lambda d: d.year+1 if d.dayofyear >= 274 else d.year
-def water_year_day(d):  #gets day of water year, accoutnting for leap years
-	if d.is_leap_year:
+def water_year_day(d):  #obtain day of water year, which begins on October 1st
 		if d.dayofyear >= 275:
 			return d.dayofyear - 274
 		elif d.dayofyear <= 274 and d.dayofyear >= 59:	
@@ -30,7 +29,6 @@ summer = lambda y: (y.index.month >= 4) & (y.index.month <= 7)
 SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf']
 
-# don't change this data
 df = pd.read_csv('cdec-data.csv', index_col=0, parse_dates=True)
 df['WY'] = pd.Series([water_year(d) for d in df.index], index=df.index)
 df['DOWY'] = pd.Series([water_year_day(d) for d in df.index], index=df.index)
@@ -176,8 +174,6 @@ FOL = (df['FOL_fnf'].to_frame(name='inf'))
 # ### delta gains calculations
 dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','SR_WYI']] #gains datafile
 stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
-# dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','WYI_sim']] #gains datafile
-# stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
 
 for station in stations:
   dfg['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
@@ -226,6 +222,8 @@ for index, row in df.iterrows():
   df.loc[index, 'gains_sim'] = gains
 df['gains_sim'] = df.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
 df['netgains'] = df.netgains.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
+
+#clean up data by month 
 for index, row in df.iterrows():
   ix = index.month
   d = index.day

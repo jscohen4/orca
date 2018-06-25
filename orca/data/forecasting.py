@@ -84,7 +84,7 @@ def get_forecast_WYI(df, zscore1, zscore2): #now determining forecasting regress
 	month = Qm.index.month
 	snow_ind = Qm.snow
 	aprjul_cumulative_ind = Qm.aprjul_cumulative
-	for m in range(1,13): # calendar months
+	for m in range(1,13):
 		oct_index = (month == 10)
 		ix = (month == m)
 		coeffs = np.polyfit(snow_ind[ix],aprjul_cumulative_ind[ix],1)
@@ -203,30 +203,30 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 		stds[d] = np.std(remaining_flow[ix])
 	
 
-	stat_types =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
+	res_stats =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
 
-	stats =  {stat_types[0]: slopes,
-	                  stat_types[1]: intercepts, 
-	                  stat_types[2]: means,
-	                  stat_types[3]:  stds}
+	stats =  {res_stats[0]: slopes,
+	                  res_stats[1]: intercepts, 
+	                  res_stats[2]: means,
+	                  res_stats[3]: stds}
 
 
-	stats = pd.DataFrame(stats, columns = [stat_types])
+	stats = pd.DataFrame(stats, columns = [res_stats])
 
 	if res_id == 'SHA':
 		stats_file = stats
 	else:
-		stats_file[stat_types] = stats
+		stats_file[res_stats] = stats
 
 	stats = stats.values.T
 	for i,s in enumerate(stats):
-		stat = stats[i]
-		v = np.append(stat,np.tile(stat, 3)) #1997-2000 WY
-		v = np.append(v,[stat[364]]) #leap year
+		day_coeff = stats[i]
+		v = np.append(day_coeff,np.tile(stat, 3)) #1997-2000 WY
+		v = np.append(v,[day_coeff[364]]) #leap year
 		for y in range(4): # 14 more years
-			v = np.append(v,np.tile(stat, 4))
-			v = np.append(v,[stat[364]]) #leap year
-		v = np.append(v,np.tile(stat, 1)) #2017 WY
+			v = np.append(v,np.tile(day_coeff, 4))
+			v = np.append(v,[day_coeff[364]]) #leap year
+		v = np.append(v,np.tile(day_coeff, 1)) #2017 WY
 		r[stat_types[i]] = pd.Series(v,index=r.index)
 	r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
 	r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)
