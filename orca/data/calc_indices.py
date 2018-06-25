@@ -9,6 +9,7 @@ from write_json import modify
 # confirm against http://cdec.water.ca.gov/cgi-progs/iodir/WSIHIST
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
+pd.options.mode.chained_assignment = None  # default='warn'
 
 water_year = lambda d: d.year+1 if d.dayofyear >= 274 else d.year
 def water_year_day(d):  #gets day of water year, accoutnting for leap years

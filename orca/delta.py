@@ -34,13 +34,6 @@ class Delta():
     self.swp_target = np.zeros(367)
     self.cvp_pmax = np.zeros(367)
     self.swp_pmax = np.zeros(367)
-    # self.hist_OMR = df.OMR * cfs_tafd
-    if not self.sim_gains:
-      # self.hist_TRP_pump = df.TRP_pump
-      # self.hist_HRO_pump = df.HRO_pump
-      self.SanLuis_SWP_stor = np.zeros(T)
-      self.SanLuis_CVP_stor = np.zeros(T)
-      self.OMR = np.zeros(T)
       
     for i in range(0,365):  
       self.cvp_target[i] = np.interp(i, self.pump_max['cvp']['d'], 

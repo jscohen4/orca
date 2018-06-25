@@ -8,7 +8,7 @@ from sklearn.linear_model import (
 import json
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
-gains_reg = json.load(open('gains_regression.json'))
+pd.options.mode.chained_assignment = None  # default='warn'
 
 def WYI_to_WYT(WYI, thresholds, values):
   for t,v in zip(thresholds,values):
@@ -124,84 +124,12 @@ df['WYT_sim'] = df.WYI_sim.apply(WYI_to_WYT,
                                thresholds=[9.2, 7.8, 6.5, 5.4, 0.0], 
                                values=['W', 'AN', 'BN', 'D', 'C'])
 
-### delta gains calculations
-dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','WYI_sim']] #gains datafile
-stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
-# dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','WYI_sim']] #gains datafile
-# stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
-
-for station in stations:
-	# df['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
-	dfg['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
-
-	# df['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
-	dfg['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
-	# df['%s_prev' %station] = df['%s_fnf' %station].shift(3)
-	dfg['%s_prev' %station] = df['%s_fnf' %station].shift(3)
-	# df['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
-	dfg['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
-
-# dfg = dfg.dropna()
-dfg = dfg.fillna(method = 'bfill')
-month_arr = np.arange(1,13)
-R2_arr = np.zeros(12)
-coeffs = []
-intercepts = []
-
-df['gains_sim'] = pd.Series(index=df.index)
-for index, row in df.iterrows():
-	m = index.month
-	X=[]
-	b = gains_reg['month_%s' %m]
-	e = gains_reg['intercepts'][m-1]
-	for station in stations:
-		X.append(dfg.loc[index,'%s_fnf' %station])
-	X.append(df.loc[index,'WYI_sim'])
-	X = np.array(X)
-	gains = (np.sum(X * b) + e) * cfs_tafd
-	df.loc[index, 'gains_sim'] = gains
-df['gains_sim'] = df.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
-# df['netgains'] = df.netgains.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
-
-for index, row in df.iterrows():
-	ix = index.month
-	d = index.day
-	if ix == 10:
-		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 35
-	if ix == 11:
-		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 4.5
-	if ix == 12:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] *3.5
-	if ix == 1:
-		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.4	
-	if (ix == 2):
-		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.5
-	if ix == 3:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.2
-	if ix == 4:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] 
-	if ix == 5: 
-		df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 12- d*0.4)*0.5 -20
-	if ix ==6:
-		df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 15)*0.5
-	if ix ==7:
-		df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim']) * 3 +15
-	if (ix == 8):
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.2 + d*0.55 -10
-	if ix == 9:
-		df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * -40 -6
-		# if (df.loc[index, 'gains_sim'] >= -3.45) and (df.loc[index, 'gains_sim'] <= -2.3):
-			# df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * -2
-	df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim']*0.9
-
 def flow_to_date(x):
-	ix = (x.index.month >= 1) 
-	cum_flow = x[ix].cumsum()
+	cum_flow = x.cumsum()
 	return cum_flow
 
 def rem_flow(x):
-	ix = (x.index.month >= 1)
-	remaining_flow = (x[ix].sum() - x[ix].cumsum())
+	remaining_flow = (x.sum() - x.cumsum())
 	return remaining_flow
 
 snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']

@@ -5,6 +5,7 @@ from sklearn import linear_model
 from write_json import modify
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
+pd.options.mode.chained_assignment = None  # default='warn'
 
 def WYI_to_WYT(WYI, thresholds, values):
   for t,v in zip(thresholds,values):
@@ -155,13 +156,13 @@ df['WYT_sim'] = df.WYI_sim.apply(WYI_to_WYT,
 ###making forcasts for reservoir carryover:
 
 def flow_to_date(x):
-	ix = (x.index.month >= 1) 
-	cum_flow = x[ix].cumsum()
+	# ix = (x.index.month >= 1) 
+	cum_flow = x.cumsum()
 	return cum_flow
 
 def rem_flow(x):
-	ix = (x.index.month >= 1)
-	remaining_flow = (x[ix].sum() - x[ix].cumsum())
+	# ix = (x.index.month >= 1)
+	remaining_flow = (x.sum() - x.cumsum())
 	return remaining_flow
 
 snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
