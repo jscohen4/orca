@@ -1,30 +1,18 @@
 import numpy as np 
 import scipy.stats as sp
-import matplotlib.pyplot as plt
 import pandas as pd
-import seaborn as sns
 from util import *
-import matplotlib.pyplot as plt
-from itertools import * 
 from sklearn import linear_model
-from sklearn.linear_model import (
-    LinearRegression, TheilSenRegressor, RANSACRegressor, HuberRegressor)
-from sklearn.metrics import mean_squared_error, r2_score
-import matplotlib.mlab as mlab
 from write_json import modify
-
-sns.set_style('whitegrid')
-# pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
 
 # calc WYT and 8RI. add columns to datafile from cdec_scraper.
 # confirm against http://cdec.water.ca.gov/cgi-progs/iodir/WSIHIST
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
+pd.options.mode.chained_assignment = None  # default='warn'
 
 water_year = lambda d: d.year+1 if d.dayofyear >= 274 else d.year
-def water_year_day(d): 
-	if d.is_leap_year:
+def water_year_day(d):  #obtain day of water year, which begins on October 1st
 		if d.dayofyear >= 275:
 			return d.dayofyear - 274
 		elif d.dayofyear <= 274 and d.dayofyear >= 59:	
@@ -41,14 +29,11 @@ summer = lambda y: (y.index.month >= 4) & (y.index.month <= 7)
 SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf']
 
-# don't change this data
 df = pd.read_csv('cdec-data.csv', index_col=0, parse_dates=True)
 df['WY'] = pd.Series([water_year(d) for d in df.index], index=df.index)
 df['DOWY'] = pd.Series([water_year_day(d) for d in df.index], index=df.index)
-# estimate delta inflow from this (ignores GCD and direct precip)
-# df.drop(['DeltaIn', 'netgains'], axis=1, inplace=True)
 
-#historical net gains- will use regression later
+#historical net Deltagains
 df['DeltaIn'] = df['DeltaOut'] + df['HRO_pump'] + df['TRP_pump']
 df['netgains'] = (df.DeltaIn - 
                   df.SHA_out.shift(5) - 
@@ -70,10 +55,9 @@ get_SR_WYI = lambda x,p: 0.3*x[winter(x)].sum() + 0.4*x[summer(x)].sum() + 0.3*p
 
 df['SR_WYI'] = pd.Series(index=df.index)
 
-prev_year = 9.8 # WY 1996, 1999 was 9.8
+prev_year = 9.8 # WY 1999 was 9.8
 for y,g in df.groupby('WY'):
   flow = (g[SR_pts] * cfsd_mafd).sum(axis=1)
-  # plt.plot(flow.cumsum().values)
   WYI = get_SR_WYI(flow, prev_year)
   df.loc[df.WY==y, 'SR_WYI'] = WYI
   prev_year = np.min((10.0,WYI))
@@ -91,7 +75,7 @@ df['SR_WYT_rolling'] = (df.SR_WYI
 
 df['SR_WYT_rolling'].fillna(method='bfill', inplace=True)
 
-# San Joaquin Water Year Type #only using historical now--- may end up predicting to help with delta regressions
+# San Joaquin Water Year Type 
 thresholds = [3.8, 3.1, 2.5, 2.1, 0.0]
 values = ['W', 'AN', 'BN', 'D', 'C']
 prev_year = 4.12 # WY 1996, 3.59 in 1999
@@ -109,7 +93,7 @@ for y,g in df.groupby('WY'):
       df.loc[df.WY==y, 'SJR_WYT'] = v
       break
 
-df['8RI'] = ((df[SR_pts + SJR_pts] * cfsd_mafd)
+df['8RI'] = ((df[SR_pts + SJR_pts] * cfsd_mafd) #8 station river index
              .sum(axis=1)
              .resample('M')
              .sum())
@@ -137,28 +121,10 @@ df.ORO_fci.fillna(method='bfill', inplace=True)
 df['FOL_fci'] = rolling_fci(df['FOL_precip'], k=0.97, start=0)
 df.ORO_fci.fillna(method='bfill', inplace=True)
 
-# folsom is different
-# FMD = 136.4 - df.FMD_storage
-# FMD[FMD > 45] = 45
-# UNV = 266.4 - df.UNV_storage
-# UNV[UNV > 80] = 80
-# HHL = 207.6 - df.HHL_storage
-# HHL[HHL > 75] = 75
-# df['FOL_fci'] = FMD + UNV + HHL
-
-# # folsom is different
-# FMD = 136.4 - df.FMD_storage
-# FMD[FMD > 45] = 45
-# UNV = 266.4 - df.UNV_storage
-# UNV[UNV > 80] = 80
-# HHL = 207.6 - df.HHL_storage
-# HHL[HHL > 75] = 75
-# df['FOL_fci'] = FMD + UNV + HHL
-
-### evap regression
+### evaporation  regression
 res_ids = ['SHA','ORO','FOL']
 for r in res_ids:
-	dfe = df[['%s_storage'%r,'%s_evap'%r,'%s_tas'%r]]
+	dfe = df[['%s_storage'%r,'%s_evap'%r,'%s_tas'%r]] #evaporation datafile
 	dfe[['storage','evap','tas']] = dfe[['%s_storage'%r,'%s_evap'%r,'%s_tas'%r]]
 	dfe = dfe.dropna(axis = 0)
 
@@ -179,9 +145,6 @@ for r in res_ids:
 	modify('evap_regression.json',"%s_evap_coeffs" %r, coeffs.tolist())
 	modify('evap_regression.json',"%s_evap_int"%r, intercept)
 
-	# print(intercept)
-	# print('Coefficients: \n', reg.coef_)
-
 ##clean up snowpack data and resample monthly 
 snow_ids = ['GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','CAP_swe','RBP_swe','KTL_swe',
 				'HMB_swe','FOR_swe','RTL_swe','GRZ_swe','SDF_swe','SNM_swe','SLT_swe','MED_swe']
@@ -195,75 +158,100 @@ dfs = dfs.resample('M').mean()
 df = df.drop(df[snow_ids],axis = 1)
 df = df.join(dfs).fillna(method = 'ffill') #snow stations now cleaned up and back in main datafile 
 
-df = df[(df.index > '1996-09-30')]#start at 2000 water year
-#sum of stations for each basins
+df = df[(df.index > '1996-09-30')]#start at 1997 water year
+#sum of stations for each basin
 df['BND_swe'] = df[['GOL_swe','CSL_swe']].mean(axis=1)
 df['ORO_swe'] = df[['HYS_swe', 'SCN_swe', 'RBB_swe', 'CAP_swe']].mean(axis = 1) #taking out RBP (for this time), also test taking out RBB later
 df['YRS_swe'] = df[['KTL_swe', 'HMB_swe', 'FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
 df['FOL_swe'] = df[['SDF_swe', 'SNM_swe', 'SLT_swe']].mean(axis = 1)
-# plt.plot(df[['BND_swe','ORO_swe','YRS_swe','FOL_swe']])
-# plt.show()
-
-# forcast_pts = ['BND','ORO','YRS','FOL']
-# snow_basins = ['BND_swe', 'ORO_swe', 'YRS_swe','FOL_swe']
-# fnfs = ['BND_fnf','ORO_fnf','YRS_fnf','FOL_inf']
 
 BND = (df['BND_fnf'].to_frame(name='inf'))
 ORO = (df['ORO_fnf'].to_frame(name='inf'))
 YRS = (df['YRS_fnf'].to_frame(name='inf'))
 FOL = (df['FOL_fnf'].to_frame(name='inf'))
 
+#gains regression with perfect foresight WYI
+# ### delta gains calculations
+dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','SR_WYI']] #gains datafile
+stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
+
+for station in stations:
+  dfg['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
+  # dfg['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
+  # dfg['%s_prev' %station] = df['%s_fnf' %station].shift(3)
+  # dfg['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
+dfg = dfg.drop(pd.Timestamp('2012-07-01'), axis = 0)
+dfg = dfg.dropna()
+month_arr = np.arange(1,13)
+R2_arr = np.zeros(12)
+coeffs = []
+intercepts = []
+for m in month_arr:
+  dfm = dfg[dfg.index.month==m] #for each month
+  gains = dfm.netgains.values
+  WYI = dfm.SR_WYI.values
+  X = np.vstack([WYI])
+  for station in stations:
+    V = np.vstack([dfm['%s_fnf' %station]])
+    X = np.vstack([X,V])
+  X = X.T
+  reg = linear_model.LinearRegression()
+  reg.fit(X, gains.T)
+  coeffs.append(reg.coef_)
+  intercepts.append(reg.intercept_)
+i = 0
+for c in coeffs:
+  i += 1
+  modify('gains_regression.json',"month_%s" %i, c.tolist())
+modify('gains_regression.json',"intercepts", intercepts)
+
+df['gains_sim'] = pd.Series(index=df.index)
+for index, row in df.iterrows():
+  m = index.month
+  X=[]
+  b = coeffs[m-1]
+  e = intercepts[m-1]
+  for station in stations:
+    X.append(df.loc[index,'%s_fnf' %station])
+    # X.append(df.loc[index,'%s_rol' %station])
+    # X.append(df.loc[index,'%s_prev' %station]) 
+    # X.append(df.loc[index,'%s_prev2' %station])
+  X.append(df.loc[ index,'SR_WYI'])
+  X = np.array(X)
+  gains = (np.sum(X * b) + e) * cfs_tafd
+  df.loc[index, 'gains_sim'] = gains
+df['gains_sim'] = df.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
+df['netgains'] = df.netgains.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
+
+#clean up data by month 
+for index, row in df.iterrows():
+  ix = index.month
+  d = index.day
+  if ix == 10:
+    df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 35
+  if ix == 11:
+    df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 4.5
+  if ix == 12:
+      df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] *3.5
+  if ix == 1:
+    df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.4 
+  if (ix == 2):
+    df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.7
+  if ix == 3:
+      df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.2
+  if ix == 4:
+      df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] *0.4
+  if ix == 5: 
+    df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 12- d*0.4)*0.5 -20
+  if ix ==6:
+    df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 15)*0.5
+  if ix ==7:
+    df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim']) * 3 -20
+  if (ix == 8):
+      df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.2 + d*0.55 -12
+  if ix == 9:
+    df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * -10 
+  df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim']*0.9
+
+
 df.to_csv('orca-data-processed.csv')
-
-############### for plotting WYI
-	# fig, axes = plt.subplots(4,2) 
-	# fig.subplots_adjust(hspace = 1)
-	# month_val = []
-	# titles = ['Oct','Nov', 'Dec', 'Jan', 'Feb', 'Mar', 'Apr', 'May']
-	# month_ind = [10,11,12,1,2,3,4,5]
-	# for ax, m, title in zip(axes.flat, month_ind, titles):
-	# 	for index, row in Qm.iterrows():
-	# 		ix = index.month
-	# 		if ix == m: 
-	# 			month_val.append(row['aprjul_cumulative'])
-	# 	month_val.sort()
-	# 	data_hist, bins = np.histogram(month_val)
-	# 	(mu, sigma) = sp.norm.fit(month_val)
-	# 	mean = np.mean(month_val)
-	# 	median = np.median(month_val)
-	# 	ax.set_title(title)
-	# 	pdf = sp.norm.pdf(month_val, mu, sigma)
-	# 	shape, loc, scale = sp.lognorm.fit(month_val)
-	# 	logpdf = sp.lognorm.pdf(month_val, shape, loc, scale)
-	# 	ax.plot(month_val,pdf)
-	# 	ax.plot(month_val,logpdf, 'r--')
-	# 	#ax.hist(month_val, edgecolor='black', linewidth=1.2, normed = 0)
-	# 	ax.hist(month_val, edgecolor='black', linewidth=1.2, normed = 1, bins = 14)#, bins = 10)
-	# 	ax.axvline(mean, color = 'm')
-	# 	ax.axvline(median, color = 'y')
-
-	# 	month_val = []
- #    #################plotting wyi timeseries
-
-	# plt.figure()
-	# Qm['Sac_WYT'] = Qm.WYI.apply(WYI_to_WYT,
- #                               thresholds=[9.2, 7.8, 6.5, 5.4, 0.0], 
- #                               values=['W', 'AN', 'BN', 'D', 'C'])
-	# b120_wyi = pd.read_csv('wyi_data.csv', index_col=0, parse_dates=True)
-	# Qm = Qm.join(b120_wyi.loc[:,['50%']])
-	# plt.axhline(9.2, color = 'g', label = 'Water Year Type Thresholds')
-	# plt.axhline(7.8, color = 'g')
-	# plt.axhline(6.5, color = 'g')
-	# plt.axhline(5.4, color = 'g')
-	# plt.plot(Qm['WYI'], 'b', label = 'Simulated Forecasts')#.plot()
-	# plt.plot(Qm['50%'], 'r', label = 'Historical Forecasts')#.plot() 
-	# plt.title('Sacramento Valley Water Year Type Index Forecasting',size = 18)
-	# plt.xlabel('Date',size=16)
-	# plt.ylabel('Water Year Type Index (million acre-ft)',size=16)
-	# plt.legend(frameon=True,fontsize = 12)
-	# df = df.join(Qm.loc[:,['WYI','Sac_WYT']])
-	# df = df.fillna(method = 'bfill')
-
-
-	# #plt.plot(Qm['WYI'])
-

@@ -87,3 +87,5 @@ for k in snow_ids:
 # df['THA_out'] = data['THA']['DISCHARGE,CONTROL REGULATING daily']['value']
 
 df.to_csv('cdec-data.csv')
+
+#If using WRF snowpack data

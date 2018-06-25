@@ -3,12 +3,10 @@ import scipy.stats as sp
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn import linear_model
-from sklearn.linear_model import (
-    LinearRegression, TheilSenRegressor, RANSACRegressor, HuberRegressor)
 import json
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
-gains_reg = json.load(open('gains_regression.json'))
+pd.options.mode.chained_assignment = None  # default='warn'
 
 def WYI_to_WYT(WYI, thresholds, values):
   for t,v in zip(thresholds,values):
@@ -16,7 +14,7 @@ def WYI_to_WYT(WYI, thresholds, values):
       return v
 
 df = pd.read_csv('orca-data-processed-climate.csv', index_col=0, parse_dates=True)
-def octmar_cumulative(x):
+def octmar_cumulative(x): #cumulative inflow from october through march
 	ix = (x.index.month >= 10) | (x.index.month <= 3)
 	octmar = (x[ix]. sum() - x[ix].cumsum())
 	ix = (x.index.month >= 4) & (x.index.month <= 7)
@@ -24,7 +22,7 @@ def octmar_cumulative(x):
 	aprjul = x[ix]
 	return pd.concat([octmar,aprjul])
 
-def aprjul_cumulative(x):
+def aprjul_cumulative(x): #cumulative inflow from april through july
 	ix = (x.index.month >= 4) & (x.index.month <= 7)
 	aprjul = (x[ix].sum() - x[ix].cumsum())
 	ix = (x.index.month >= 10) | (x.index.month <= 3)
@@ -52,7 +50,7 @@ def aprjul_flow_to_date(x):
 	aprjul =  x[ix].cumsum()
 	return pd.concat([aprjul])
 
-def get_forecast_WYI(df, zscore1, zscore2): 
+def get_forecast_WYI(df, zscore1, zscore2): #now determining forecasting regression coefficients based off perfect foresight
 	flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 	snow_sites = ['BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 
@@ -124,87 +122,12 @@ df['WYT_sim'] = df.WYI_sim.apply(WYI_to_WYT,
                                thresholds=[9.2, 7.8, 6.5, 5.4, 0.0], 
                                values=['W', 'AN', 'BN', 'D', 'C'])
 
-### delta gains calculations
-dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','WYI_sim']] #gains datafile
-stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
-# dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','WYI_sim']] #gains datafile
-# stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
-
-for station in stations:
-	# df['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
-	dfg['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
-
-	# df['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
-	dfg['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
-	# df['%s_prev' %station] = df['%s_fnf' %station].shift(3)
-	dfg['%s_prev' %station] = df['%s_fnf' %station].shift(3)
-	# df['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
-	dfg['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
-
-# dfg = dfg.dropna()
-dfg = dfg.fillna(method = 'bfill')
-month_arr = np.arange(1,13)
-R2_arr = np.zeros(12)
-coeffs = []
-intercepts = []
-
-df['gains_sim'] = pd.Series(index=df.index)
-for index, row in df.iterrows():
-	m = index.month
-	X=[]
-	b = gains_reg['month_%s' %m]
-	e = gains_reg['intercepts'][m-1]
-	for station in stations:
-		X.append(dfg.loc[index,'%s_fnf' %station])
-	X.append(df.loc[index,'WYI_sim'])
-	X = np.array(X)
-	gains = (np.sum(X * b) + e) * cfs_tafd
-	df.loc[index, 'gains_sim'] = gains
-df['gains_sim'] = df.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
-# df['netgains'] = df.netgains.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
-
-for index, row in df.iterrows():
-	ix = index.month
-	d = index.day
-
-	if (ix >= 3) & (ix <= 8):
-		if ix == 3:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.4
-		else:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.2
-	if (ix >= 5) & (ix <= 8):
-		d = index.day
-		if ix == 5: 
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] - 12- d*0.4
-		if ix ==6:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] - 20
-		if ix ==7:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] - 20
-		if ix == 8:
-			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] + d*0.55 -20
-	# if (ix >= 9) & (ix <= 12):
-	# 	df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] + 5
-
-
-	# df['gains_sim'] = df['gains_sim']+0.004
-
-# plt.plot(df.gains_sim,label = 'Simulated gains')
-# plt.show()
-# df[['netgains','gains_sim']].plot(legend = True)
-# plt.grid()
-# plt.show()			df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] + d*0.55 -20
-
-
-###making forcasts for reservoir carryover:
-
 def flow_to_date(x):
-	ix = (x.index.month >= 1) 
-	cum_flow = x[ix].cumsum()
+	cum_flow = x.cumsum()
 	return cum_flow
 
 def rem_flow(x):
-	ix = (x.index.month >= 1)
-	remaining_flow = (x[ix].sum() - x[ix].cumsum())
+	remaining_flow = (x.sum() - x.cumsum())
 	return remaining_flow
 
 snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
@@ -231,20 +154,20 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 	                            .apply(rem_flow))
 	r.cum_flow_to_date.fillna(method='ffill', inplace=True)
 
-	stat_types =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
+	res_stats =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
 
 	stats = pd.read_csv('carryover_regression_statistics.csv', index_col = 0)
-	stats = stats[stat_types]
+	stats = stats[res_stats]
 	stats = stats.values.T
 	for i,s in enumerate(stats):
-		stat = stats[i]
-		v = np.append(stat,np.tile(stat, 1)) #2000 WY
-		v = np.append(v,[stat[364]]) #leap year
+		yearly_stats = stats[i]
+		v = np.append(yearly_stats,np.tile(yearly_stats, 1)) #2000 WY
+		v = np.append(v,[yearly_stats[364]]) #leap year
 		for y in range(24): # 2001-2096 WYs
-			v = np.append(v,np.tile(stat, 4))
-			v = np.append(v,[stat[364]]) #leap year
-		v = np.append(v,np.tile(stat, 2)) #2097-2099 WY
-		r[stat_types[i]] = pd.Series(v,index=r.index)
+			v = np.append(v,np.tile(yearly_stats, 4))
+			v = np.append(v,[yearly_stats[364]]) #leap year
+		v = np.append(v,np.tile(yearly_stats, 2)) #2097-2099 WY
+		r[res_stats[i]] = pd.Series(v,index=r.index)
 	r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
 	r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)
 	r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)
