@@ -95,13 +95,11 @@ class Delta():
     self.inflow[t] = max(self.gains[t] + cvp_flows + swp_flows, 0) # realinflow * cfs_tafd
     min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
     export_ratio = self.export_ratio[wyt][m-1]
-
     cvp_max = self.cvp_pmax[d-1]
     swp_max = self.swp_pmax[d-1]
     if d == 366:
       cvp_max = self.cvp_pmax[d-2]
       swp_max = self.swp_pmax[d-2]
-
     required_outflow = max(min_rule, (1-export_ratio)*self.inflow[t])
     surplus = self.gains[t] - required_outflow
 
@@ -119,16 +117,9 @@ class Delta():
         swp_pump = max(swp_flows - (deficit - cvp_flows), 0)
       else:
         swp_pump = max(swp_flows - 0.25 * deficit, 0)
-
       self.TRP_pump[t] = max(min(cvp_pump, cvp_max),0)
       self.HRO_pump[t] = max(min(swp_pump, swp_max),0)
-
     self.outflow[t] = self.inflow[t] - self.TRP_pump[t] - self.HRO_pump[t]
-      
-  
-  def find_gains(self, timestep, folsomreleases, shastareleases, orovillereleases):
-      self.gains_d[timestep-1] = self.hist_inflows[timestep-1] - folsomreleases - shastareleases - orovillereleases
-
 
   def results_as_df(self, index):
     df = pd.DataFrame()
@@ -137,4 +128,3 @@ class Delta():
     for n,t in zip(names,things):
       df['%s_%s' % (self.key,n)] = pd.Series(t, index=index)
     return df
-

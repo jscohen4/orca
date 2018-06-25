@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from orca import *
 
-scenario = True
+scenario = False
 
 if scenario:
   model = Model('orca/data/orca-data-climate-forecasted.csv', 'orca/data/results.csv',sd='10-01-1999',scenario = True, sim_gains = True) #climate scenario test
@@ -72,6 +72,4 @@ if not scenario:
         for s,o,c in zip(sim,obs,calibr_pts):
           plotter.compare(s, o, freq=f)
           plt.savefig('orca/figs/%s_%s_hist.pdf' % (f,c), dpi=150)
-          plt.close()
-
-  
+          plt.close()  

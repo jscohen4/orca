@@ -28,7 +28,7 @@ class Model():
     for d in range(0,365):
       for r in self.reservoirs:
         self.sumnodds[d] = sum([np.interp(d, first_of_month, r.nodd) for r in self.reservoirs])
-   
+
     for t in range(1,self.T):
       d = self.dayofyear[t]
       dowy = water_day(d)
@@ -46,9 +46,7 @@ class Model():
       self.delta.step(t, d, m, wyt, dowy,
                       self.shasta.R_to_delta[t] + self.folsom.R_to_delta[t],
                       self.oroville.R_to_delta[t])
-
     return self.results_as_df()
-
 
   def results_as_df(self):
     df = pd.DataFrame(index=self.df.index)
