@@ -2,8 +2,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from orca import *
+from subprocess import call
 
 scenario = False
+calc_R2s = False
+plot = False
 
 if scenario:
   model = Model('orca/data/orca-data-climate-forecasted.csv', 'orca/data/results.csv',sd='10-01-1999',scenario = True, sim_gains = True) #climate scenario test
@@ -33,11 +36,8 @@ if scenario:
       plt.savefig('orca/figs/%s_%s_proj.pdf' % (f,c), dpi=150)
       plt.close()
 
-
 if not scenario:
-  calc_R2s = False
-  plot = False
-  model = Model('orca/data/orca-data-forecasted.csv', 'orca/data/orca-data-forecasted.csv',sd='10-01-1999',scenario = False, sim_gains = True) #beacuse of rolling calc in gains, we start on 10th day of
+  model = Model('orca/data/orca-data-forecasted.csv', 'orca/data/orca-data-forecasted.csv',sd='10-01-1999',scenario = False, sim_gains = False) #beacuse of rolling calc in gains, we start on 10th day of
   results = model.simulate() # takes a while... save results
   results.to_csv('orca/data/results.csv')
   if calc_R2s:

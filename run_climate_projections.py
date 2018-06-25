@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 from subprocess import call
 from orca import *
-
+#need climate data folders for this, which are too large for github
 with open('orca/data/scenario_names.txt') as f:
 	scenarios = f.read().splitlines()
 i = 0

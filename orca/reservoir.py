@@ -123,9 +123,8 @@ class Reservoir():
     ##this function uses the linear regression variables calculated in find_release_func (called before simulation loop) to figure out how
     ##much 'excess' storage is available to bešreleased to the delta with the explicit intention of running the pumps.  This function is calculated
     ##each timestep before the reservoirs' individual step function is called
-    d = int(self.dayofyear[t-1])
-    dowy = water_day(d)
-    wyt = self.wyt[t]
+    # d = int(self.dayofyear[t-1])
+    # dowy = water_day(d)
     self.exceedence_level = (self.WYI[t-1] - 10.0)/3##how conservative are they being about the flow forecasts (ie, 90% exceedence level, 75% exceedence level, etc)
     self.forecast[t] = max((self.slope[t] * self.obs_flow[t] + self.intercept[t]), 0.0)
     self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]]/self.exceedence_level + self.forecast[t] - self.cum_min_release[dowy])

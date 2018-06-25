@@ -50,8 +50,6 @@ class Delta():
     # gains are calculated from (DeltaIn - sum of res. outflow)
 
     gains = self.netgains[t] #+ sumnodds 
-
-
     min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
     export_ratio = self.export_ratio[wyt][m-1]
 
@@ -60,7 +58,6 @@ class Delta():
     if d == 366:
       cvp_max = self.cvp_target[d-2]
       swp_max = self.swp_target[d-2]
-
 
     # the sodd_* variables tell the reservoirs how much to release
     # for south of delta demands only
