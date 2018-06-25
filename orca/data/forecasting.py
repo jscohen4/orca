@@ -220,14 +220,14 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 
 	stats = stats.values.T
 	for i,s in enumerate(stats):
-		day_coeff = stats[i]
-		v = np.append(day_coeff,np.tile(stat, 3)) #1997-2000 WY
-		v = np.append(v,[day_coeff[364]]) #leap year
+		yearly_stats = stats[i]
+		v = np.append(yearly_stats,np.tile(yearly_stats, 3)) #1997-2000 WY
+		v = np.append(v,[yearly_stats[364]]) #leap year
 		for y in range(4): # 14 more years
-			v = np.append(v,np.tile(day_coeff, 4))
-			v = np.append(v,[day_coeff[364]]) #leap year
-		v = np.append(v,np.tile(day_coeff, 1)) #2017 WY
-		r[stat_types[i]] = pd.Series(v,index=r.index)
+			v = np.append(v,np.tile(yearly_stats, 4))
+			v = np.append(v,[yearly_stats[364]]) #leap year
+		v = np.append(v,np.tile(yearly_stats, 1)) #2017 WY
+		r[res_stats[i]] = pd.Series(v,index=r.index)
 	r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
 	r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)
 	r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)

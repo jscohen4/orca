@@ -3,8 +3,6 @@ import scipy.stats as sp
 import matplotlib.pyplot as plt
 import pandas as pd
 from sklearn import linear_model
-from sklearn.linear_model import (
-    LinearRegression, TheilSenRegressor, RANSACRegressor, HuberRegressor)
 import json
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
@@ -16,7 +14,7 @@ def WYI_to_WYT(WYI, thresholds, values):
       return v
 
 df = pd.read_csv('orca-data-processed-climate.csv', index_col=0, parse_dates=True)
-def octmar_cumulative(x):
+def octmar_cumulative(x): #cumulative inflow from october through march
 	ix = (x.index.month >= 10) | (x.index.month <= 3)
 	octmar = (x[ix]. sum() - x[ix].cumsum())
 	ix = (x.index.month >= 4) & (x.index.month <= 7)
@@ -24,7 +22,7 @@ def octmar_cumulative(x):
 	aprjul = x[ix]
 	return pd.concat([octmar,aprjul])
 
-def aprjul_cumulative(x):
+def aprjul_cumulative(x): #cumulative inflow from april through july
 	ix = (x.index.month >= 4) & (x.index.month <= 7)
 	aprjul = (x[ix].sum() - x[ix].cumsum())
 	ix = (x.index.month >= 10) | (x.index.month <= 3)
@@ -52,7 +50,7 @@ def aprjul_flow_to_date(x):
 	aprjul =  x[ix].cumsum()
 	return pd.concat([aprjul])
 
-def get_forecast_WYI(df, zscore1, zscore2): 
+def get_forecast_WYI(df, zscore1, zscore2): #now determining forecasting regression coefficients based off perfect foresight
 	flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 	snow_sites = ['BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 
@@ -156,20 +154,20 @@ for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 	                            .apply(rem_flow))
 	r.cum_flow_to_date.fillna(method='ffill', inplace=True)
 
-	stat_types =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
+	res_stats =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
 
 	stats = pd.read_csv('carryover_regression_statistics.csv', index_col = 0)
-	stats = stats[stat_types]
+	stats = stats[res_stats]
 	stats = stats.values.T
 	for i,s in enumerate(stats):
-		stat = stats[i]
-		v = np.append(stat,np.tile(stat, 1)) #2000 WY
-		v = np.append(v,[stat[364]]) #leap year
+		yearly_stats = stats[i]
+		v = np.append(yearly_stats,np.tile(yearly_stats, 1)) #2000 WY
+		v = np.append(v,[yearly_stats[364]]) #leap year
 		for y in range(24): # 2001-2096 WYs
-			v = np.append(v,np.tile(stat, 4))
-			v = np.append(v,[stat[364]]) #leap year
-		v = np.append(v,np.tile(stat, 2)) #2097-2099 WY
-		r[stat_types[i]] = pd.Series(v,index=r.index)
+			v = np.append(v,np.tile(yearly_stats, 4))
+			v = np.append(v,[yearly_stats[364]]) #leap year
+		v = np.append(v,np.tile(yearly_stats, 2)) #2097-2099 WY
+		r[res_stats[i]] = pd.Series(v,index=r.index)
 	r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
 	r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)
 	r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)

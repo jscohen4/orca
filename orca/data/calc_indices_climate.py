@@ -10,9 +10,10 @@ import json
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 gains_reg = json.load(open('gains_regression.json'))
+pd.options.mode.chained_assignment = None  # default='warn'
 
 water_year = lambda d: d.year+1 if d.dayofyear >= 274 else d.year
-def water_year_day(d): 
+def water_year_day(d):  #obtain day of water year, which begins on October 1st
   if d.is_leap_year:
     if d.dayofyear >= 275:
       return d.dayofyear - 274
@@ -47,12 +48,6 @@ def WYI_to_WYT(WYI, thresholds, values):
       return v
 ### bias corrections and unit conversions
 
-#streamflows
-# df['TLG_fnf'] = df['TLG_fnf'] no correction
-# df['BND_fnf'] = df['BND_fnf'] no correction
-# df['NML_fnf'] = df['NML_fnf'] no correction
-# df['MIL_fnf'] = df['MIL_fnf'] no correction
-
 df['SHA_fnf'] = df['SHA_fnf'] * 0.95 #0.95
 df['ORO_fnf'] = df['ORO_fnf'] * 1.1
 df['FOL_fnf'] = df['FOL_fnf'] * 0.8 #0.8
@@ -61,12 +56,12 @@ df['MKM_fnf'] = df['MKM_fnf'] * 0.9
 df['NHG_fnf'] = df['NHG_fnf'] * 0.25
 df['YRS_fnf'] = df['YRS_fnf'] * 0.85
 
-#snow convert to inches
 snow_ids = ['MED_swe','SDF_swe','SLT_swe','BKL_swe','HMB_swe','FOR_swe','RTL_swe',
                 'GRZ_swe','GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','RBP_swe','CAP_swe']
+# convert snow to inches
 for sn in snow_ids:
   df[sn] = df[sn]/25.4
-#snow bias correction ( none for RBP and CAP)
+#snow bias correction (none for RBP and CAP)
 df['MED_swe'] = df['MED_swe'] * 8.0
 df['SDF_swe'] = df['SDF_swe'] * 0.6
 df['SLT_swe'] = df['SLT_swe'] * 2.7
@@ -187,21 +182,17 @@ BND = (df['BND_fnf'].to_frame(name='inf'))
 ORO = (df['ORO_fnf'].to_frame(name='inf'))
 YRS = (df['YRS_fnf'].to_frame(name='inf'))
 FOL = (df['FOL_fnf'].to_frame(name='inf'))
+
 ## delta gains calculations
-dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','SR_WYI']] #gains datafile
+dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','SR_WYI']] #gains dataframe
 stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
 # dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','WYI_sim']] #gains datafile
 # stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
 
 for station in stations:
-  # df['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
   dfg['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
-
-  # df['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
   dfg['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
-  # df['%s_prev' %station] = df['%s_fnf' %station].shift(3)
   dfg['%s_prev' %station] = df['%s_fnf' %station].shift(3)
-  # df['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
   dfg['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
 
 # dfg = dfg.dropna()
@@ -211,6 +202,7 @@ R2_arr = np.zeros(12)
 coeffs = []
 intercepts = []
 
+#get daily gains from regression
 df['gains_sim'] = pd.Series(index=df.index)
 for index, row in df.iterrows():
   m = index.month
@@ -224,8 +216,8 @@ for index, row in df.iterrows():
   gains = (np.sum(X * b) + e) * cfs_tafd
   df.loc[index, 'gains_sim'] = gains
 df['gains_sim'] = df.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
-# df['netgains'] = df.netgains.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
 
+#clean up gains data by month 
 for index, row in df.iterrows():
   ix = index.month
   d = index.day
