@@ -36,8 +36,8 @@ class Delta():
     self.swp_pmax = np.zeros(367)
     # self.hist_OMR = df.OMR * cfs_tafd
     if not self.sim_gains:
-      self.hist_TRP_pump = df.TRP_pump * cfs_tafd
-      self.hist_HRO_pump = df.HRO_pump * cfs_tafd
+      # self.hist_TRP_pump = df.TRP_pump
+      # self.hist_HRO_pump = df.HRO_pump
       self.SanLuis_SWP_stor = np.zeros(T)
       self.SanLuis_CVP_stor = np.zeros(T)
       self.OMR = np.zeros(T)

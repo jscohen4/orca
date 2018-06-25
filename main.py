@@ -43,7 +43,7 @@ if not scenario:
   sim = [results['DEL_HRO_pump'] / cfs_tafd,
        results['DEL_TRP_pump'] / cfs_tafd, 
        # (results['DEL_HRO_pump'] + results['DEL_TRP_pump']) / cfs_tafd,
-       results['Combined_pump'],
+       results['Combined_pump']/ cfs_tafd,
        results['SHA_storage'], 
        results['SHA_out'] / cfs_tafd,
        results['FOL_storage'],
@@ -54,7 +54,7 @@ if not scenario:
        results['DEL_out'] / cfs_tafd]
   obs = [model.df['HRO_pump'],
          model.df['TRP_pump'],
-         (model.df['HRO_pump'] + model.df['TRP_pump'])*cfs_tafd,
+         (model.df['HRO_pump'] + model.df['TRP_pump']),
          model.df['SHA_storage'],
          model.df['SHA_out'],
          model.df['FOL_storage'],
