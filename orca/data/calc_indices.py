@@ -25,7 +25,6 @@ def water_year_day(d):  #obtain day of water year, which begins on October 1st
       return d.dayofyear - 273
     else:
       return d.dayofyear + 92
-
 winter = lambda y: (y.index.month >= 10) | (y.index.month <= 3)
 summer = lambda y: (y.index.month >= 4) & (y.index.month <= 7)
 SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
