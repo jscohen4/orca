@@ -230,23 +230,21 @@ for index, row in df.iterrows():
   if ix == 1:
     df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.4 
   if (ix == 2):
-    df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.5
+    df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.7
   if ix == 3:
       df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.2
   if ix == 4:
-      df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] 
+      df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] *0.4
   if ix == 5: 
     df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 12- d*0.4)*0.5 -20
   if ix ==6:
-    df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 15)*0.5
+    df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 12)*0.5
   if ix ==7:
-    df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim']) * 3 +15
+    df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim']) * 3 -10
   if (ix == 8):
       df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.2 + d*0.55 -10
   if ix == 9:
-    df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * -40 -6
-    # if (df.loc[index, 'gains_sim'] >= -3.45) and (df.loc[index, 'gains_sim'] <= -2.3):
-      # df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * -2
+    df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * -10 
   df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim']*0.9
 
 df.to_csv('orca-data-processed-climate.csv')

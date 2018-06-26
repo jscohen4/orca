@@ -4,7 +4,7 @@ import pandas as pd
 from util import *
 from sklearn import linear_model
 from write_json import modify
-
+import matplotlib.pyplot as plt
 # calc WYT and 8RI. add columns to datafile from cdec_scraper.
 # confirm against http://cdec.water.ca.gov/cgi-progs/iodir/WSIHIST
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
@@ -13,17 +13,19 @@ pd.options.mode.chained_assignment = None  # default='warn'
 
 water_year = lambda d: d.year+1 if d.dayofyear >= 274 else d.year
 def water_year_day(d):  #obtain day of water year, which begins on October 1st
-		if d.dayofyear >= 275:
-			return d.dayofyear - 274
-		elif d.dayofyear <= 274 and d.dayofyear >= 59:	
-			return d.dayofyear + 92
-		else:
-			return d.dayofyear + 92
-	elif not d.is_leap_year:
-		if d.dayofyear >= 274:
-			return d.dayofyear - 273
-		else:
-			return d.dayofyear + 92
+  if d.is_leap_year:
+    if d.dayofyear >= 275:
+      return d.dayofyear - 274
+    elif d.dayofyear <= 274 and d.dayofyear >= 59:  
+      return d.dayofyear + 92
+    else:
+      return d.dayofyear + 92
+  elif not d.is_leap_year:
+    if d.dayofyear >= 274:
+      return d.dayofyear - 273
+    else:
+      return d.dayofyear + 92
+
 winter = lambda y: (y.index.month >= 10) | (y.index.month <= 3)
 summer = lambda y: (y.index.month >= 4) & (y.index.month <= 7)
 SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
@@ -244,14 +246,15 @@ for index, row in df.iterrows():
   if ix == 5: 
     df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 12- d*0.4)*0.5 -20
   if ix ==6:
-    df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 15)*0.5
+    df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 12)*0.5
   if ix ==7:
-    df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim']) * 3 -20
+    df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim']) * 3 -10
   if (ix == 8):
-      df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.2 + d*0.55 -12
+      df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.2 + d*0.55 -10
   if ix == 9:
     df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * -10 
   df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim']*0.9
-
-
+# df.netgains.plot()
+# df.gains_sim.plot()
+# plt.show()
 df.to_csv('orca-data-processed.csv')
