@@ -5,8 +5,8 @@ from orca import *
 from subprocess import call
 
 scenario = False
-calc_R2s = False
-plot = False
+calc_R2s = True
+plot = True
 
 if scenario:
   model = Model('orca/data/orca-data-climate-forecasted.csv', 'orca/data/results.csv',sd='10-01-1999',scenario = True, sim_gains = True) #climate scenario test
@@ -28,13 +28,6 @@ if scenario:
        results['ORO_out'] / cfs_tafd,
        results['DEL_in'] / cfs_tafd,
        results['DEL_out'] / cfs_tafd]
-
-  calibr_pts = ['HRO_pump','TRP_pump','Combined_pump','SHA_storage','SHA_out','FOL_storage','FOL_out','ORO_storage','ORO_out','DeltaIn','DeltaOut']
-  for f in ['D','W','M','AS-OCT']:
-    for s,c in zip(sim,calibr_pts):
-      plotter.plotting(s, freq=f)
-      plt.savefig('orca/figs/%s_%s_proj.pdf' % (f,c), dpi=150)
-      plt.close()
 
 if not scenario:
   model = Model('orca/data/orca-data-forecasted.csv', 'orca/data/orca-data-forecasted.csv',sd='10-01-1999',scenario = False, sim_gains = False) #beacuse of rolling calc in gains, we start on 10th day of
