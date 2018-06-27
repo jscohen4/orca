@@ -10,14 +10,20 @@ i = 0
 for sc in scenarios:
 	i+=1
 	print(i)
-	call(['mkdir', 'orca/data/scenario_runs/%s'%sc]) 
-	call(['cp','input_climate_files/%s_input_data.csv'%sc,'orca/data/scenario_runs/%s/%s_input_data.csv'%(sc,sc)]) #right now folder in jc- takes up a couple GB of space in github
-	# call(['cp','input_climate_files/%s_input_data.csv'%sc,'orca/data/scenario_runs/%s/%s_input_data.csv'%(sc,sc)]) 
-	call(['cp','orca/data/scenario_runs/%s/%s_input_data.csv'%(sc,sc), 'orca/data/climate_input_data.csv']) #right now folder in jc- takes up a couple GB of space
-	call(['python', 'orca/data/calc_indices_climate.py'])
-	call(['cp','orca/data/orca-data-processed-climate.csv', 'orca/data/scenario_runs/%s/orca-data-processed-%s.csv'%(sc,sc)])
-	call(['python', 'orca/data/forecasting_climate.py'])
-	call(['cp','orca/data/scenario_runs/%s/orca-data-forecasted-%s.csv'%(sc,sc),'orca/data/orca-data-climate-forecasted.csv'])
 	model = Model('orca/data/orca-data-climate-forecasted.csv', 'orca/data/results.csv',sd='10-01-1999',projection = True, sim_gains = True) #climate scenario test
 	results = model.simulate() # takes a while... save results
 	results.to_csv('orca/data/scenario_runs/%s/%s-results.csv'%(sc,sc))
+
+result_ids = ['SHA_storage','SHA_out','SHA_target','SHA_out_to_delta','SHA_tocs','FOL_storage','FOL_out',
+							'FOL_target','FOL_out_to_delta','FOL_tocs','ORO_storage','ORO_out','ORO_target','ORO_out_to_delta',
+							'ORO_tocs','DEL_in','DEL_out','DEL_TRP_pump','DEL_HRO_pump']
+for obj in result_ids:
+	df = pd.DataFrame()
+	print(obj)
+	i = 0
+	for sc in scenarios:
+		i+=1
+		print(i)
+		dfobj = pd.read_csv('orca/data/scenario_runs/%s/%s-results.csv'%(sc,sc), parse_dates = True, index_col = 0)
+		df['%s'%sc] = dfobj[obj]
+	df.to_csv('orca/data/climate_results/%s.csv'%obj)
