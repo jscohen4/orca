@@ -7,9 +7,9 @@ from .util import *
 
 class Reservoir():
 
-  def __init__(self, df, dfh, key, scenario = False):
+  def __init__(self, df, dfh, key, projection = False):
     T = len(df)
-    self.scenario = scenario
+    self.projection = projection
     self.dayofyear = df.index.dayofyear
     self.month = df.index.month
     self.key = key
@@ -20,10 +20,10 @@ class Reservoir():
     self.evap_coeffs = np.asarray(self.evap_reg['%s_evap_coeffs' % key])
     self.evap_int = self.evap_reg['%s_evap_int' % key]
     # self.sodd_pct_var = self.sodd_pct
-    if self.scenario:
+    if self.projection:
         self.Q = df['%s_fnf'% key].values * cfs_tafd
         self.E = np.zeros(T)
-    if not self.scenario:
+    if not self.projection:
         self.Q = df['%s_in_fix'% key].values * cfs_tafd
         self.E = df['%s_evap'% key].values * cfs_tafd
     self.fci = df['%s_fci' % key].values
@@ -71,7 +71,7 @@ class Reservoir():
     return self.tocs_index[i][d]
 
 
-  def step(self, t, d, m, wyt, dowy, dmin=0.0, sodd=0.0, scenario = False): #pretty much the same as master, although there are opportunities to speed up this function by using pandas functions elsewhere
+  def step(self, t, d, m, wyt, dowy, dmin=0.0, sodd=0.0, projection = False): #pretty much the same as master, although there are opportunities to speed up this function by using pandas functions elsewhere
     d = self.dayofyear[t]
     dowy = water_day(d)
     m = self.month[t]
@@ -106,7 +106,7 @@ class Reservoir():
     self.R[t] +=  max(W - self.R[t] - self.capacity, 0) # spill
     self.spill[t] = max(W - self.R[t] - self.capacity +  self.Q[t],0)
     #getting evap
-    if self.scenario:
+    if self.projection:
         X=[]
         storage = self.S[t-1]
         temp = self.tas[t]

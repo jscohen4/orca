@@ -8,15 +8,15 @@ import matplotlib.pyplot as plt
 
 class Model():
 
-  def __init__(self, datafile, hist_datafile, sd='10-01-1999',scenario = False, sim_gains = False):
+  def __init__(self, datafile, hist_datafile, sd='10-01-1999',projection = False, sim_gains = False):
     self.df = pd.read_csv(datafile, index_col=0, parse_dates=True)
     self.dfh = pd.read_csv(hist_datafile, index_col=0, parse_dates=True)
     self.sim_gains = sim_gains
-    self.scenario = scenario
+    self.projection = projection
     self.T = len(self.df)
-    self.shasta = Reservoir(self.df, self.dfh, 'SHA', self.scenario)
-    self.folsom = Reservoir(self.df, self.dfh, 'FOL', self.scenario)
-    self.oroville = Reservoir(self.df, self.dfh, 'ORO', self.scenario)
+    self.shasta = Reservoir(self.df, self.dfh, 'SHA', self.projection)
+    self.folsom = Reservoir(self.df, self.dfh, 'FOL', self.projection)
+    self.oroville = Reservoir(self.df, self.dfh, 'ORO', self.projection)
     self.reservoirs = [self.shasta, self.folsom, self.oroville]
     self.delta = Delta(self.df, 'DEL', self.sim_gains)
     self.dayofyear = self.df.index.dayofyear
@@ -40,9 +40,9 @@ class Model():
       self.delta.calc_flow_bounds(t, d, m, wyt, dowy, self.sumnodds[d], self.oroville.available_storage[t], self.shasta.available_storage[t], self.folsom.available_storage[t])
       # self.shasta.sodd_pct = self.delta.shastaSODDPCT
       # self.folsom.sodd_pct = self.delta.folsomSODDPCT
-      self.shasta.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t], self.scenario)
-      self.folsom.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t], self.scenario)
-      self.oroville.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_swp[t], self.scenario)
+      self.shasta.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t], self.projection)
+      self.folsom.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_cvp[t], self.projection)
+      self.oroville.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_swp[t], self.projection)
       self.delta.step(t, d, m, wyt, dowy,
                       self.shasta.R_to_delta[t] + self.folsom.R_to_delta[t],
                       self.oroville.R_to_delta[t])

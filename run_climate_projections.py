@@ -18,6 +18,6 @@ for sc in scenarios:
 	# call(['cp','orca/data/orca-data-processed-climate.csv', 'orca/data/scenrio_runs/%s/orca-data-processed-%s.csv'%(sc,sc)])
 	# call(['python', 'orca/data/forecasting_climate.py'])
 	call(['cp','orca/data/scenrio_runs/%s/orca-data-forecasted-%s.csv'%(sc,sc),'orca/data/orca-data-climate-forecasted.csv'])
-	model = Model('orca/data/orca-data-climate-forecasted.csv', 'orca/data/results.csv',sd='10-01-1999',scenario = True, sim_gains = True) #climate scenario test
+	model = Model('orca/data/orca-data-climate-forecasted.csv', 'orca/data/results.csv',sd='10-01-1999',projection = True, sim_gains = True) #climate scenario test
 	results = model.simulate() # takes a while... save results
 	results.to_csv('orca/data/scenrio_runs/%s/%s-results.csv'%(sc,sc))
