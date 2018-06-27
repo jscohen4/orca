@@ -8,12 +8,15 @@ projection = False #True if running a climate_scenario
 calc_R2s = False #True if calculating R2s
 plot = False #True if plotting outputs
 
+
 process_hist_data = False #True if changing any historical data inputs
+
 ###Only relevant if processing historical data
 cdec = False # True if downloading up-to-date cdec data
 hist_indices = False #True if running calc_indices script
 run_hist_forcast = False #True if running updated forecast
 
+process_climate_data = True #only mark True if using running climate projection and processing projection input data
 if process_hist_data: 
   from orca.data import *
   if cdec:
