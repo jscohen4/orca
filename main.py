@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 from orca import *
 from subprocess import call
 
-projection = False #True if running a climate_scenario
+projection = True #True if running a climate_scenario
 calc_R2s = False #True if calculating R2s
-plot = False #True if plotting outputs
+plot = True #True if plotting outputs
 
 
 process_hist_data = False #True if changing any historical data inputs
@@ -87,7 +87,7 @@ if process_climate_data:
     WYI_stats_file = pd.read_csv('orca/data/WYI_forcasting_regression_stats.csv', index_col = 0, parse_dates = True)
     carryover_stats_file = pd.read_csv('orca/data/carryover_regression_statistics.csv', index_col = 0, parse_dates = True)
     forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file)
-    forc_df.to_csv('orca/data/orca-data-forecasted.csv')
+    forc_df.to_csv('orca/data/orca-data-climate-forecasted.csv')
 
 if projection:
   model = Model('orca/data/orca-data-climate-forecasted.csv', 'orca/data/results.csv',sd='10-01-1999',projection = True, sim_gains = True) #climate scenario test
