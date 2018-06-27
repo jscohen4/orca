@@ -126,7 +126,7 @@ def get_forecast_WYI(df, zscore1, zscore2): #now determining forecasting regress
                     'octmar_std', 
                     'octmar_intercept', 
                     'octmar_slope'])
-	stats.to_csv('WYI_forcasting_regression_stats.csv')
+	# stats.to_csv('WYI_forcasting_regression_stats.csv')
 	for s in stats: 
 		df[s] = pd.Series(index=df.index)
 		for m in range(1,13):
@@ -151,10 +151,10 @@ def get_forecast_WYI(df, zscore1, zscore2): #now determining forecasting regress
 		Qm.loc[index, 'WYI'] = WYI
 
 	Qm.WYI = Qm.WYI.shift(periods=-1)
-	return(Qm.WYI)
+	return(Qm.WYI,stats)
 
 def forecast(df):
-	WYI_sim = get_forecast_WYI(df,0.4,0) #wyt
+	WYI_sim,WYI_stats = get_forecast_WYI(df,0.4,0) #wyt
 	df['WYI_sim'] = WYI_sim
 	df.WYI_sim = df.WYI_sim.fillna(method = 'bfill')
 	df.loc[df['WYI_sim'].isnull(),'WYI_sim'] = df['SR_WYI']
@@ -233,7 +233,7 @@ def forecast(df):
 		r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)
 		r.drop(['inf','WY','DOWY'], axis=1, inplace=True)
 		df = pd.concat([df, r], axis=1, join_axes=[df.index])
-	return df,stats_file
+	return df,stats_file,WYI_stats
 
 	# stats_file.to_csv('carryover_regression_statistics.csv')
 	# df.to_csv('orca-data-forecasted.csv')
@@ -304,8 +304,8 @@ def get_projection_forecast_WYI(df, stats_file,zscore1, zscore2): #now determini
 	# Qm.WYI = Qm.WYI.fillna(method = 'bfill')
 	return(Qm.WYI)
 
-def projection_forecast(df):
-	WYI_sim = get_forecast_WYI(df,0.4,0) #wyt
+def projection_forecast(df,WYI_stats_file,carryover_stats_file):
+	WYI_sim = get_projection_forecast_WYI(df,WYI_stats_file,0.4,0) #wyt
 	df['WYI_sim'] = WYI_sim
 	df.WYI_sim = df.WYI_sim.fillna(method = 'bfill')
 	df.loc[df['WYI_sim'].isnull(),'WYI_sim'] = df['SR_WYI']
@@ -340,11 +340,11 @@ def projection_forecast(df):
 
 		res_stats =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
 
-		stats = pd.read_csv('carryover_regression_statistics.csv', index_col = 0)
-		stats = stats[res_stats]
-		stats = stats.values.T
-		for i,s in enumerate(stats):
-			yearly_stats = stats[i]
+		# stats = pd.read_csv('carryover_regression_statistics.csv', index_col = 0)
+		carryover_stats = carryover_stats_file[res_stats]
+		carryover_stats = carryover_stats.values.T
+		for i,s in enumerate(carryover_stats):
+			yearly_stats = carryover_stats[i]
 			v = np.append(yearly_stats,np.tile(yearly_stats, 1)) #2000 WY
 			v = np.append(v,[yearly_stats[364]]) #leap year
 			for y in range(24): # 2001-2096 WYs

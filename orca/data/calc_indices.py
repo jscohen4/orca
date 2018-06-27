@@ -4,6 +4,7 @@ import pandas as pd
 from .util import *
 from sklearn import linear_model
 from .write_json import modify
+import json
 # import matplotlib.pyplot as plt
 # calc WYT and 8RI. add columns to datafile from cdec_scraper.
 # confirm against http://cdec.water.ca.gov/cgi-progs/iodir/WSIHIST
