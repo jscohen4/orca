@@ -4,9 +4,32 @@ import matplotlib.pyplot as plt
 from orca import *
 from subprocess import call
 
-projection = False
-calc_R2s = True
-plot = True
+projection = False #True if running a climate_scenario
+calc_R2s = False #True if calculating R2s
+plot = False #True if plotting outputs
+
+process_hist_data = False #True if changing any historical data inputs
+###Only relevant if processing historical data
+cdec = False # True if downloading up-to-date cdec data
+hist_indices = False #True if running calc_indices script
+run_hist_forcast = False #True if running updated forecast
+
+if process_hist_data: 
+  from orca.data import *
+  if cdec:
+    cdec_df = cdec_scraper.scrape_cdec()
+    cdec_df.to_csv('orca/data/cdec-data.csv')
+  if hist_indices:
+    if not cdec: 
+      cdec_df = pd.read_csv('orca/data/cdec-data.csv', index_col=0, parse_dates=True)
+    ind_df = process(cdec_df,'orca/data/evap_regression.json','orca/data/gains_regression.json')  
+    ind_df.to_csv('orca/data/orca-data-processed.csv')
+  if run_hist_forcast:
+    if not hist_indices:
+      ind_df = pd.read_csv('orca/data/orca-data-processed.csv', index_col=0, parse_dates=True)
+    forc_df, stats_df = forecast(ind_df)
+    forc_df.to_csv('orca-data-forecasted.csv')
+    stats_df.to_csv('WYI_forcasting_regression_stats.csv')
 
 if projection:
   model = Model('orca/data/orca-data-climate-forecasted.csv', 'orca/data/results.csv',sd='10-01-1999',projection = True, sim_gains = True) #climate scenario test

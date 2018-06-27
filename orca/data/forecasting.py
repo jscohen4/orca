@@ -2,7 +2,7 @@ import numpy as np
 import scipy.stats as sp
 import pandas as pd
 from sklearn import linear_model
-from write_json import modify
+from .write_json import modify
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -12,7 +12,6 @@ def WYI_to_WYT(WYI, thresholds, values):
     if WYI > t:
       return v
 
-df = pd.read_csv('orca-data-processed.csv', index_col=0, parse_dates=True)
 def octmar_cumulative(x): #cumulative inflow from october through march
 	ix = (x.index.month >= 10) | (x.index.month <= 3)
 	octmar = (x[ix]. sum() - x[ix].cumsum())
@@ -143,95 +142,96 @@ def get_forecast_WYI(df, zscore1, zscore2): #now determining forecasting regress
 
 	Qm.WYI = Qm.WYI.shift(periods=-1)
 	return(Qm.WYI)
+def forecast(df):
+	WYI_sim = get_forecast_WYI(df,0.4,0) #wyt
+	df['WYI_sim'] = WYI_sim
+	df.WYI_sim = df.WYI_sim.fillna(method = 'bfill')
+	df.loc[df['WYI_sim'].isnull(),'WYI_sim'] = df['SR_WYI']
 
-WYI_sim = get_forecast_WYI(df,0.4,0) #wyt
-df['WYI_sim'] = WYI_sim
-df.WYI_sim = df.WYI_sim.fillna(method = 'bfill')
-df.loc[df['WYI_sim'].isnull(),'WYI_sim'] = df['SR_WYI']
+	df['WYT_sim'] = df.WYI_sim.apply(WYI_to_WYT,
+	                               thresholds=[9.2, 7.8, 6.5, 5.4, 0.0], 
+	                               values=['W', 'AN', 'BN', 'D', 'C'])
 
-df['WYT_sim'] = df.WYI_sim.apply(WYI_to_WYT,
-                               thresholds=[9.2, 7.8, 6.5, 5.4, 0.0], 
-                               values=['W', 'AN', 'BN', 'D', 'C'])
+	###making forcasts for reservoir carryover:
 
-###making forcasts for reservoir carryover:
+	def flow_to_date(x):
+		# ix = (x.index.month >= 1) 
+		cum_flow = x.cumsum()
+		return cum_flow
 
-def flow_to_date(x):
-	# ix = (x.index.month >= 1) 
-	cum_flow = x.cumsum()
-	return cum_flow
+	def rem_flow(x):
+		# ix = (x.index.month >= 1)
+		remaining_flow = (x.sum() - x.cumsum())
+		return remaining_flow
 
-def rem_flow(x):
-	# ix = (x.index.month >= 1)
-	remaining_flow = (x.sum() - x.cumsum())
-	return remaining_flow
+	snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
+	res_ids = ['SHA','ORO','FOL']
 
-snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
-res_ids = ['SHA','ORO','FOL']
-
-SHA_inf = (df['SHA_fnf'].to_frame(name='inf') * cfsd_mafd)  
-ORO_inf = (df['ORO_fnf'].to_frame(name='inf') * cfsd_mafd)
-FOL_inf = (df['FOL_fnf'].to_frame(name='inf') * cfsd_mafd)
-
-
-res_frames = [SHA_inf,ORO_inf,FOL_inf]
-stats_file = pd.DataFrame()
-for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
-	r['WY'] = df.WY
-	r['DOWY'] = df.DOWY
-	r['snowpack'] = df[swe]
-	r = r[r.WY != r.WY[-1]]
-	month = r.index.month
-
-	r['cum_flow_to_date'] = (r.groupby('WY').inf
-	                           .apply(flow_to_date))
-	r['remaining_flow'] = (r.groupby('WY').inf
-	                            .apply(rem_flow))
-	r.cum_flow_to_date.fillna(method='ffill', inplace=True)
-	slopes = np.zeros(365)
-	intercepts = np.zeros(365)
-	means = np.zeros(365)
-	stds = np.zeros(365)
-	snowpack = r.snowpack
-	remaining_flow = r.remaining_flow
-	DOWY = r.DOWY
-	for d in range(1,365):
-		ix = (DOWY == d)
-		coeffs = np.polyfit(snowpack[ix],remaining_flow[ix],1)
-		slopes[d] = coeffs[0]
-		intercepts[d] = coeffs[1]
-		means[d] = np.mean(remaining_flow[ix]) 
-		stds[d] = np.std(remaining_flow[ix])
-	
-
-	res_stats =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
-
-	stats =  {res_stats[0]: slopes,
-	                  res_stats[1]: intercepts, 
-	                  res_stats[2]: means,
-	                  res_stats[3]: stds}
+	SHA_inf = (df['SHA_fnf'].to_frame(name='inf') * cfsd_mafd)  
+	ORO_inf = (df['ORO_fnf'].to_frame(name='inf') * cfsd_mafd)
+	FOL_inf = (df['FOL_fnf'].to_frame(name='inf') * cfsd_mafd)
 
 
-	stats = pd.DataFrame(stats, columns = [res_stats])
+	res_frames = [SHA_inf,ORO_inf,FOL_inf]
+	stats_file = pd.DataFrame()
+	for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
+		r['WY'] = df.WY
+		r['DOWY'] = df.DOWY
+		r['snowpack'] = df[swe]
+		r = r[r.WY != r.WY[-1]]
+		month = r.index.month
 
-	if res_id == 'SHA':
-		stats_file = stats
-	else:
-		stats_file[res_stats] = stats
+		r['cum_flow_to_date'] = (r.groupby('WY').inf
+		                           .apply(flow_to_date))
+		r['remaining_flow'] = (r.groupby('WY').inf
+		                            .apply(rem_flow))
+		r.cum_flow_to_date.fillna(method='ffill', inplace=True)
+		slopes = np.zeros(365)
+		intercepts = np.zeros(365)
+		means = np.zeros(365)
+		stds = np.zeros(365)
+		snowpack = r.snowpack
+		remaining_flow = r.remaining_flow
+		DOWY = r.DOWY
+		for d in range(1,365):
+			ix = (DOWY == d)
+			coeffs = np.polyfit(snowpack[ix],remaining_flow[ix],1)
+			slopes[d] = coeffs[0]
+			intercepts[d] = coeffs[1]
+			means[d] = np.mean(remaining_flow[ix]) 
+			stds[d] = np.std(remaining_flow[ix])
+		
 
-	stats = stats.values.T
-	for i,s in enumerate(stats):
-		yearly_stats = stats[i]
-		v = np.append(yearly_stats,np.tile(yearly_stats, 3)) #1997-2000 WY
-		v = np.append(v,[yearly_stats[364]]) #leap year
-		for y in range(4): # 14 more years
-			v = np.append(v,np.tile(yearly_stats, 4))
+		res_stats =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
+
+		stats =  {res_stats[0]: slopes,
+		                  res_stats[1]: intercepts, 
+		                  res_stats[2]: means,
+		                  res_stats[3]: stds}
+
+
+		stats = pd.DataFrame(stats, columns = [res_stats])
+
+		if res_id == 'SHA':
+			stats_file = stats
+		else:
+			stats_file[res_stats] = stats
+
+		stats = stats.values.T
+		for i,s in enumerate(stats):
+			yearly_stats = stats[i]
+			v = np.append(yearly_stats,np.tile(yearly_stats, 3)) #1997-2000 WY
 			v = np.append(v,[yearly_stats[364]]) #leap year
-		v = np.append(v,np.tile(yearly_stats, 1)) #2017 WY
-		r[res_stats[i]] = pd.Series(v,index=r.index)
-	r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
-	r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)
-	r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)
-	r.drop(['inf','WY','DOWY'], axis=1, inplace=True)
-	df = pd.concat([df, r], axis=1, join_axes=[df.index])
-stats_file.to_csv('carryover_regression_statistics.csv')
-df.to_csv('orca-data-forecasted.csv')
+			for y in range(4): # 14 more years
+				v = np.append(v,np.tile(yearly_stats, 4))
+				v = np.append(v,[yearly_stats[364]]) #leap year
+			v = np.append(v,np.tile(yearly_stats, 1)) #2017 WY
+			r[res_stats[i]] = pd.Series(v,index=r.index)
+		r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
+		r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)
+		r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)
+		r.drop(['inf','WY','DOWY'], axis=1, inplace=True)
+		df = pd.concat([df, r], axis=1, join_axes=[df.index])
+	return df,stats_file
+	# stats_file.to_csv('carryover_regression_statistics.csv')
+	# df.to_csv('orca-data-forecasted.csv')
