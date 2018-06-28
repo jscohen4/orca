@@ -1,9 +1,10 @@
 import numpy as np 
 import scipy.stats as sp
 import pandas as pd
-from util import *
+from .util import *
 from sklearn import linear_model
 import json
+from .write_json import modify
 
 # calc WYT and 8RI. add columns to datafile from cdec_scraper.
 # confirm against http://cdec.water.ca.gov/cgi-progs/iodir/WSIHIST
@@ -13,6 +14,7 @@ gains_reg = json.load(open('gains_regression.json'))
 pd.options.mode.chained_assignment = None  # default='warn'
 
 water_year = lambda d: d.year+1 if d.dayofyear >= 274 else d.year
+
 def water_year_day(d):  #obtain day of water year, which begins on October 1st
   if d.is_leap_year:
     if d.dayofyear >= 275:

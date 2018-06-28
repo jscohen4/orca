@@ -13,6 +13,6 @@ for obj in result_ids:
 	for sc in scenarios:
 		i+=1
 		print(i)
-		dfobj = pd.read_csv('scenrio_runs/%s/%s-results.csv'%(sc,sc), parse_dates = True, index_col = 0)
+		dfobj = pd.read_csv('scenario_runs/%s/%s-results.csv'%(sc,sc), parse_dates = True, index_col = 0)
 		df['%s'%sc] = dfobj[obj]
 	df.to_csv('climate_results/%s.csv'%obj)
