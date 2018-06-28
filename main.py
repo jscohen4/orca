@@ -4,12 +4,12 @@ import matplotlib.pyplot as plt
 from orca import *
 from subprocess import call
 
-projection = True #True if running a climate_scenario
-calc_R2s = False #True if calculating R2s
-plot = True #True if plotting outputs
+projection = False #True if running a climate_scenario
+calc_R2s = True #True if calculating R2s
+plot = False #True if plotting outputs
 
 
-process_hist_data = False #True if changing any historical data inputs
+process_hist_data = True #True if changing any historical data inputs
 ###Only relevant if processing historical data
 cdec = True # True if downloading up-to-date cdec data
 hist_indices = True #True if running calc_indices script
@@ -37,6 +37,7 @@ if process_hist_data:
     forc_df.to_csv('orca/data/orca-data-forecasted.csv')
     stats_df.to_csv('orca/data/carryover_regression_statistics.csv')
     WYI_stats.to_csv('orca/data/WYI_forcasting_regression_stats.csv')
+  print('done')
 if not projection:
   model = Model('orca/data/orca-data-forecasted.csv', 'orca/data/orca-data-forecasted.csv',sd='10-01-1999',projection = False, sim_gains = False) #beacuse of rolling calc in gains, we start on 10th day of
   results = model.simulate() # takes a while... save results
@@ -74,7 +75,7 @@ if not projection:
           plotter.compare(s, o, freq=f)
           plt.savefig('orca/figs/%s_%s_hist.pdf' % (f,c), dpi=150)
           plt.close()  
-
+    print('done')
 if process_climate_data:
   from orca.data import *
   if climate_indices:
@@ -88,7 +89,7 @@ if process_climate_data:
     carryover_stats_file = pd.read_csv('orca/data/carryover_regression_statistics.csv', index_col = 0, parse_dates = True)
     forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file)
     forc_df.to_csv('orca/data/orca-data-climate-forecasted.csv')
-
+  print('done')
 if projection:
   model = Model('orca/data/orca-data-climate-forecasted.csv', 'orca/data/results.csv',sd='10-01-1999',projection = True, sim_gains = True) #climate scenario test
   results = model.simulate() # takes a while... save results
