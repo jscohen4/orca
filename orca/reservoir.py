@@ -14,9 +14,9 @@ class Reservoir():
     self.month = df.index.month
     self.key = key
     self.wyt = df.WYT_sim# simulated (forecasted)wyi
-    for k,v in json.load(open('orca/data/%s_properties.json' % key)).items():
+    for k,v in json.load(open('orca/data/json_files/%s_properties.json' % key)).items():
       setattr(self,k,v)
-    self.evap_reg = json.load(open('orca/data/evap_regression.json'))
+    self.evap_reg = json.load(open('orca/data/json_files/evap_regression.json'))
     self.evap_coeffs = np.asarray(self.evap_reg['%s_evap_coeffs' % key])
     self.evap_int = self.evap_reg['%s_evap_int' % key]
     # self.sodd_pct_var = self.sodd_pct

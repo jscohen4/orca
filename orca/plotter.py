@@ -48,8 +48,8 @@ def plotting(res,freq='D'):
   ax0.legend(['Simulated'], ncol=3)
   plt.tight_layout()
 
-def Rsquares(sim,obs):
-  text_file = open('orca/data/Rsquares.txt', 'w')
+def Rsquares(sim,obs,R2sfile):
+  text_file = open(R2sfile, 'w')
   r2s = []
   r2s.append(['Timestep','Daily','Weekly','Monthly','Water Year'])
   for s,o in zip(sim,obs):
