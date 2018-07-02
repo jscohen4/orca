@@ -24,4 +24,4 @@ These values will change as new input data is downloaded from CDEC, even if the 
 | DEL_out  | 0.95 | 0.96 | 0.98 | n/a |
 
 ### License
-Copyright (C) 2017 CALFEWS Team. Released under the [MIT license](LICENSE.md).
+Copyright (C) 2018 CALFEWS Team. Released under the [MIT license](LICENSE.md).
