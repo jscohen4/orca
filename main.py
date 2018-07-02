@@ -17,7 +17,7 @@ process_hist_data = True #True if changing any historical data inputs, or downlo
 ###Only relevant if processing historical data
 cdec = True # True if downloading up-to-date cdec data
 hist_indices = True #True if running calc_indices script
-run_hist_forcast = True #True if running updated forecast
+hist_forcast = True #True if running updated forecast
 
 sc = 'access1-0_rcp85_r1i1p1' #cmip5 climate scenario to use, if projection = True
 process_climate_data = False #only mark True if running climate projection and/or processing projection input data
@@ -50,8 +50,8 @@ if process_hist_data:
       cdec_df = pd.read_csv('orca/data/historical_runs_data/cdec-data.csv', index_col=0, parse_dates=True)
     ind_df = process(cdec_df,'orca/data/json_files/evap_regression.json','orca/data/json_files/gains_regression.json')  
     ind_df.to_csv('orca/data/historical_runs_data/orca-data-processed.csv')
-  if run_hist_forcast:
-    if not hist_indices:
+  if hist_forcast:
+    if not hist_forcast:
       ind_df = pd.read_csv('orca/data/historical_runs_data/orca-data-processed.csv', index_col=0, parse_dates=True)
     forc_df, stats_df, WYI_stats= forecast(ind_df)
     forc_df.to_csv('orca/data/historical_runs_data/orca-data-forecasted.csv')
