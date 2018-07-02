@@ -37,6 +37,7 @@ class Reservoir():
     self.WYI = df['WYI_sim'].values
     self.obs_flow = df['%s_cum_flow_to_date' % key].values
     self.obs_snow = df['%s_snowpack' % key].values
+    #initialize time series arrays
     self.S = np.zeros(T)
     self.R = np.zeros(T)
     self.Rtarget = np.zeros(T)
@@ -71,16 +72,15 @@ class Reservoir():
     return self.tocs_index[i][d]
 
 
-  def step(self, t, d, m, wyt, dowy, dmin=0.0, sodd=0.0, projection = False): #pretty much the same as master, although there are opportunities to speed up this function by using pandas functions elsewhere
+  def step(self, t, d, m, wyt, dowy, dmin=0.0, sodd=0.0, projection = False): 
     d = self.dayofyear[t]
     dowy = water_day(d)
     m = self.month[t]
     wyt = self.wyt[t]
-    # envmin = max(self.env_min_flow[wyt][m-1], self.temp_releases[wyt][m-1]) * cfs_tafd
-    envmin = self.env_min_flow[wyt][m-1] * cfs_tafd
-    nodd = np.interp(d, first_of_month, self.nodd)  
+    envmin = self.env_min_flow[wyt][m-1] * cfs_tafd #minimum allowed environmental flows
+    nodd = np.interp(d, first_of_month, self.nodd)  #north of delta demands
     # sodd *= self.sodd_pct_var
-    sodd *= self.sodd_pct * self.sodd_curtail_pct[wyt]
+    sodd *= self.sodd_pct * self.sodd_curtail_pct[wyt] #south of delta demands
     self.soddp[t] = sodd
 
     ###the variable percentage calculates Folsom & Shasta's contribution to the total releases
@@ -91,22 +91,21 @@ class Reservoir():
       envmin += nodd 
     # decide next release
     W = self.S[t-1] + self.Q[t]
-    # HB's idea for flood control relesae..
-    # fcr = (W-self.tocs[t])*np.exp(4.5*10**-6 * (W-self.capacity))
-    fcr = 0.2*(W-self.tocs[t]) 
-    self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin))
-    if m >= 5 and m < 10:
-        if self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy) < self.carryover_target[wyt]:
+    fcr = 0.2*(W-self.tocs[t]) #flood control release
+    self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin)) #target release
+    if m >= 5 and m <= 9: #from may to september, accout for carryover storage targets
+        if self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy) < self.carryover_target[wyt]: #forecasting rest-of-wateryear inflow
+            #how much to curtail releases in attempt to meet carryover targets
             self.carryover_curtail_pct = (self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy))/self.carryover_target[wyt]
-            self.Rtarget[t] = self.Rtarget[t] * max(self.carryover_curtail_pct,self.carryover_curtail[wyt])
+            self.Rtarget[t] = self.Rtarget[t] * max(self.carryover_curtail_pct,self.carryover_curtail[wyt]) #update target release
 
     # then clip based on constraints
-    self.R[t] = min(self.Rtarget[t], W - self.dead_pool)
-    self.R[t] = min(self.R[t], self.max_outflow * cfs_tafd)
+    self.R[t] = min(self.Rtarget[t], W - self.dead_pool) # dead-pool constraint
+    self.R[t] = min(self.R[t], self.max_outflow * cfs_tafd) #max outflow constraint
     self.R[t] +=  max(W - self.R[t] - self.capacity, 0) # spill
     self.spill[t] = max(W - self.R[t] - self.capacity +  self.Q[t],0)
-    #getting evap
-    if self.projection:
+
+    if self.projection: # if projection mode, calculate evaporation
         X=[]
         storage = self.S[t-1]
         temp = self.tas[t]
@@ -115,7 +114,7 @@ class Reservoir():
         X.append(temp*storage)
         X.append(temp**2)
         X.append(storage**2)
-        self.E[t] = max((np.sum(X * self.evap_coeffs) + self.evap_int) * cfs_tafd,0)
+        self.E[t] = max((np.sum(X * self.evap_coeffs) + self.evap_int) * cfs_tafd,0) #evaporation variable
     self.S[t] = W - self.R[t] - self.E[t] # mass balance update
     self.R_to_delta[t] = max(self.R[t] - nodd, 0) # delta calcs need this
 
@@ -123,10 +122,9 @@ class Reservoir():
     ##this function uses the linear regression variables calculated in find_release_func (called before simulation loop) to figure out how
     ##much 'excess' storage is available to bešreleased to the delta with the explicit intention of running the pumps.  This function is calculated
     ##each timestep before the reservoirs' individual step function is called
-    # d = int(self.dayofyear[t-1])
-    # dowy = water_day(d)
+    #also used to obtain inflow forecasts
     self.exceedence_level = (self.WYI[t-1] - 10.0)/3##how conservative are they being about the flow forecasts (ie, 90% exceedence level, 75% exceedence level, etc)
-    self.forecast[t] = max((self.slope[t] * self.obs_flow[t] + self.intercept[t]), 0.0)
+    self.forecast[t] = max((self.slope[t] * self.obs_flow[t] + self.intercept[t]), 0.0) #based on forecast regression
     self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]]/self.exceedence_level + self.forecast[t] - self.cum_min_release[dowy])
 
   def results_as_df(self, index):
