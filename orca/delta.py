@@ -64,7 +64,7 @@ class Delta():
     # (dmin is the reservoir release needed to meet delta outflows)
     if gains > min_rule: # extra unstored water available for pumping
       # in this case dmin[t] is 0
-      self.sodd_cvp[t] = max((self.cvp_max - 0.55*(gains - min_rule)) / export_ratio, 0)
+      self.sodd_cvp[t] = max((self.cvp_max - 0.55*(gains - min_rule)) / export_ratio, 0) #south of delta demand rules
       self.sodd_swp[t] = max((self.swp_max - 0.45*(gains - min_rule)) / export_ratio, 0)
     else: # additional flow needed
       self.dmin[t] = min_rule - gains
@@ -92,7 +92,7 @@ class Delta():
     self.inflow[t] = max(self.gains[t] + cvp_flows + swp_flows, 0) # realinflow * cfs_tafd
     min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
     export_ratio = self.export_ratio[wyt][m-1]
-    cvp_max = self.cvp_pmax[d-1]
+    cvp_max = self.cvp_pmax[d-1] #max pumping allowed 
     swp_max = self.swp_pmax[d-1]
     if d == 366:
       cvp_max = self.cvp_pmax[d-2]
@@ -103,8 +103,8 @@ class Delta():
     if surplus > 0:
       # gains cover both the min_rule and the export ratio requirement
       # so, pump the full cvp/swp inflows
-      self.TRP_pump[t] = max(min(cvp_flows + 0.55 * surplus, cvp_max),0)
-      self.HRO_pump[t] = max(min(swp_flows + 0.45 * surplus, swp_max),0)
+      self.TRP_pump[t] = max(min(cvp_flows + 0.55 * surplus, cvp_max),0) #Tracy pumping plant, for CVP exports
+      self.HRO_pump[t] = max(min(swp_flows + 0.45 * surplus, swp_max),0) #Harvey 0. Banks pumping plant, for SWP exports
     else:
       # deficit must be made up from cvp/swp flows. Assume 75/25 responsibility for these
       # (including meeting the export ratio requirement)

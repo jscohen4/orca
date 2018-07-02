@@ -81,6 +81,7 @@ def get_forecast_WYI(df, zscore1, zscore2): #now determining forecasting regress
 	                           .apply(aprjul_flow_to_date)
 	                           .reset_index(level=0).drop('WY', axis=1)) 
 
+#obtaining regression coefficients for WYI forecasting
 	aprjul_slopes = np.zeros(12)
 	aprjul_intercepts = np.zeros(12)
 	aprjul_means = np.zeros(12)
@@ -134,6 +135,7 @@ def get_forecast_WYI(df, zscore1, zscore2): #now determining forecasting regress
 	Qm = Qm.fillna(0)
 	Qm['WYI'] = pd.Series(index=Qm.index)
 	prev = 10
+	#using water year index formula
 	for index, row in Qm.iterrows():
 		ix = index.month
 		if (ix == 10) | (ix == 11):
@@ -174,6 +176,7 @@ def forecast(df):
 
 	res_frames = [SHA_inf,ORO_inf,FOL_inf]
 	stats_file = pd.DataFrame()
+	#obtaining daily inflow forecast regression coeffients
 	for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
 		r['WY'] = df.WY
 		r['DOWY'] = df.DOWY

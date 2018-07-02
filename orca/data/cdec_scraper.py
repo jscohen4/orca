@@ -15,7 +15,7 @@ def scrape_cdec():
 
   # flowrates: inflow / outflow / evap / pumping
 
-  ids = ['SHA', 'ORO', 'FOL']#, 'CLE', 'NML', 'DNP', 'EXC', 'MIL', 'SNL']
+  ids = ['SHA', 'ORO', 'FOL']# Main reservoir IDs
 
   data = cd.get_data(station_ids=ids, sensor_ids=[15,23,74,76,94,45], 
                      resolutions=['daily'], start=sd)
@@ -30,7 +30,7 @@ def scrape_cdec():
     # fix mass balance problems in inflow
     df[k + '_in_fix'] = df[k+'_storage'].diff()/cfs_tafd + df[k+'_out'] + df[k+'_evap']
 
-  temp_ids = ['SHS','OWS','ADR']
+  temp_ids = ['SHS','OWS','ADR'] #IDs for reservoir temperature
 
   data = cd.get_data(station_ids=temp_ids, sensor_ids=[30,31,32], 
                      resolutions=['daily'], start=sd)
@@ -40,7 +40,7 @@ def scrape_cdec():
     df['%s_tasmin'%k] = data[t]['TEMPERATURE, AIR MINIMUM daily']['value']
 
 
-  ids = ['BND', 'ORO', 'YRS', 'FOL', 'NML', 'TLG', 'MRC', 'MIL','MKM', 'NHG','SHA']
+  ids = ['BND', 'ORO', 'YRS', 'FOL', 'NML', 'TLG', 'MRC', 'MIL','MKM', 'NHG','SHA'] #IDs for full natural flow into several reservoirs
          # 'GDW', 'MHB', 'MKM', 'NHG', 'SHA']
   data = cd.get_data(station_ids=ids, sensor_ids=[8], #full natural flows
                      resolutions=['daily'], start=sd)
@@ -76,7 +76,7 @@ def scrape_cdec():
   df.interpolate(inplace=True)
 
   snow_ids = ['GOL','CSL', 'HYS', 'SCN', 'RBB', 'CAP', 'RBP','KTL', 'HMB', 
-  'FOR', 'RTL', 'GRZ','SDF', 'SNM', 'SLT', 'MED'] #snowpack station points
+  'FOR', 'RTL', 'GRZ','SDF', 'SNM', 'SLT', 'MED']              #snowpack station points
   data = cd.get_data(station_ids = snow_ids, sensor_ids=[3], resolutions=['daily'],start=sd) 
   for k in snow_ids:
     df[k + '_swe'] = data[k]['SNOW, WATER CONTENT daily']['value']

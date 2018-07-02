@@ -32,16 +32,16 @@ def water_year_day(d):  #obtain day of water year, which begins on October 1st
 winter = lambda y: (y.index.month >= 10) | (y.index.month <= 3)
 summer = lambda y: (y.index.month >= 4) & (y.index.month <= 7)
 
-def water_month(m):
+def water_month(m): #obtain month of water year
   return m - 9 if m >= 9 else m + 3
 
 
-def WYI_to_WYT(WYI, thresholds, values):
+def WYI_to_WYT(WYI, thresholds, values): #converts water year index to water year type
   for t,v in zip(thresholds,values):
     if WYI > t:
       return v
 
-def rolling_fci(inflow, k, start):
+def rolling_fci(inflow, k, start): #used to obtain reservoir flood control index based on inflow
   T = len(inflow)
   x = np.zeros(T)
   for i,t in enumerate(inflow.index):
@@ -52,17 +52,17 @@ def rolling_fci(inflow, k, start):
 
   return pd.Series(x, index=inflow.index)
 
-def process(df,evap_regr,gains_regr):
-  SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
-  SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf']
+def process(df,evap_regr,gains_regr): #used for historical data processing
+  SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf'] # flows to calculate Sacramento Valley WYI
+  SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf'] #flows to calculate San-Joaquin Valley WYI
 
   # df = pd.read_csv('cdec-data.csv', index_col=0, parse_dates=True)
   df['WY'] = pd.Series([water_year(d) for d in df.index], index=df.index)
-  df['DOWY'] = pd.Series([water_year_day(d) for d in df.index], index=df.index)
+  df['DOWY'] = pd.Series([water_year_day(d) for d in df.index], index=df.index) #day of water year
 
-  #historical net Deltagains
+  #historical net Deltagains, with perfect hindsight in pumping 
   df['DeltaIn'] = df['DeltaOut'] + df['HRO_pump'] + df['TRP_pump']
-  df['netgains'] = (df.DeltaIn - 
+  df['netgains'] = (df.DeltaIn -  
                     df.SHA_out.shift(5) - 
                     df.ORO_out.shift(3) - 
                     df.FOL_out.shift(1))
@@ -83,7 +83,7 @@ def process(df,evap_regr,gains_regr):
                                  thresholds=[9.2, 7.8, 6.5, 5.4, 0.0], 
                                  values=['W', 'AN', 'BN', 'D', 'C'])
 
-  df['SR_WYT_rolling'] = (df.SR_WYI
+  df['SR_WYT_rolling'] = (df.SR_WYI #updating WYT throughout the year, thus limiting perfect foresight
                             .rolling(120).mean()
                             .apply(WYI_to_WYT,
                                  thresholds=[9.2, 7.8, 6.5, 5.4, 0.0], 
@@ -212,7 +212,7 @@ def process(df,evap_regr,gains_regr):
     modify(gains_regr,"month_%s" %i, c.tolist())
   modify(gains_regr,"intercepts", intercepts)
 
-  df['gains_sim'] = pd.Series(index=df.index)
+  df['gains_sim'] = pd.Series(index=df.index) #regression for gains
   for index, row in df.iterrows():
     m = index.month
     X=[]
@@ -264,7 +264,7 @@ def process(df,evap_regr,gains_regr):
   # plt.show()
   return df
 
-def process_projection(df,gains_regr):
+def process_projection(df,gains_regr): #used to process climate projection data
   SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
   SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf']
   df = df[(df.index > '1996-09-30')]
@@ -272,6 +272,7 @@ def process_projection(df,gains_regr):
 
   df['WY'] = pd.Series([water_year(d) for d in df.index], index=df.index)
   df['DOWY'] = pd.Series([water_year_day(d) for d in df.index], index=df.index)
+  #bias corrections for fnfs
   df['SHA_fnf'] = df['SHA_fnf'] * 0.95 #0.95
   df['ORO_fnf'] = df['ORO_fnf'] * 1.1
   df['FOL_fnf'] = df['FOL_fnf'] * 0.8 #0.8
@@ -412,6 +413,7 @@ def process_projection(df,gains_regr):
   intercepts = []
 
   #get daily gains from regression
+  #using coefficients obtained from process()
   df['gains_sim'] = pd.Series(index=df.index)
   for index, row in df.iterrows():
     m = index.month
