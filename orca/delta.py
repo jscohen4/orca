@@ -34,14 +34,14 @@ class Delta():
     self.swp_target = np.zeros(367)
     self.cvp_pmax = np.zeros(367)
     self.swp_pmax = np.zeros(367)
-      
+    
     for i in range(0,365):  
-      self.cvp_target[i] = np.interp(i, self.pump_max['cvp']['d'], 
+      self.cvp_target[i] = np.interp(i, self.pump_max['cvp']['d'], #calculate pumping target for day of year (based on target pumping for sodd) 
                                 self.pump_max['cvp']['target']) * cfs_tafd
       self.swp_target[i] = np.interp(i, self.pump_max['swp']['d'], 
                                 self.pump_max['swp']['target']) * cfs_tafd
       self.cvp_pmax[i] = np.interp(i, self.pump_max['cvp']['d'], 
-                                self.pump_max['cvp']['pmax']) * cfs_tafd
+                                self.pump_max['cvp']['pmax']) * cfs_tafd #calculate pumping targets (based on max allowed pumping) based on time of year 
       self.swp_pmax[i] = np.interp(i, self.pump_max['swp']['d'], 
                                 self.pump_max['swp']['pmax']) * cfs_tafd
     
@@ -49,7 +49,7 @@ class Delta():
 
     # gains are calculated from (DeltaIn - sum of res. outflow)
 
-    gains = self.netgains[t] #+ sumnodds 
+    gains = self.netgains[t] 
     min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
     export_ratio = self.export_ratio[wyt][m-1]
 
@@ -64,7 +64,7 @@ class Delta():
     # (dmin is the reservoir release needed to meet delta outflows)
     if gains > min_rule: # extra unstored water available for pumping
       # in this case dmin[t] is 0
-      self.sodd_cvp[t] = max((self.cvp_max - 0.55*(gains - min_rule)) / export_ratio, 0) #south of delta demand rules
+      self.sodd_cvp[t] = max((self.cvp_max - 0.55*(gains - min_rule)) / export_ratio, 0) #implementing export ratio "tax"
       self.sodd_swp[t] = max((self.swp_max - 0.45*(gains - min_rule)) / export_ratio, 0)
     else: # additional flow needed
       self.dmin[t] = min_rule - gains
@@ -76,9 +76,10 @@ class Delta():
         self.sodd_cvp[t] = self.cvp_max
         self.sodd_swp[t] = self.swp_max
       else:
-        self.sodd_cvp[t] = 0.75*Q + (self.cvp_max - 0.75*Q)/export_ratio
+        self.sodd_cvp[t] = 0.75*Q + (self.cvp_max - 0.75*Q)/export_ratio #implementing export ratio "tax"
         self.sodd_swp[t] = 0.25*Q + (self.swp_max - 0.25*Q)/export_ratio
 
+    #determining percentage of CVP sodd demands from both Shasta and Folsom
     if folsomAS > 0.0 and shastaAS > 0.0:
       self.folsomSODDPCT = folsomAS/(folsomAS + shastaAS)
     elif folsomAS < 0.0:
@@ -114,8 +115,8 @@ class Delta():
         swp_pump = max(swp_flows - (deficit - cvp_flows), 0)
       else:
         swp_pump = max(swp_flows - 0.25 * deficit, 0)
-      self.TRP_pump[t] = max(min(cvp_pump, cvp_max),0)
-      self.HRO_pump[t] = max(min(swp_pump, swp_max),0)
+      self.TRP_pump[t] = max(min(cvp_pump, cvp_max),0) #overall TRP pumping
+      self.HRO_pump[t] = max(min(swp_pump, swp_max),0) #overall HRO pumping
     self.outflow[t] = self.inflow[t] - self.TRP_pump[t] - self.HRO_pump[t]
 
   def results_as_df(self, index):
