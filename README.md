@@ -2,7 +2,7 @@
 
 A simulation mode incorporating CVP and SWP Delta exports, reservoir releases, and snow-pack to streamflow forecasts. Simulates both historical and projected scenarios.
 
-**Requirements:** [NumPy](http://www.numpy.org/), [pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), [and scikit-learn](http://scikit-learn.org/).
+**Requirements:** [NumPy](http://www.numpy.org/), [pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), and [scikit-learn](http://scikit-learn.org/).
 
 Instructions to run model in historial mode:
 In main.py, set projection to False. Choose whether to calculate R2s and plot resuts. If running any data processing scripts, set process_hist_data to True. If downloading up-to-date historical data, set cdec to True. Set hist_indices to True if re-processing new data. Set hist_forcast to True if re-running forecasts. Run main.py and results will be in historical_runs_data folder.
