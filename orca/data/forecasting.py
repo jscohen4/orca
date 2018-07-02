@@ -1,5 +1,4 @@
 import numpy as np 
-import scipy.stats as sp
 import pandas as pd
 from sklearn import linear_model
 from .write_json import modify

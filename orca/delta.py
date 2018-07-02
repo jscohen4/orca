@@ -17,7 +17,7 @@ class Delta():
       self.netgains = df.gains_sim
     elif not self.sim_gains:
       self.netgains = df.netgains 
-    for k,v in json.load(open('orca/data/Delta_properties.json')).items():
+    for k,v in json.load(open('orca/data/json_files/Delta_properties.json')).items():
       setattr(self,k,v)
     # self.assign_flow(df)
     # what vars to store/save here

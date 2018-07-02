@@ -19,17 +19,17 @@ for sc in scenarios:
 	call(['mkdir', 'orca/data/scenario_runs/%s'%sc])
 	if climate_indices:
 		input_df = pd.read_csv('orca/data/input_climate_files/%s_input_data.csv'%sc, index_col = 0, parse_dates = True)
-		proj_ind_df = process_projection(input_df,'orca/data/gains_regression.json') 
+		proj_ind_df = process_projection(input_df,'orca/data/json_files/gains_regression.json') 
 		proj_ind_df.to_csv('orca/data/scenario_runs/%s/orca-data-processed-%s.csv'%(sc,sc))
 	if climate_forecasts:
 		if not climate_indices:
 			proj_ind_df = pd.read_csv('orca/data/scenario_runs/%s/orca-data-processed-%s.csv'%(sc,sc),index_col = 0, parse_dates = True)
-		WYI_stats_file = pd.read_csv('orca/data/WYI_forcasting_regression_stats.csv', index_col = 0, parse_dates = True)
-		carryover_stats_file = pd.read_csv('orca/data/carryover_regression_statistics.csv', index_col = 0, parse_dates = True)
+		WYI_stats_file = pd.read_csv('orca/data/forecast_regressions/WYI_forcasting_regression_stats.csv', index_col = 0, parse_dates = True)
+		carryover_stats_file = pd.read_csv('orca/data/forecast_regressions/carryover_regression_statistics.csv', index_col = 0, parse_dates = True)
 		forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file)
-		forc_df.to_csv('orca/data/scenario_runs/%s/orca-data-processed-%s.csv'%(sc,sc))
+		forc_df.to_csv('orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s.csv'%(sc,sc))
 	if run_projection: 
-		model = Model('orca/data/scenario_runs/%s/orca-data-processed-%s.csv'%(sc,sc), 'orca/data/results.csv',sd='10-01-1999',projection = True, sim_gains = True) #climate scenario test
+		model = Model('orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s.csv'%(sc,sc), 'orca/data/historical_runs_data/results.csv',sd='10-01-1999',projection = True, sim_gains = True) #climate scenario test
 		projection_results = model.simulate() # takes a while... save results
 		projection_results.to_csv('orca/data/scenario_runs/%s/%s-results.csv'%(sc,sc))
 
