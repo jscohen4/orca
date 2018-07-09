@@ -9,6 +9,7 @@ climate_indices = True
 climate_forecasts = True
 run_projection = True
 consolidate_outputs = True
+consolidate_inputs = False
 #need climate data folders for this, which are too large for github (a few are present in repository for example)
 with open('orca/data/scenario_names.txt') as f:
 	scenarios = f.read().splitlines()
@@ -47,3 +48,33 @@ if consolidate_outputs:
 			dfobj = pd.read_csv('orca/data/scenario_runs/%s/%s-results.csv'%(sc,sc), parse_dates = True, index_col = 0)
 			df['%s'%sc] = dfobj[obj]
 		df.to_csv('orca/data/climate_results/%s.csv'%obj)
+
+if consolidate_inputs: 
+	input_ids = ['TLG_fnf', 'FOL_fnf', 'MRC_fnf', 'MIL_fnf', 'NML_fnf', 'ORO_fnf',
+       'MKM_fnf', 'BND_fnf', 'NHG_fnf', 'SHA_fnf', 'YRS_fnf', 'BKL_swe',
+       'SHA_pr', 'ORO_pr', 'FOL_pr', 'SHA_tas', 'ORO_tas', 'FOL_tas',
+       'SHA_tasmax', 'ORO_tasmax', 'FOL_tasmax', 'SHA_tasmin', 'ORO_tasmin',
+       'FOL_tasmin', 'WY', 'DOWY', 'SR_WYI', 'SR_WYT', 'SR_WYT_rolling',
+       'SJR_WYI', 'SJR_WYT', '8RI', 'SHA_fci', 'ORO_fci', 'FOL_fci', 'GOL_swe',
+       'CSL_swe', 'HYS_swe', 'SCN_swe', 'RBB_swe', 'CAP_swe', 'RBP_swe',
+       'HMB_swe', 'FOR_swe', 'RTL_swe', 'GRZ_swe', 'SDF_swe', 'SLT_swe',
+       'MED_swe', 'BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe', 'aprjul_slope',
+       'aprjul_intercept', 'aprjul_mean', 'aprjul_std', 'octmar_mean',
+       'octmar_std', 'octmar_intercept', 'octmar_slope', 'WYI_sim', 'WYT_sim',
+       'gains_sim', 'SHA_snowpack', 'SHA_cum_flow_to_date',
+       'SHA_remaining_flow', 'SHA_slope', 'SHA_intercept', 'SHA_mean',
+       'SHA_std', 'ORO_snowpack', 'ORO_cum_flow_to_date', 'ORO_remaining_flow',
+       'ORO_slope', 'ORO_intercept', 'ORO_mean', 'ORO_std', 'FOL_snowpack',
+       'FOL_cum_flow_to_date', 'FOL_remaining_flow', 'FOL_slope',
+       'FOL_intercept', 'FOL_mean', 'FOL_std']
+
+	for obj in input_ids:
+		df = pd.DataFrame()
+		print(obj)
+		i = 0
+		for sc in scenarios:
+			i+=1
+			print('projection # %s' %i)
+			dfobj = pd.read_csv('orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s.csv'%(sc,sc), parse_dates = True, index_col = 0)
+			df['%s'%sc] = dfobj[obj]
+		df.to_csv('orca/data/climate_input_forecasts/%s.csv'%obj)		
