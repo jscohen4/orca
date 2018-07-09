@@ -20,7 +20,7 @@ A simulation mode incorporating CVP and SWP Delta exports, reservoir releases, a
 ### Running ORCA in projection mode for multiple cmip5 scenarios:
 1. Copy input files for all desired cmip5 scenarios from the [orca_cmip5_inputs](https://github.com/jscohen4/orca_cmip5_inputs) repository to ORCA's scenario_runs folder.
 2. Write names of all desired cmip5 scenarios to scenario_names.txt file in data folder.
-3. Set climate_indices , climate_forecasts, and run_projection options in run_all_climate_projections.py. Set consolidate_outputs to formate results for each scenario in the same csv files.
+3. Set climate_indices , climate_forecasts, and run_projection options in run_all_climate_projections.py. Set consolidate_outputs to format results for each scenario in the same csv files.
 4. After executing run_all_climate_projections.py, results will be in the scenario_runs and climate_results folders.
 
 ## License
