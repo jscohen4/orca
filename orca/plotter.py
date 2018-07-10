@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib import gridspec
 from .util import *
-
+import seaborn as sns
 def compare(res,obs,freq='D'):
   # input two pandas series and a frequency
   sns.set_style('whitegrid')
