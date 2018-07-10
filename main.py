@@ -8,9 +8,9 @@ now = datetime.now().strftime('Last modified %Y-%m-%d %H:%M:%S')
 
 #Each of these booleans determines the actions that will be run by the model 
 
-projection = False #True if running a single climate projection
-calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
-plot = True #True if plotting outputs, need calc_R2s to also be true if plotting historical!!!!
+projection = True #True if running a single climate projection
+calc_R2s = False #True if calculating R2s (only relevant for historical scenario)
+plot = False #True if plotting outputs, need calc_R2s to also be true if plotting historical!!!!
 
 
 process_hist_data = False #True if changing any historical data inputs, or downloading updated data from cdec
@@ -96,7 +96,7 @@ if not projection:
       for f in ['D','W','M','AS-OCT']:
         for s,o,c in zip(sim,obs,calibr_pts):
           plotter.compare(s, o, freq=f)
-          plt.savefig('orca/figs/historical/%s_%s.pdf' % (f,c), dpi=150)
+          plt.savefig('orca/figs/historical/%s_%s.png' % (f,c), dpi=150)
           plt.close()  
 
 if process_climate_data:
@@ -142,6 +142,6 @@ if projection:
     for f in ['D','W','M','AS-OCT']:
       for s,c in zip(sim,calibr_pts):
         plotter.plotting(s, freq=f)
-        plt.savefig('orca/figs/projection/%s_%s.pdf' % (f,c), dpi=150)
+        plt.savefig('orca/figs/projection/%s_%s.png' % (f,c), dpi=150)
         plt.close()  
 
