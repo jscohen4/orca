@@ -72,7 +72,7 @@ class Delta():
       # because dmin release helps to meet the export ratio requirement
       Q = min_rule*export_ratio/(1-export_ratio) 
 
-      if self.cvp_max + self.swp_max < Q:
+      if self.cvp_max + self.swp_max > Q:
         self.sodd_cvp[t] = self.cvp_max
         self.sodd_swp[t] = self.swp_max
       else:
