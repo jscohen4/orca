@@ -36,7 +36,7 @@ def plotting(res,freq='D'):
   # input two pandas series and a frequency
   sns.set_style('whitegrid')
   plt.rcParams['figure.figsize'] = (12, 8)
-  res = res.resample(freq).mean()
+  res = res.resample(freq).sum()
 
   fig = plt.figure(figsize=(12, 3)) 
   gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1]) 
