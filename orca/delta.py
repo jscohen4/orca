@@ -17,6 +17,7 @@ class Delta():
       self.netgains = df.gains_sim
     elif not self.sim_gains:
       self.netgains = df.netgains 
+      self.sanjoaquin = df.netgains - df.YRS_fnf - df.NML_fnf
     for k,v in json.load(open('orca/data/json_files/Delta_properties.json')).items():
       setattr(self,k,v)
     # self.assign_flow(df)
@@ -44,7 +45,37 @@ class Delta():
                                 self.pump_max['cvp']['pmax']) * cfs_tafd #calculate pumping targets (based on max allowed pumping) based on time of year 
       self.swp_pmax[i] = np.interp(i, self.pump_max['swp']['d'], 
                                 self.pump_max['swp']['pmax']) * cfs_tafd
+
+  def find_release(self, dowy, d, t, wyt, orovilleAS, shastaAS, folsomAS):
+    swp_intake_max = np.interp(d, self.pump_max['swp']['d'], self.pump_max['swp']['intake_limit']) * cfs_tafd
+    cvp_intake_max = np.interp(d, self.pump_max['cvp']['d'],self.pump_max['cvp']['intake_limit']) * cfs_tafd
+    san_joaquin_adj = np.interp(dowy, self.san_joaquin_add['d'], self.san_joaquin_add['mult']) * max(self.sanjoaquin[t] - 1000.0 * cfs_tafd, 0.0)
+    if np.interp(t,self.san_joaquin_export_ratio['D1641_dates'],self.san_joaquin_export_ratio['D1641_on_off']) == 1:
+      san_joaquin_ie_amt = np.interp(self.sanjoaquin[t]*tafd_cfs, self.san_joaquin_export_ratio['D1641_flow_target'],self.san_joaquin_export_ratio['D1641_export_limit']) * cfs_tafd
+    else:
+      san_joaquin_ie_amt = np.interp(self.sanjoaquin[t]*tafd_cfs, self.san_joaquin_export_ratio['flow'], self.san_joaquin_export_ratio['ratio']) * self.sanjoaquin[t]
     
+    san_joaquin_ie_used = np.interp(dowy, self.san_joaquin_export_ratio['d'], self.san_joaquin_export_ratio['on_off'])
+    san_joaquin_ie = san_joaquin_ie_amt * san_joaquin_ie_used
+    swp_jas_stor = (self.pump_max['swp']['pmax'][5] * cfs_tafd)/self.export_ratio[wyt][8]
+    cvp_jas_stor = (self.pump_max['cvp']['pmax'][5] * cfs_tafd)/self.export_ratio[wyt][8]
+    
+    if dowy <= 274:
+      numdaysSave = 92
+    else:
+      numdaysSave = 1
+
+    if orovilleAS > numdaysSave*swp_jas_stor:
+      swp_max = min(max(swp_intake_max + san_joaquin_adj, san_joaquin_ie * 0.45), np.interp(d, self.pump_max['swp']['d'], self.pump_max['swp']['pmax']) * cfs_tafd)
+    else:
+      swp_max = 0.0
+    if (shastaAS + folsomAS) > numdaysSave*cvp_jas_stor:
+      cvp_max = min(max(cvp_intake_max, san_joaquin_ie * 0.55), np.interp(d, self.pump_max['cvp']['d'], self.pump_max['cvp']['pmax']) * cfs_tafd)
+    else:
+      cvp_max = 0.0
+
+    return cvp_max, swp_max
+
   def calc_flow_bounds(self, t, d, m, wyt, dowy, sumnodds, orovilleAS, shastaAS, folsomAS): 
 
     # gains are calculated from (DeltaIn - sum of res. outflow)
@@ -88,13 +119,15 @@ class Delta():
       self.folsomSODDPCT = 1.0
     self.shastaSODDPCT = 1.0 - self.folsomSODDPCT
    
-  def step(self, t, d, m, wyt, dowy, cvp_flows, swp_flows):
+  def step(self, t, d, m, wyt, dowy, cvp_flows, swp_flows, orovilleAS, shastaAS, folsomAS):
     self.gains[t] = self.netgains[t]
     self.inflow[t] = max(self.gains[t] + cvp_flows + swp_flows, 0) # realinflow * cfs_tafd
     min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
     export_ratio = self.export_ratio[wyt][m-1]
     cvp_max = self.cvp_pmax[d-1] #max pumping allowed 
     swp_max = self.swp_pmax[d-1]
+    cvp_max, swp_max = self.find_release(dowy, d, t, wyt, orovilleAS, shastaAS, folsomAS)
+
     if d == 366:
       cvp_max = self.cvp_pmax[d-2]
       swp_max = self.swp_pmax[d-2]

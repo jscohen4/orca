@@ -45,7 +45,7 @@ class Model():
       self.oroville.step(t, d, m, wyt, dowy, self.delta.dmin[t], self.delta.sodd_swp[t], self.projection)
       self.delta.step(t, d, m, wyt, dowy,
                       self.shasta.R_to_delta[t] + self.folsom.R_to_delta[t],
-                      self.oroville.R_to_delta[t])
+                      self.oroville.R_to_delta[t],self.oroville.available_storage[t], self.shasta.available_storage[t], self.folsom.available_storage[t])
     return self.results_as_df()
 
   def results_as_df(self):

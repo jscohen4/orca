@@ -118,15 +118,47 @@ class Reservoir():
     self.S[t] = W - self.R[t] - self.E[t] # mass balance update
     self.R_to_delta[t] = max(self.R[t] - nodd, 0) # delta calcs need this
 
+  def calc_expected_min_release(self,t):
+    ##this function calculates the total expected releases needed to meet environmental minimums used in the find_available_storage function
+    ##this is only calculated once per year, at the beginning of the year
+    self.cum_min_release[0] = 0.0
+    wyt = self.wyt[t]
+    ##the cum_min_release is the total expected environmental releases between the current day and the end of september in that water year
+    ## (based on the water year type)
+    if self.nodd_meets_envmin: #for Shasta and Oroville only 
+      for x in range(1,366):
+        m = int(self.month[x-1])
+        d = int(self.dayofyear[x-1])
+        self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd, np.interp(d, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd) #minimum yearly release on first day. Either environmental minimum flow, north of delta demands, or temperature release standards. 
+      for x in range(1,365):
+        m = int(self.month[x-1])
+        self.cum_min_release[x] = self.cum_min_release[x-1] - max(self.env_min_flow[wyt][m-1] * cfs_tafd , np.interp(x-1, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd ) #each day the yearly cumulative minimum release is decreased by that days minimum allowed flow. might be able to re-write this (and def take the interpolate out of the function to save time)
+    else: # same idea, but for folsom. env_min_flow and nodd are combined because flow for agricultural users is diverted before the flow reaches the Lower American River (where the env minimunm flows are to be met)
+      for x in range(1,366):
+        m = int(self.month[x-1])
+        d = int(self.dayofyear[x-1])
+        self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd + np.interp(d, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd)
+      for x in range(1,365):
+        m = int(self.month[x-1])
+        self.cum_min_release[x] = max(self.cum_min_release[x-1] - self.env_min_flow[wyt][m-1] * cfs_tafd - np.interp(x-1, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd) 
+
   def find_available_storage(self, t, dowy, exceedence_level):
     ##this function uses the linear regression variables calculated in find_release_func (called before simulation loop) to figure out how
     ##much 'excess' storage is available to bešreleased to the delta with the explicit intention of running the pumps.  This function is calculated
     ##each timestep before the reservoirs' individual step function is called
     #also used to obtain inflow forecasts
-    self.exceedence_level = (self.WYI[t-1] - 10.0)/3##how conservative are they being about the flow forecasts (ie, 90% exceedence level, 75% exceedence level, etc)
-    self.forecast[t] = max((self.slope[t] * self.obs_flow[t] + self.intercept[t]), 0.0) #based on forecast regression
-    self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]]/self.exceedence_level + self.forecast[t] - self.cum_min_release[dowy])
-
+    self.exceedence_level = -1*min((self.WYI[t-1] - 10.0)*0.8,-2)##how conservative are they being about the flow forecasts (ie, 90% exceedence level, 75% exceedence level, etc)
+    # print(self.exceedence_level)
+    # self.forecast[t] = max((self.slope[t] * self.obs_snow[t] + self.intercept[t]), 0.0) #based on forecast regression
+    self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t]) * 1000 #based on forecast regression
+    if dowy == 0:
+      self.calc_expected_min_release(t-1)##what do they expect to need to release for env. requirements through the end of september
+    # print(self.calc_expected_min_release)
+    # self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]] + self.forecast[t]/self.exceedence_level - self.cum_min_release[dowy])
+    # print(self.S[t-1] - self.carryover_target[self.wyt[t]]/self.exceedence_level)
+    self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]]/self.exceedence_level + self.forecast[t]/self.exceedence_level- self.cum_min_release[dowy])
+    # print(self.carryover_target[self.wyt[t]]/self.exceedence_level)
+    print(self.forecast[t])
   def results_as_df(self, index):
     df = pd.DataFrame()
     names = ['storage', 'out', 'target', 'out_to_delta', 'tocs','sodd','spill']
