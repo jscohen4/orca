@@ -10,7 +10,7 @@ now = datetime.now().strftime('Last modified %Y-%m-%d %H:%M:%S')
 
 projection = False #True if running a single climate projection
 calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
-plot = False #True if plotting outputs, need calc_R2s to also be true if plotting historical!!!!
+plot = True #True if plotting outputs, need calc_R2s to also be true if plotting historical!!!!
 
 process_hist_data = False #True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data

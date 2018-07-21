@@ -148,17 +148,10 @@ class Reservoir():
     ##each timestep before the reservoirs' individual step function is called
     #also used to obtain inflow forecasts
     self.exceedence_level = -1*min((self.WYI[t-1] - 10.0)*0.8,-2)##how conservative are they being about the flow forecasts (ie, 90% exceedence level, 75% exceedence level, etc)
-    # print(self.exceedence_level)
-    # self.forecast[t] = max((self.slope[t] * self.obs_snow[t] + self.intercept[t]), 0.0) #based on forecast regression
     self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t]) * 1000 #based on forecast regression
     if dowy == 0:
       self.calc_expected_min_release(t-1)##what do they expect to need to release for env. requirements through the end of september
-    # print(self.calc_expected_min_release)
-    # self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]] + self.forecast[t]/self.exceedence_level - self.cum_min_release[dowy])
-    # print(self.S[t-1] - self.carryover_target[self.wyt[t]]/self.exceedence_level)
     self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]]/self.exceedence_level + self.forecast[t]/self.exceedence_level- self.cum_min_release[dowy])
-    # print(self.carryover_target[self.wyt[t]]/self.exceedence_level)
-    print(self.forecast[t])
   def results_as_df(self, index):
     df = pd.DataFrame()
     names = ['storage', 'out', 'target', 'out_to_delta', 'tocs','sodd','spill']
