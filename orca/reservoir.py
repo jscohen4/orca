@@ -151,7 +151,8 @@ class Reservoir():
     self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t]) * 1000 #based on forecast regression
     if dowy == 0:
       self.calc_expected_min_release(t-1)##what do they expect to need to release for env. requirements through the end of september
-    self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]]/self.exceedence_level + self.forecast[t]/self.exceedence_level- self.cum_min_release[dowy])
+    self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]]/self.exceedence_level + self.forecast[t] - self.cum_min_release[dowy])
+    print()
   def results_as_df(self, index):
     df = pd.DataFrame()
     names = ['storage', 'out', 'target', 'out_to_delta', 'tocs','sodd','spill']
