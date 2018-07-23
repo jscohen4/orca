@@ -37,7 +37,12 @@ class Delta():
     self.swp_target = np.zeros(367)
     self.cvp_pmax = np.zeros(367)
     self.swp_pmax = np.zeros(367)
-    
+    self.swp_intake_max = np.zeros(367)
+    self.cvp_intake_max = np.zeros(367)
+    self.san_joaquin_adj = np.zeros(367)
+    self.D1641_on_off = np.zeros(367)
+    self.san_joaquin_ie_used = np.zeros(367)
+    self.san_joaquin_ie_amt = np.zeros(T)
     for i in range(0,365):  
       self.cvp_target[i] = np.interp(i, self.pump_max['cvp']['d'], #calculate pumping target for day of year (based on target pumping for sodd) 
                                 self.pump_max['cvp']['target']) * cfs_tafd
@@ -48,17 +53,26 @@ class Delta():
       self.swp_pmax[i] = np.interp(i, self.pump_max['swp']['d'], 
                                 self.pump_max['swp']['pmax']) * cfs_tafd
 
-  def find_release(self, dowy, d, t, wyt, orovilleAS, shastaAS, folsomAS):
-    swp_intake_max = np.interp(d, self.pump_max['swp']['d'], self.pump_max['swp']['intake_limit']) * cfs_tafd
-    cvp_intake_max = np.interp(d, self.pump_max['cvp']['d'],self.pump_max['cvp']['intake_limit']) * cfs_tafd
-    san_joaquin_adj = np.interp(dowy, self.san_joaquin_add['d'], self.san_joaquin_add['mult']) * max(self.sanjoaquin[t] - 1000.0 * cfs_tafd, 0.0)
-    if np.interp(t,self.san_joaquin_export_ratio['D1641_dates'],self.san_joaquin_export_ratio['D1641_on_off']) == 1:
-      san_joaquin_ie_amt = np.interp(self.sanjoaquin[t]*tafd_cfs, self.san_joaquin_export_ratio['D1641_flow_target'],self.san_joaquin_export_ratio['D1641_export_limit']) * cfs_tafd
-    else:
-      san_joaquin_ie_amt = np.interp(self.sanjoaquin[t]*tafd_cfs, self.san_joaquin_export_ratio['flow'], self.san_joaquin_export_ratio['ratio']) * self.sanjoaquin[t]
+      self.swp_intake_max[i] = np.interp(i, self.pump_max['swp']['d'], self.pump_max['swp']['intake_limit']) * cfs_tafd
+      self.cvp_intake_max[i] = np.interp(i, self.pump_max['cvp']['d'],self.pump_max['cvp']['intake_limit']) * cfs_tafd
+      self.san_joaquin_adj[i] = np.interp(water_day(i), self.san_joaquin_add['d'], self.san_joaquin_add['mult']) * max(self.sanjoaquin[i] - 1000.0 * cfs_tafd, 0.0)
+      self.san_joaquin_ie_used[i] = np.interp(water_day(i), self.san_joaquin_export_ratio['d'], self.san_joaquin_export_ratio['on_off'])
     
-    san_joaquin_ie_used = np.interp(dowy, self.san_joaquin_export_ratio['d'], self.san_joaquin_export_ratio['on_off'])
-    san_joaquin_ie = san_joaquin_ie_amt * san_joaquin_ie_used
+    for i in range(0,T):
+      self.san_joaquin_ie_amt[i] = np.interp(self.sanjoaquin[i]*tafd_cfs, self.san_joaquin_export_ratio['D1641_flow_target'],self.san_joaquin_export_ratio['D1641_export_limit']) * cfs_tafd
+
+  def find_release(self, dowy, d, t, wyt, orovilleAS, shastaAS, folsomAS):
+    # swp_intake_max = np.interp(d, self.pump_max['swp']['d'], self.pump_max['swp']['intake_limit']) * cfs_tafd
+    # cvp_intake_max = np.interp(d, self.pump_max['cvp']['d'],self.pump_max['cvp']['intake_limit']) * cfs_tafd
+    
+    # san_joaquin_adj = np.interp(dowy, self.san_joaquin_add['d'], self.san_joaquin_add['mult']) * max(self.sanjoaquin[t] - 1000.0 * cfs_tafd, 0.0)
+    # if np.interp(t,self.san_joaquin_export_ratio['D1641_dates'],self.san_joaquin_export_ratio['D1641_on_off']) == 1:
+    # san_joaquin_ie_amt = np.interp(self.sanjoaquin[t]*tafd_cfs, self.san_joaquin_export_ratio['D1641_flow_target'],self.san_joaquin_export_ratio['D1641_export_limit']) * cfs_tafd
+    # else:
+      # san_joaquin_ie_amt = np.interp(self.sanjoaquin[t]*tafd_cfs, self.san_joaquin_export_ratio['flow'], self.san_joaquin_export_ratio['ratio']) * self.sanjoaquin[t]
+    # san_joaquin_ie_used = np.interp(dowy, self.san_joaquin_export_ratio['d'], self.san_joaquin_export_ratio['on_off'])
+
+    san_joaquin_ie = self.san_joaquin_ie_amt[t] * self.san_joaquin_ie_used[dowy]
     swp_jas_stor = (self.pump_max['swp']['pmax'][5] * cfs_tafd)/self.export_ratio[wyt][8]
     cvp_jas_stor = (self.pump_max['cvp']['pmax'][5] * cfs_tafd)/self.export_ratio[wyt][8]
     
@@ -68,11 +82,11 @@ class Delta():
       numdaysSave = 1
 
     if orovilleAS > numdaysSave*swp_jas_stor:
-      swp_max = min(max(swp_intake_max + san_joaquin_adj, san_joaquin_ie * 0.45), np.interp(d, self.pump_max['swp']['d'], self.pump_max['swp']['pmax']) * cfs_tafd)
+      swp_max = min(max(self.swp_intake_max[d] + self.san_joaquin_adj[d], san_joaquin_ie * 0.45), self.swp_pmax[d])
     else:
       swp_max = 0.0
     if (shastaAS + folsomAS) > numdaysSave*cvp_jas_stor:
-      cvp_max = min(max(cvp_intake_max, san_joaquin_ie * 0.55), np.interp(d, self.pump_max['cvp']['d'], self.pump_max['cvp']['pmax']) * cfs_tafd)
+      cvp_max = min(max(self.cvp_intake_max[d], san_joaquin_ie * 0.55), self.cvp_pmax[d])
     else:
       cvp_max = 0.0
 
