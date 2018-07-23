@@ -127,20 +127,20 @@ class Reservoir():
     ## (based on the water year type)
     if self.nodd_meets_envmin: #for Shasta and Oroville only 
       for x in range(1,366):
-        m = int(self.month[x-1])
-        d = int(self.dayofyear[x-1])
-        self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd, np.interp(d, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd) #minimum yearly release on first day. Either environmental minimum flow, north of delta demands, or temperature release standards. 
+        m = self.month[x-1]
+        d = self.dayofyear[x-1]
+        self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd, self.nodds[d], self.temp_releases[wyt][m-1] * cfs_tafd) #minimum yearly release on first day. Either environmental minimum flow, north of delta demands, or temperature release standards. 
       for x in range(1,365):
-        m = int(self.month[x-1])
-        self.cum_min_release[x] = self.cum_min_release[x-1] - max(self.env_min_flow[wyt][m-1] * cfs_tafd , np.interp(x-1, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd ) #each day the yearly cumulative minimum release is decreased by that days minimum allowed flow. might be able to re-write this (and def take the interpolate out of the function to save time)
+        m = self.month[x-1]
+        self.cum_min_release[x] = self.cum_min_release[x-1] - max(self.env_min_flow[wyt][m-1] * cfs_tafd, self.nodds[d], self.temp_releases[wyt][m-1] * cfs_tafd ) #each day the yearly cumulative minimum release is decreased by that days minimum allowed flow. might be able to re-write this (and def take the interpolate out of the function to save time)
     else: # same idea, but for folsom. env_min_flow and nodd are combined because flow for agricultural users is diverted before the flow reaches the Lower American River (where the env minimunm flows are to be met)
       for x in range(1,366):
-        m = int(self.month[x-1])
-        d = int(self.dayofyear[x-1])
-        self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd + np.interp(d, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd)
+        m = self.month[x-1]
+        d = self.dayofyear[x-1]
+        self.cum_min_release[0] += max(self.env_min_flow[wyt][m-1] * cfs_tafd + self.nodds[d], self.temp_releases[wyt][m-1] * cfs_tafd)
       for x in range(1,365):
-        m = int(self.month[x-1])
-        self.cum_min_release[x] = max(self.cum_min_release[x-1] - self.env_min_flow[wyt][m-1] * cfs_tafd - np.interp(x-1, first_of_month, self.nodd), self.temp_releases[wyt][m-1] * cfs_tafd) 
+        m = self.month[x-1]
+        self.cum_min_release[x] = max(self.cum_min_release[x-1] - self.env_min_flow[wyt][m-1] * cfs_tafd - self.nodds[d], self.temp_releases[wyt][m-1] * cfs_tafd) 
 
   def find_available_storage(self, t, dowy, exceedence_level):
     ##this function uses the linear regression variables calculated in find_release_func (called before simulation loop) to figure out how
@@ -152,7 +152,7 @@ class Reservoir():
     if dowy == 0:
       self.calc_expected_min_release(t-1)##what do they expect to need to release for env. requirements through the end of september
     self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]]/self.exceedence_level + self.forecast[t] - self.cum_min_release[dowy])
-    print()
+    
   def results_as_df(self, index):
     df = pd.DataFrame()
     names = ['storage', 'out', 'target', 'out_to_delta', 'tocs','sodd','spill']
