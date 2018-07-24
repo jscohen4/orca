@@ -19,10 +19,10 @@ hist_indices = True #True if running calc_indices script
 hist_forcast = True #True if running updated forecast
 
 sc = 'access1-0_rcp85_r1i1p1' #cmip5 climate scenario to use, if projection = True
-process_climate_data = False #only mark True if running climate projection and/or processing projection input data
+process_climate_data = True #only mark True if running climate projection and/or processing projection input data
 ####### only relevant if processing projection data
-climate_indices = False
-climate_forecasts = False
+climate_indices = True
+climate_forecasts = True
 #Nothing below here needs to be changed!
 ###############################################
 ###############################################

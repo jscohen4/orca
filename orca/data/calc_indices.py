@@ -385,7 +385,7 @@ def process_projection(df,gains_regr,inf_regr): #used to process climate project
   res_ids = ['SHA','ORO','FOL']
   for r in res_ids:
     coeffs = inf_reg["%s_inf_coeffs" %r]
-    intercepts = ["%s_inf_int"%r]
+    intercepts = inf_reg["%s_inf_int"%r]
     df['%s_in_tr'%r] = pd.Series()
 
     for m in range(1,13):
@@ -395,13 +395,12 @@ def process_projection(df,gains_regr,inf_regr): #used to process climate project
         inter = intercepts[m-1]
         coeff = coeffs[m-1]
         fnf = dfm['%s_fnf'%r].values
-        inf = dfm['%s_in'%r].values
         in_tr = inter + fnf*coeff
         dfm['%s_in_tr'%r] = in_tr
         df['%s_in_tr'%r] = df['%s_in_tr'%r].fillna(dfm['%s_in_tr'%r])
 
 ########flood incides
-  df['SHA_fci'] = rolling_fci(df['SHA__in_tr'], k=0.95, start=100000)
+  df['SHA_fci'] = rolling_fci(df['SHA_in_tr'], k=0.95, start=100000)
   df.SHA_fci.fillna(method='bfill', inplace=True)
 
   df['ORO_fci'] = rolling_fci(df['ORO_pr'], k=0.97, start=0)
