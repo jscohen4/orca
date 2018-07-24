@@ -213,6 +213,7 @@ def process(df,evap_regr,gains_regr): #used for historical data processing
   modify(gains_regr,"intercepts", intercepts)
 
   df['gains_sim'] = pd.Series(index=df.index) #regression for gains
+
   for index, row in df.iterrows():
     m = index.month
     X=[]
@@ -223,7 +224,7 @@ def process(df,evap_regr,gains_regr): #used for historical data processing
       # X.append(df.loc[index,'%s_rol' %station])
       # X.append(df.loc[index,'%s_prev' %station]) 
       # X.append(df.loc[index,'%s_prev2' %station])
-    X.append(df.loc[ index,'SR_WYI'])
+    X.append(df.loc[index,'SR_WYI'])
     X = np.array(X)
     gains = (np.sum(X * b) + e) * cfs_tafd
     df.loc[index, 'gains_sim'] = gains
