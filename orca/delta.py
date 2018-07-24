@@ -15,7 +15,7 @@ class Delta():
     self.sim_gains = sim_gains
     if self.sim_gains:
       self.netgains = df.gains_sim
-      self.sanjoaquin = df.netgains - df.YRS_fnf - df.NML_fnf
+      self.sanjoaquin = df.gains_sim - df.YRS_fnf - df.NML_fnf
 
     elif not self.sim_gains:
       self.netgains = df.netgains 
