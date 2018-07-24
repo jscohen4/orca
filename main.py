@@ -12,7 +12,7 @@ projection = False #True if running a single climate projection
 calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
 plot = True #True if plotting outputs, need calc_R2s to also be true if plotting historical!!!!
 
-process_hist_data = True #True if changing any historical data inputs, or downloading updated data from cdec
+process_hist_data = False #True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data
 cdec = True # True if downloading up-to-date cdec data
 hist_indices = True #True if running calc_indices script
@@ -26,7 +26,7 @@ climate_forecasts = True
 #Nothing below here needs to be changed!
 ###############################################
 ###############################################
-###############################################
+###########`s####################################
 if process_hist_data or not projection: 
   text_file = open("orca/data/historical_runs_data/datetime.txt", "w")
   text_file.write("%s" %now)
@@ -95,7 +95,7 @@ if not projection:
       for f in ['D','W','M','AS-OCT']:
         for s,o,c in zip(sim,obs,calibr_pts):
           plotter.compare(s, o, freq=f)
-          plt.savefig('orca/figs/historical/%s_%s.png' % (f,c), dpi=150)
+          plt.savefig('orca/figs/historical/%s_%s.pdf' % (f,c), dpi=150)
           plt.close()  
 
 if process_climate_data:

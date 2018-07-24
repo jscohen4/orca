@@ -81,11 +81,11 @@ class Delta():
     else:
       numdaysSave = 1
 
-    if orovilleAS > numdaysSave*swp_jas_stor:
+    if orovilleAS > numdaysSave:#*swp_jas_stor:
       swp_max = min(max(self.swp_intake_max[d] + self.san_joaquin_adj[d], san_joaquin_ie * 0.45), self.swp_pmax[d])
     else:
       swp_max = 0.0
-    if (shastaAS + folsomAS) > numdaysSave*cvp_jas_stor:
+    if (shastaAS + folsomAS) > numdaysSave:#*cvp_jas_stor:
       cvp_max = min(max(self.cvp_intake_max[d], san_joaquin_ie * 0.55), self.cvp_pmax[d])
     else:
       cvp_max = 0.0
@@ -148,7 +148,7 @@ class Delta():
       cvp_max = self.cvp_pmax[d-2]
       swp_max = self.swp_pmax[d-2]
     required_outflow = max(min_rule, (1-export_ratio)*self.inflow[t])
-    surplus = self.gains[t] - required_outflow
+    surplus = self.gains[t] - required_outflow 
 
     if surplus > 0:
       # gains cover both the min_rule and the export ratio requirement
@@ -166,6 +166,7 @@ class Delta():
         swp_pump = max(swp_flows - 0.25 * deficit, 0)
       self.TRP_pump[t] = max(min(cvp_pump, cvp_max),0) #overall TRP pumping
       self.HRO_pump[t] = max(min(swp_pump, swp_max),0) #overall HRO pumping
+
     self.outflow[t] = self.inflow[t] - self.TRP_pump[t] - self.HRO_pump[t]
 
   def results_as_df(self, index):
