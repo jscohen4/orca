@@ -137,8 +137,8 @@ class Delta():
       self.folsomSODDPCT = 1.0
     self.shastaSODDPCT = 1.0 - self.folsomSODDPCT
    
-  def step(self, t, d, m, wyt, dowy, cvp_flows, swp_flows, orovilleAS, shastaAS, folsomAS):
-    self.gains[t] = self.netgains[t]
+  def step(self, t, d, m, wyt, dowy, cvp_flows, swp_flows, orovilleAS, shastaAS, folsomAS,sumnodds):
+    self.gains[t] = self.netgains[t] + sumnodds
     self.inflow[t] = max(self.gains[t] + cvp_flows + swp_flows, 0) # realinflow * cfs_tafd
     min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
     export_ratio = self.export_ratio[wyt][m-1]
