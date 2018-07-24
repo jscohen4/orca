@@ -24,7 +24,7 @@ class Reservoir():
         self.Q = df['%s_fnf'% key].values * cfs_tafd
         self.E = np.zeros(T)
     if not self.projection:
-        self.Q = df['%s_in_fix'% key].values * cfs_tafd
+        self.Q = df['%s_in_tr'%key].values * cfs_tafd
         self.E = df['%s_evap'% key].values * cfs_tafd
     self.fci = df['%s_fci' % key].values
     self.slope =  df['%s_slope' % key].values
