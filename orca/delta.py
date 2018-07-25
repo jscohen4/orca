@@ -107,7 +107,6 @@ class Delta():
     if d == 366:
       cvp_max = self.cvp_target[d-2]
       swp_max = self.swp_target[d-2]
-
     # the sodd_* variables tell the reservoirs how much to release
     # for south of delta demands only
     # (dmin is the reservoir release needed to meet delta outflows)
@@ -146,9 +145,9 @@ class Delta():
     swp_max = self.swp_pmax[d-1]
     cvp_max, swp_max = self.find_release(dowy, d, t, wyt, orovilleAS, shastaAS, folsomAS)
 
-    if d == 366:
-      cvp_max = self.cvp_pmax[d-2]
-      swp_max = self.swp_pmax[d-2]
+    # if d == 366:
+      # cvp_max = self.cvp_pmax[d-2]
+      # swp_max = self.swp_pm ax[d-2]
     required_outflow = max(min_rule, (1-export_ratio)*self.inflow[t])
     surplus = self.gains[t] - required_outflow 
 
@@ -168,7 +167,9 @@ class Delta():
         swp_pump = max(swp_flows - 0.25 * deficit, 0)
       self.TRP_pump[t] = max(min(cvp_pump, cvp_max),0) #overall TRP pumping
       self.HRO_pump[t] = max(min(swp_pump, swp_max),0) #overall HRO pumping
-
+    if d >= 365:
+      self.TRP_pump[t] = self.TRP_pump[t-1]
+      self.HRO_pump[t] = self.HRO_pump[t-1]
     self.outflow[t] = self.inflow[t] - self.TRP_pump[t] - self.HRO_pump[t]
 
   def results_as_df(self, index):
