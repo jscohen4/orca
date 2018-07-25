@@ -288,6 +288,21 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
   # df.netgains.plot()
   # df.gains_sim.plot()
   # plt.show()
+  df['newgains'] = pd.Series()
+  for WYT in ['C','D','BN','AN','W']:
+    dfw = df[(df.SR_WYT == WYT)]
+    means = dfw.netgains.groupby([dfw.index.strftime('%m-%d')]).mean()
+    # plt.plot(means)
+    days = [dfw.index.strftime('%Y-%m-%d')]
+    days = days[0]
+
+    for d in days:
+      df.loc[df.index == d,'newgains'] = means[d[5:]]
+
+
+  df['newgains']=df.newgains.fillna(method='ffill')
+  df['gains_sim'] = (df['newgains']*0.75+df['gains_sim']*0.25)
+
   return df
 
 def process_projection(df,gains_regr,inf_regr): #used to process climate projection data

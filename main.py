@@ -9,14 +9,14 @@ now = datetime.now().strftime('Last modified %Y-%m-%d %H:%M:%S')
 #Each of these booleans determines the actions that will be run by the model 
 
 projection = False #True if running a single climate projection
-calc_R2s = False #True if calculating R2s (only relevant for historical scenario)
-plot = False #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
+calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
+plot = True #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
 
-process_hist_data = False #True if changing any historical data inputs, or downloading updated data from cdec
+process_hist_data = True #True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data
-cdec = True # True if downloading up-to-date cdec data
-hist_indices = False #True if running calc_indices script
-hist_forcast = False #True if running updated forecast
+cdec = False # True if downloading up-to-date cdec data
+hist_indices = True #True if running calc_indices script
+hist_forcast = True #True if running updated forecast
 
 sc = 'access1-0_rcp85_r1i1p1' #cmip5 climate scenario to use, if projection = True
 process_climate_data = False #only mark True if running climate projection and/or processing projection input data
@@ -58,7 +58,7 @@ if process_hist_data:
     WYI_stats.to_csv('orca/data/forecast_regressions/WYI_forcasting_regression_stats.csv')
 
 if not projection:
-  model = Model('orca/data/historical_runs_data/orca-data-forecasted.csv', 'orca/data/historical_runs_data/orca-data-forecasted.csv',sd='10-01-1999',projection = False, sim_gains = False) #beacuse of rolling calc in gains, we start on 10th day of
+  model = Model('orca/data/historical_runs_data/orca-data-forecasted.csv', 'orca/data/historical_runs_data/orca-data-forecasted.csv',sd='10-01-1999',projection = False, sim_gains = True) #beacuse of rolling calc in gains, we start on 10th day of
   results = model.simulate() # takes a while... save results
   results.to_csv('orca/data/historical_runs_data/results.csv')
   if calc_R2s:
