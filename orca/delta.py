@@ -20,7 +20,7 @@ class Delta():
 
     elif not self.sim_gains:
       self.netgains = df.netgains 
-      self.sanjoaquin = df.netgains - df.YRS_fnf - df.NML_fnf
+      self.sanjoaquin = df.netgains - df.YRS_fnf #- 100*df.NML_fnf
     for k,v in json.load(open('orca/data/json_files/Delta_properties.json')).items():
       setattr(self,k,v)
     # self.assign_flow(df)
@@ -44,6 +44,7 @@ class Delta():
     self.D1641_on_off = np.zeros(367)
     self.san_joaquin_ie_used = np.zeros(367)
     self.san_joaquin_ie_amt = np.zeros(T)
+    self.omr_reqr_int = np.zeros(367)
     for i in range(0,365):  
       self.cvp_target[i] = np.interp(i, self.pump_max['cvp']['d'], #calculate pumping target for day of year (based on target pumping for sodd) 
                                 self.pump_max['cvp']['target']) * cfs_tafd
@@ -58,7 +59,7 @@ class Delta():
       self.cvp_intake_max[i] = np.interp(i, self.pump_max['cvp']['d'],self.pump_max['cvp']['intake_limit']) * cfs_tafd
       self.san_joaquin_adj[i] = np.interp(water_day(i), self.san_joaquin_add['d'], self.san_joaquin_add['mult']) * max(self.sanjoaquin[i] - 1000.0 * cfs_tafd, 0.0)
       self.san_joaquin_ie_used[i] = np.interp(water_day(i), self.san_joaquin_export_ratio['d'], self.san_joaquin_export_ratio['on_off'])
-    
+      self.omr_reqr_int[i] = np.interp(water_day(i), self.omr_reqr['d'], self.omr_reqr['flow']) * cfs_tafd
     for i in range(0,T):
       self.san_joaquin_ie_amt[i] = np.interp(self.sanjoaquin[i]*tafd_cfs, self.san_joaquin_export_ratio['D1641_flow_target'],self.san_joaquin_export_ratio['D1641_export_limit']) * cfs_tafd
 
@@ -160,8 +161,8 @@ class Delta():
     cvp_max = self.cvp_pmax[d-1] #max pumping allowed 
     swp_max = self.swp_pmax[d-1]
     omrNat = self.OMR_sim[t]* cfs_tafd
-    fish_trigger_adj = np.interp(t, self.omr_reqr['t'], self.omr_reqr['adjustment']) * cfs_tafd
-    maxTotPumpInt = omrNat - np.interp(dowy, self.omr_reqr['d'], self.omr_reqr['flow']) * cfs_tafd - fish_trigger_adj
+    # fish_trigger_adj = np.interp(t, self.omr_reqr['t'], self.omr_reqr['adjustment']) * cfs_tafd
+    maxTotPumpInt = omrNat - np.interp(dowy, self.omr_reqr['d'], self.omr_reqr['flow']) * cfs_tafd #- fish_trigger_adj
     self.maxTotPump = max(maxTotPumpInt,0.0)
 
     cvp_max, swp_max = self.find_release(dowy, d, t, wyt, orovilleAS, shastaAS, folsomAS)

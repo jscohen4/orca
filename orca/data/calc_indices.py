@@ -300,8 +300,8 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
     for d in days:
       df.loc[df.index == d,'newgains'] = means[d[5:]]
 
-
-  df['newgains']=df.newgains.fillna(method='ffill')
+  df['newgains'] = df.newgains.rolling(5).mean()
+  df['newgains']=df.newgains.fillna(method='bfill')
   df['gains_sim'] = (df['newgains']*0.75+df['gains_sim']*0.25)
   df['OMR'] = df.OMR + df.HRO_pump + df.TRP_pump
 
@@ -556,7 +556,8 @@ def process_projection(df,df_g,gains_regr,inf_regr): #used to process climate pr
 
     for d in days:
       df.loc[df.index == d,'newgains'] = means[d[5:]]
-  df['newgains']=df.newgains.fillna(method='ffill')
+  df['newgains'] = df.newgains.rolling(5).mean()
+  df['newgains']=df.newgains.fillna(method='bfill')
   df['gains_sim'] = (df['newgains']*0.75+df['gains_sim']*0.25)
   
   return df
