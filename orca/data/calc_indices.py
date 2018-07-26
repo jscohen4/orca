@@ -303,6 +303,34 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
 
   df['newgains']=df.newgains.fillna(method='ffill')
   df['gains_sim'] = (df['newgains']*0.75+df['gains_sim']*0.25)
+  df['OMR'] = df.OMR + df.HRO_pump + df.TRP_pump
+
+  df2 = df[(df.index > '2008-12-01')]#start at 1997 water year
+  df['OMR_sim'] = pd.Series()
+  for WYT in ['C','D','BN','AN','W']:
+    if WYT =='AN':
+      dfWEY = df2[(df2.SR_WYT == 'W')]
+      means_wet = dfWEY.OMR.groupby([dfWEY.index.strftime('%m-%d')]).mean()
+
+      dfBN = df2[(df2.SR_WYT == 'BN')]
+      means_BN = dfBN.OMR.groupby([dfBN.index.strftime('%m-%d')]).mean()
+      means = means_wet.add(means_BN)/2
+
+    else:
+      dfw = df2[(df2.SR_WYT == WYT)]
+      means = dfw.OMR.groupby([dfw.index.strftime('%m-%d')]).mean()
+    # plt.plot(means)
+    dfh = df[(df.SR_WYT == WYT)]
+
+    days = [dfh.index.strftime('%Y-%m-%d')]
+    days = days[0]
+
+    for d in days:
+      if d[5:] != '02-29':
+        df.loc[df.index == d,'OMR_sim'] = means[d[5:]]
+
+
+  df['OMR_sim']=df.OMR_sim.fillna(method='ffill')
   return df, df_g
 
 def process_projection(df,df_g,gains_regr,inf_regr): #used to process climate projection data
@@ -530,7 +558,7 @@ def process_projection(df,df_g,gains_regr,inf_regr): #used to process climate pr
       df.loc[df.index == d,'newgains'] = means[d[5:]]
   df['newgains']=df.newgains.fillna(method='ffill')
   df['gains_sim'] = (df['newgains']*0.75+df['gains_sim']*0.25)
-
+  
   return df
 
 # df.to_csv('orca-data-processed.csv')

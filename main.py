@@ -60,7 +60,7 @@ if process_hist_data:
     WYI_stats.to_csv('orca/data/forecast_regressions/WYI_forcasting_regression_stats.csv')
 
 if not projection:
-  model = Model('orca/data/historical_runs_data/orca-data-forecasted.csv', 'orca/data/historical_runs_data/orca-data-forecasted.csv',sd='10-01-1999',projection = False, sim_gains = True) #beacuse of rolling calc in gains, we start on 10th day of
+  model = Model('orca/data/historical_runs_data/orca-data-forecasted.csv', 'orca/data/historical_runs_data/orca-data-forecasted.csv',sd='10-01-1999',projection = False, sim_gains = False) #beacuse of rolling calc in gains, we start on 10th day of
   results = model.simulate() # takes a while... save results
   results.to_csv('orca/data/historical_runs_data/results.csv')
   if calc_R2s:
