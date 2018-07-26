@@ -8,18 +8,18 @@ now = datetime.now().strftime('Last modified %Y-%m-%d %H:%M:%S')
 
 #Each of these booleans determines the actions that will be run by the model 
 
-projection = False #True if running a single climate projection
+projection = True #True if running a single climate projection
 calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
 plot = True #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
 
-process_hist_data = False #True if changing any historical data inputs, or downloading updated data from cdec
+process_hist_data = False#True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data
 cdec = False # True if downloading up-to-date cdec data
-hist_indices = True #True if running calc_indices script
-hist_forcast = True #True if running updated forecast
+hist_indices = False #True if running calc_indices script
+hist_forcast = False #True if running updated forecast
 
 sc = 'access1-0_rcp85_r1i1p1' #cmip5 climate scenario to use, if projection = True
-process_climate_data = False #only mark True if running climate projection and/or processing projection input data
+process_climate_data = True #only mark True if running climate projection and/or processing projection input data
 ####### only relevant if processing projection data
 climate_indices = True
 climate_forecasts = True
@@ -47,12 +47,12 @@ if process_hist_data:
   if hist_indices:
     if not cdec: 
       cdec_df = pd.read_csv('orca/data/historical_runs_data/cdec-data.csv', index_col=0, parse_dates=True)
-    ind_df, gains_df = process(cdec_df,'orca/data/json_files/evap_regression.json','orca/data/json_files/gains_regression.json','orca/data/json_files/inf_regression.json')  
+    ind_df, gains_df, OMR_df= process(cdec_df,'orca/data/json_files/evap_regression.json','orca/data/json_files/gains_regression.json','orca/data/json_files/inf_regression.json')  
     ind_df.to_csv('orca/data/historical_runs_data/orca-data-processed.csv')
     gains_df.to_csv('orca/data/historical_runs_data/gains_loops.csv')
-
+    OMR_df.to_csv('orca/data/historical_runs_data/OMR_loops.csv')
   if hist_forcast:
-    if not hist_forcast:
+    if not hist_indices:
       ind_df = pd.read_csv('orca/data/historical_runs_data/orca-data-processed.csv', index_col=0, parse_dates=True)
     forc_df, stats_df, WYI_stats= forecast(ind_df)
     forc_df.to_csv('orca/data/historical_runs_data/orca-data-forecasted.csv')
@@ -60,7 +60,7 @@ if process_hist_data:
     WYI_stats.to_csv('orca/data/forecast_regressions/WYI_forcasting_regression_stats.csv')
 
 if not projection:
-  model = Model('orca/data/historical_runs_data/orca-data-forecasted.csv', 'orca/data/historical_runs_data/orca-data-forecasted.csv',sd='10-01-1999',projection = False, sim_gains = True) #beacuse of rolling calc in gains, we start on 10th day of
+  model = Model('orca/data/historical_runs_data/orca-data-forecasted.csv', 'orca/data/historical_runs_data/orca-data-forecasted.csv',sd='10-01-1999',projection = False, sim_gains = False) #beacuse of rolling calc in gains, we start on 10th day of
   results = model.simulate() # takes a while... save results
   results.to_csv('orca/data/historical_runs_data/results.csv')
   if calc_R2s:
@@ -106,8 +106,8 @@ if process_climate_data:
   if climate_indices:
     input_df = pd.read_csv('orca/data/individual_projection_runs/%s/%s_input_data.csv'%(sc,sc), index_col = 0, parse_dates = True)
     gains_loop_df = pd.read_csv('orca/data/historical_runs_data/gains_loops.csv', index_col = 0, parse_dates = True)
-
-    proj_ind_df = process_projection(input_df,gains_loop_df,'orca/data/json_files/gains_regression.json','orca/data/json_files/inf_regression.json')  
+    OMR_loop_df = pd.read_csv('orca/data/historical_runs_data/OMR_loops.csv', index_col = 0, parse_dates = True)
+    proj_ind_df = process_projection(input_df,gains_loop_df,OMR_loop_df,'orca/data/json_files/gains_regression.json','orca/data/json_files/inf_regression.json')  
     proj_ind_df.to_csv('orca/data/individual_projection_runs/%s/orca-data-processed-%s.csv'%(sc,sc))
   if climate_forecasts:
     if not climate_indices:

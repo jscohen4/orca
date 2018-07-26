@@ -13,13 +13,14 @@ class Delta():
     self.key = key
     self.wyt = df.WYT_sim 
     self.sim_gains = sim_gains
+    self.OMR_sim = df.OMR_sim
     if self.sim_gains:
       self.netgains = df.gains_sim
       self.sanjoaquin = df.gains_sim - df.YRS_fnf - df.NML_fnf
 
     elif not self.sim_gains:
       self.netgains = df.netgains 
-      self.sanjoaquin = df.netgains - df.YRS_fnf - df.NML_fnf
+      self.sanjoaquin = df.netgains - df.YRS_fnf #- 100*df.NML_fnf
     for k,v in json.load(open('orca/data/json_files/Delta_properties.json')).items():
       setattr(self,k,v)
     # self.assign_flow(df)
@@ -43,6 +44,7 @@ class Delta():
     self.D1641_on_off = np.zeros(367)
     self.san_joaquin_ie_used = np.zeros(367)
     self.san_joaquin_ie_amt = np.zeros(T)
+    self.omr_reqr_int = np.zeros(367)
     for i in range(0,365):  
       self.cvp_target[i] = np.interp(i, self.pump_max['cvp']['d'], #calculate pumping target for day of year (based on target pumping for sodd) 
                                 self.pump_max['cvp']['target']) * cfs_tafd
@@ -57,7 +59,7 @@ class Delta():
       self.cvp_intake_max[i] = np.interp(i, self.pump_max['cvp']['d'],self.pump_max['cvp']['intake_limit']) * cfs_tafd
       self.san_joaquin_adj[i] = np.interp(water_day(i), self.san_joaquin_add['d'], self.san_joaquin_add['mult']) * max(self.sanjoaquin[i] - 1000.0 * cfs_tafd, 0.0)
       self.san_joaquin_ie_used[i] = np.interp(water_day(i), self.san_joaquin_export_ratio['d'], self.san_joaquin_export_ratio['on_off'])
-    
+      self.omr_reqr_int[i] = np.interp(water_day(i), self.omr_reqr['d'], self.omr_reqr['flow']) * cfs_tafd
     for i in range(0,T):
       self.san_joaquin_ie_amt[i] = np.interp(self.sanjoaquin[i]*tafd_cfs, self.san_joaquin_export_ratio['D1641_flow_target'],self.san_joaquin_export_ratio['D1641_export_limit']) * cfs_tafd
 
@@ -135,7 +137,22 @@ class Delta():
     else:
       self.folsomSODDPCT = 1.0
     self.shastaSODDPCT = 1.0 - self.folsomSODDPCT
-   
+  
+  def meet_OMR_requirement(self, Tracy, Banks, t): #old and middle river requirements (hence "OMR")
+    #cvp_m = cvpm
+    #swp_m = swpm
+    if Tracy + Banks > self.maxTotPump: #maxTotPump is calculated in calc_weekly_storage, before this OMR function is called. 
+    #current simulated puming is more that the total allowed pumping based on Delta requirements
+    #Tracy (CVP) is allocated 55% of available flow for pumping, Banks (SWP) is allocated 45%. (assuming Delta outflow is greater than it's requirement- I still need to look into where that's determined)
+      if Tracy < self.maxTotPump*0.55: #Tracy is pumping less that it's maximum allocated flow. Harvery should pump less flow now. 
+        Banks = self.maxTotPump - Tracy 
+      elif Banks < self.maxTotPump*0.45: #Banks is pumping less that it's maximum allocated flow. Tracy should pump less flow now. 
+        Tracy = self.maxTotPump - Banks
+      else: # in this case, both pumps would be taking their allocated percentage of flow, but the overall flow through the pumps is still greater than the maximum allowed
+        Banks = self.maxTotPump*0.45
+        Tracy= self.maxTotPump*0.55
+    return Tracy, Banks
+
   def step(self, t, d, m, wyt, dowy, cvp_flows, swp_flows, orovilleAS, shastaAS, folsomAS,sumnodds):
     self.gains[t] = self.netgains[t] + sumnodds
     self.inflow[t] = max(self.gains[t] + cvp_flows + swp_flows, 0) # realinflow * cfs_tafd
@@ -143,8 +160,13 @@ class Delta():
     export_ratio = self.export_ratio[wyt][m-1]
     cvp_max = self.cvp_pmax[d-1] #max pumping allowed 
     swp_max = self.swp_pmax[d-1]
-    cvp_max, swp_max = self.find_release(dowy, d, t, wyt, orovilleAS, shastaAS, folsomAS)
+    omrNat = self.OMR_sim[t]* cfs_tafd
+    # fish_trigger_adj = np.interp(t, self.omr_reqr['t'], self.omr_reqr['adjustment']) * cfs_tafd
+    maxTotPumpInt = omrNat - np.interp(dowy, self.omr_reqr['d'], self.omr_reqr['flow']) * cfs_tafd #- fish_trigger_adj
+    self.maxTotPump = max(maxTotPumpInt,0.0)
 
+    cvp_max, swp_max = self.find_release(dowy, d, t, wyt, orovilleAS, shastaAS, folsomAS)
+    cvp_max, swp_max = self.meet_OMR_requirement(cvp_max, swp_max, t)
     # if d == 366:
       # cvp_max = self.cvp_pmax[d-2]
       # swp_max = self.swp_pm ax[d-2]
