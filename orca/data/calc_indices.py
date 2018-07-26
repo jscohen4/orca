@@ -307,6 +307,7 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
 
   df2 = df[(df.index > '2008-12-01')]#start at 1997 water year
   df['OMR_sim'] = pd.Series()
+  df_OM = pd.DataFrame() #for means for OMR loops
   for WYT in ['C','D','BN','AN','W']:
     if WYT =='AN':
       dfWEY = df2[(df2.SR_WYT == 'W')]
@@ -315,25 +316,23 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
       dfBN = df2[(df2.SR_WYT == 'BN')]
       means_BN = dfBN.OMR.groupby([dfBN.index.strftime('%m-%d')]).mean()
       means = means_wet.add(means_BN)/2
-
     else:
       dfw = df2[(df2.SR_WYT == WYT)]
       means = dfw.OMR.groupby([dfw.index.strftime('%m-%d')]).mean()
-    # plt.plot(means)
+    df_OM[WYT] = means
     dfh = df[(df.SR_WYT == WYT)]
-
     days = [dfh.index.strftime('%Y-%m-%d')]
     days = days[0]
 
-    for d in days:
+    for i,d in enumerate(days):
       if d[5:] != '02-29':
         df.loc[df.index == d,'OMR_sim'] = means[d[5:]]
-
-
+      elif d[5:] == '02-29':
+        df.loc[df.index == d,'OMR_sim'] = means[days[i-1][5:]]
   df['OMR_sim']=df.OMR_sim.fillna(method='ffill')
-  return df, df_g
+  return df, df_g, df_OM
 
-def process_projection(df,df_g,gains_regr,inf_regr): #used to process climate projection data
+def process_projection(df,df_g,df_OMR,gains_regr,inf_regr): #used to process climate projection data
   SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
   SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf']
   df = df[(df.index > '1996-09-30')]
@@ -560,6 +559,28 @@ def process_projection(df,df_g,gains_regr,inf_regr): #used to process climate pr
   df['newgains']=df.newgains.fillna(method='bfill')
   df['gains_sim'] = (df['newgains']*0.75+df['gains_sim']*0.25)
   
+  df['OMR_sim'] = pd.Series()
+  for WYT in ['C','D','BN','AN','W']:
+    # if WYT =='AN':
+      # dfWEY = df2[(df2.SR_WYT == 'W')]
+      # means_wet = dfWEY.OMR.groupby([dfWEY.index.strftime('%m-%d')]).mean()
+
+      # dfBN = df2[(df2.SR_WYT == 'BN')]
+      # means_BN = dfBN.OMR.groupby([dfBN.index.strftime('%m-%d')]).mean()
+      # means = means_wet.add(means_BN)/2
+    # else:
+      # dfw = df2[(df2.SR_WYT == WYT)]
+      # means = dfw.OMR.groupby([dfw.index.strftime('%m-%d')]).mean()
+    dfh = df[(df.SR_WYT == WYT)]
+    days = [dfh.index.strftime('%Y-%m-%d')]
+    days = days[0]
+    for i,d in enumerate(days):
+      if d[5:] != '02-29':
+        df.loc[df.index == d,'OMR_sim'] = means[d[5:]]
+      elif d[5:] == '02-29':
+        df.loc[df.index == d,'OMR_sim'] = means[days[i-1][5:]]
+  df['OMR_sim'] = df.OMR_sim.rolling(5).mean()
+  df['OMR_sim']=df.OMR_sim.fillna(method='bfill')
   return df
 
 # df.to_csv('orca-data-processed.csv')
