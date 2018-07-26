@@ -52,7 +52,7 @@ def rolling_fci(inflow, k, start): #used to obtain reservoir flood control index
 
   return pd.Series(x, index=inflow.index)
 
-def process(df,evap_regr,gains_regr): #used for historical data processing
+def process(df,evap_regr,gains_regr,inf_regr): #used for historical data processing
   SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf'] # flows to calculate Sacramento Valley WYI
   SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf'] #flows to calculate San-Joaquin Valley WYI
 
@@ -115,9 +115,33 @@ def process(df,evap_regr,gains_regr): #used for historical data processing
                .sum())
 
   df['8RI'].fillna(method='bfill', inplace=True)
+ 
+  
+  ###transfolrmed inflows
+  res_ids = ['SHA','ORO','FOL']
+  for r in res_ids:
+    coeffs = []
+    intercepts = []
+    df['%s_in_tr'%r] = pd.Series()
+    for m in range(1,13):
+      # for WYT in ['C','D','BN','AN','W']:
+        dfm = df[(df.index.month == m)]
+        # dfm = dfm[(dfm.SR_WYT == WYT)]
+
+        fnf = dfm['%s_fnf'%r].values
+        inf = dfm['%s_in'%r].values
+        fit = np.polyfit(fnf,inf,1)
+
+        in_tr = fit[1] + fnf*fit[0]
+        dfm['%s_in_tr'%r] = in_tr
+        df['%s_in_tr'%r] = df['%s_in_tr'%r].fillna(dfm['%s_in_tr'%r])
+        coeffs.append(fit[0])
+        intercepts.append(fit[1])
+    modify(inf_regr,"%s_inf_coeffs" %r, coeffs)
+    modify(inf_regr,"%s_inf_int"%r, intercepts)
 
   # flood control indices
-  df['SHA_fci'] = rolling_fci(df['SHA_in_fix'], k=0.95, start=100000)
+  df['SHA_fci'] = rolling_fci(df['SHA_in_tr'], k=0.95, start=100000)
   df.SHA_fci.fillna(method='bfill', inplace=True)
 
   df['ORO_fci'] = rolling_fci(df['ORO_precip'], k=0.97, start=0)
@@ -127,7 +151,6 @@ def process(df,evap_regr,gains_regr): #used for historical data processing
   df.ORO_fci.fillna(method='bfill', inplace=True)
 
   ### evaporation  regression
-  res_ids = ['SHA','ORO','FOL']
   for r in res_ids:
     dfe = df[['%s_storage'%r,'%s_evap'%r,'%s_tas'%r]] #evaporation datafile
     dfe[['storage','evap','tas']] = dfe[['%s_storage'%r,'%s_evap'%r,'%s_tas'%r]]
@@ -151,6 +174,8 @@ def process(df,evap_regr,gains_regr): #used for historical data processing
     # modify('evap_regression.json',"%s_evap_int"%r, intercept)
     modify(evap_regr,"%s_evap_coeffs" %r, coeffs.tolist())
     modify(evap_regr,"%s_evap_int"%r, intercept)
+
+
 
   ##clean up snowpack data and resample monthly 
   snow_ids = ['GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','CAP_swe','RBP_swe','KTL_swe',
@@ -213,6 +238,7 @@ def process(df,evap_regr,gains_regr): #used for historical data processing
   modify(gains_regr,"intercepts", intercepts)
 
   df['gains_sim'] = pd.Series(index=df.index) #regression for gains
+
   for index, row in df.iterrows():
     m = index.month
     X=[]
@@ -223,7 +249,7 @@ def process(df,evap_regr,gains_regr): #used for historical data processing
       # X.append(df.loc[index,'%s_rol' %station])
       # X.append(df.loc[index,'%s_prev' %station]) 
       # X.append(df.loc[index,'%s_prev2' %station])
-    X.append(df.loc[ index,'SR_WYI'])
+    X.append(df.loc[index,'SR_WYI'])
     X = np.array(X)
     gains = (np.sum(X * b) + e) * cfs_tafd
     df.loc[index, 'gains_sim'] = gains
@@ -262,13 +288,29 @@ def process(df,evap_regr,gains_regr): #used for historical data processing
   # df.netgains.plot()
   # df.gains_sim.plot()
   # plt.show()
-  return df
+  df['newgains'] = pd.Series()
+  df_g = pd.DataFrame() #gains datafile
+  for WYT in ['C','D','BN','AN','W']:
+    dfw = df[(df.SR_WYT == WYT)]
+    means = dfw.netgains.groupby([dfw.index.strftime('%m-%d')]).mean()
+    df_g[WYT] = means 
+    days = [dfw.index.strftime('%Y-%m-%d')]
+    days = days[0]
 
-def process_projection(df,gains_regr): #used to process climate projection data
+    for d in days:
+      df.loc[df.index == d,'newgains'] = means[d[5:]]
+
+
+  df['newgains']=df.newgains.fillna(method='ffill')
+  df['gains_sim'] = (df['newgains']*0.75+df['gains_sim']*0.25)
+  return df, df_g
+
+def process_projection(df,df_g,gains_regr,inf_regr): #used to process climate projection data
   SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
   SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf']
   df = df[(df.index > '1996-09-30')]
   gains_reg = json.load(open(gains_regr))
+  inf_reg = json.load(open(inf_regr))
 
   df['WY'] = pd.Series([water_year(d) for d in df.index], index=df.index)
   df['DOWY'] = pd.Series([water_year_day(d) for d in df.index], index=df.index)
@@ -354,7 +396,26 @@ def process_projection(df,gains_regr): #used to process climate projection data
 
   df['8RI'].fillna(method='bfill', inplace=True)
 
-  df['SHA_fci'] = rolling_fci(df['SHA_fnf'], k=0.95, start=100000)
+  ###transfolrmed inflows
+  res_ids = ['SHA','ORO','FOL']
+  for r in res_ids:
+    coeffs = inf_reg["%s_inf_coeffs" %r]
+    intercepts = inf_reg["%s_inf_int"%r]
+    df['%s_in_tr'%r] = pd.Series()
+
+    for m in range(1,13):
+      # for WYT in ['C','D','BN','AN','W']:
+        dfm = df[(df.index.month == m)]
+        # dfm = dfm[(dfm.SR_WYT == WYT)]
+        inter = intercepts[m-1]
+        coeff = coeffs[m-1]
+        fnf = dfm['%s_fnf'%r].values
+        in_tr = inter + fnf*coeff
+        dfm['%s_in_tr'%r] = in_tr
+        df['%s_in_tr'%r] = df['%s_in_tr'%r].fillna(dfm['%s_in_tr'%r])
+
+########flood incides
+  df['SHA_fci'] = rolling_fci(df['SHA_in_tr'], k=0.95, start=100000)
   df.SHA_fci.fillna(method='bfill', inplace=True)
 
   df['ORO_fci'] = rolling_fci(df['ORO_pr'], k=0.97, start=0)
@@ -457,6 +518,19 @@ def process_projection(df,gains_regr): #used to process climate projection data
     if ix == 9:
       df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * -10 
     df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim']*0.9
+  
+  df['newgains'] = pd.Series()
+  for WYT in ['C','D','BN','AN','W']:
+    dfw = df[(df.SR_WYT == WYT)]
+    means = df_g[WYT] 
+    days = [dfw.index.strftime('%Y-%m-%d')]
+    days = days[0]
+
+    for d in days:
+      df.loc[df.index == d,'newgains'] = means[d[5:]]
+  df['newgains']=df.newgains.fillna(method='ffill')
+  df['gains_sim'] = (df['newgains']*0.75+df['gains_sim']*0.25)
+
   return df
 
 # df.to_csv('orca-data-processed.csv')

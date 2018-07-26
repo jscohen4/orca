@@ -12,7 +12,6 @@ cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 def scrape_cdec():
   df = pd.DataFrame()
   sd = '01-01-1996' # reliable start for CDEC daily data
-
   # flowrates: inflow / outflow / evap / pumping
 
   ids = ['SHA', 'ORO', 'FOL']# Main reservoir IDs
@@ -51,7 +50,7 @@ def scrape_cdec():
   # observed delta outflow
   data = cd.get_data(['DTO'], [23], ['daily'], start=sd)
   df['DeltaOut'] = data['DTO']['RESERVOIR OUTFLOW daily']['value']
-
+  
   # San Luis storage
   data = cd.get_data(['SNL'], [15], ['daily'], start=sd)
   df['SNL_storage'] = data['SNL']['RESERVOIR STORAGE daily']['value'] / 1000
@@ -71,16 +70,18 @@ def scrape_cdec():
   for k in ids:
     df[k + '_storage'] = data[k]['RESERVOIR STORAGE daily']['value'] / 1000 # TAF
 
-  # cleanup
-  df[df < 0] = np.nan
-  df.interpolate(inplace=True)
-
   snow_ids = ['GOL','CSL', 'HYS', 'SCN', 'RBB', 'CAP', 'RBP','KTL', 'HMB', 
   'FOR', 'RTL', 'GRZ','SDF', 'SNM', 'SLT', 'MED']              #snowpack station points
   data = cd.get_data(station_ids = snow_ids, sensor_ids=[3], resolutions=['daily'],start=sd) 
   for k in snow_ids:
     df[k + '_swe'] = data[k]['SNOW, WATER CONTENT daily']['value']
+  #cleanup snow
+  df[df < 0] = np.nan
+  df.interpolate(inplace=True)
 
+  #old & middle river flow
+  data = cd.get_data(['OMR'], [20], ['hourly'], start='12-01-2008')
+  df['OMR'] = data['OMR']['FLOW, RIVER DISCHARGE hourly']['value']
 
 
   # oroville release from thermalito instead?
