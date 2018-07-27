@@ -23,6 +23,7 @@ class Delta():
       self.sanjoaquin = df.netgains - df.YRS_fnf #- 100*df.NML_fnf
     for k,v in json.load(open('orca/data/json_files/Delta_properties.json')).items():
       setattr(self,k,v)
+
     # self.assign_flow(df)
     # what vars to store/save here
     self.dmin = np.zeros(T)
@@ -45,6 +46,31 @@ class Delta():
     self.san_joaquin_ie_used = np.zeros(367)
     self.san_joaquin_ie_amt = np.zeros(T)
     self.omr_reqr_int = np.zeros(367)
+
+
+    #######stuff for salinity
+    self.x2 = np.zeros(T+1)
+    self.x2[1] = 82.0
+    self.x2[0] = 82.0
+
+    # self.x2constraint = {}
+    # self.x2constraint['W'] = [0] * 366
+    # self.x2constraint['AN'] = [0] * 366
+    # self.x2constraint['BN'] = [0] * 366
+    # self.x2constraint['D'] = [0] * 366
+    # self.x2constraint['C'] = [0] * 366
+    # for x in range(1,365):
+    #   self.x2constraint['C'][x] = 90.0
+    #   for wyt in ['W', 'AN', 'BN', 'D']:
+    #     if x > 180 and x < 274:
+    #       self.x2constraint[wyt][x] = 74.0 + 5.0*(x-181)/94
+    #     elif x > 274 and x < 318:
+    #       self.x2constraint[wyt][x] = 79.0 + 6.0*(x-275)/44
+    #     else:
+    #       self.x2constraint[wyt][x] = 90.0
+    # with open('Delta_salinity.json', 'w') as fp:
+    #   json.dump(self.x2constraint, fp)
+
     for i in range(0,365):  
       self.cvp_target[i] = np.interp(i, self.pump_max['cvp']['d'], #calculate pumping target for day of year (based on target pumping for sodd) 
                                 self.pump_max['cvp']['target']) * cfs_tafd
@@ -156,7 +182,19 @@ class Delta():
   def step(self, t, d, m, wyt, dowy, cvp_flows, swp_flows, orovilleAS, shastaAS, folsomAS,sumnodds):
     self.gains[t] = self.netgains[t] + sumnodds
     self.inflow[t] = max(self.gains[t] + cvp_flows + swp_flows, 0) # realinflow * cfs_tafd
-    min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
+    if dowy > 180 and dowy < 318:
+      if self.x2[t-1] > self.x2constraint[wyt][dowy]:
+        x2outflow = 10**((self.x2constraint[wyt][dowy] - 10.16 - 0.945*self.x2[t])/(-1.487))
+      else:
+        x2outflow = 0.0
+    else:
+      x2outflow = 0.0
+    
+    salinity_rule = min(x2outflow*cfs_tafd,12000.0*cfs_tafd)
+    outflow_rule = self.min_outflow[wyt][m-1] * cfs_tafd
+
+    min_rule = max(outflow_rule, salinity_rule)
+    # min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
     export_ratio = self.export_ratio[wyt][m-1]
     cvp_max = self.cvp_pmax[d-1] #max pumping allowed 
     swp_max = self.swp_pmax[d-1]
@@ -167,6 +205,7 @@ class Delta():
 
     cvp_max, swp_max = self.find_release(dowy, d, t, wyt, orovilleAS, shastaAS, folsomAS)
     cvp_max, swp_max = self.meet_OMR_requirement(cvp_max, swp_max, t)
+
     # if d == 366:
       # cvp_max = self.cvp_pmax[d-2]
       # swp_max = self.swp_pm ax[d-2]
@@ -193,11 +232,16 @@ class Delta():
       self.TRP_pump[t] = self.TRP_pump[t-1]
       self.HRO_pump[t] = self.HRO_pump[t-1]
     self.outflow[t] = self.inflow[t] - self.TRP_pump[t] - self.HRO_pump[t]
+    if self.outflow[t] > 0.0:
+      self.x2[t+1] = 10.16 + 0.945*self.x2[t] - 1.487*np.log10(self.outflow[t]*tafd_cfs)
+    else:
+      self.x2[t+1] = 10.16 + 0.945*self.x2[t] - 1.487*np.log10(50.0)
 
   def results_as_df(self, index):
     df = pd.DataFrame()
-    names = ['in','out','TRP_pump','HRO_pump']
-    things = [self.inflow, self.outflow, self.TRP_pump, self.HRO_pump]
+    self.x2 = self.x2[:-1]
+    names = ['in','out','TRP_pump','HRO_pump','X2']
+    things = [self.inflow, self.outflow, self.TRP_pump, self.HRO_pump, self.x2]
     for n,t in zip(names,things):
       df['%s_%s' % (self.key,n)] = pd.Series(t, index=index)
     return df

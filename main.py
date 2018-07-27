@@ -14,9 +14,9 @@ plot = True #True if plotting outputs, need calc_R2s to also be true if plotting
 
 process_hist_data = False#True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data
-cdec = False # True if downloading up-to-date cdec data
-hist_indices = False #True if running calc_indices script
-hist_forcast = False #True if running updated forecast
+cdec = True # True if downloading up-to-date cdec data
+hist_indices = True #True if running calc_indices script
+hist_forcast = True #True if running updated forecast
 
 sc = 'access1-0_rcp85_r1i1p1' #cmip5 climate scenario to use, if projection = True
 process_climate_data = False #only mark True if running climate projection and/or processing projection input data
@@ -76,7 +76,8 @@ if not projection:
          results['ORO_storage'],
          results['ORO_out'] / cfs_tafd,
          results['DEL_in'] / cfs_tafd,
-         results['DEL_out'] / cfs_tafd]
+         results['DEL_out'] / cfs_tafd, 
+         results['DEL_X2']]
     obs = [model.df['HRO_pump'],
            model.df['TRP_pump'],
            (model.df['HRO_pump'] + model.df['TRP_pump']),
@@ -87,10 +88,11 @@ if not projection:
            model.df['ORO_storage'],
            model.df['ORO_out'],
            model.df['DeltaIn'],
-           model.df['DeltaOut']]
+           model.df['DeltaOut'], 
+           model.df['X2']]
     plotter.Rsquares(sim,obs,'orca/data/historical_runs_data/Rsquares.txt')
     if plot:
-      calibr_pts = ['HRO_pump','TRP_pump','Combined_pump','SHA_storage','SHA_out','FOL_storage','FOL_out','ORO_storage','ORO_out','DeltaIn','DeltaOut']
+      calibr_pts = ['HRO_pump','TRP_pump','Combined_pump','SHA_storage','SHA_out','FOL_storage','FOL_out','ORO_storage','ORO_out','DeltaIn','DeltaOut','X2']
       text_file = open("orca/figs/historical/datetime.txt", "w")
       text_file.write("%s" %now)
       text_file.close()
@@ -135,13 +137,14 @@ if projection:
        results['ORO_storage'],
        results['ORO_out'] / cfs_tafd,
        results['DEL_in'] / cfs_tafd,
-       results['DEL_out'] / cfs_tafd]
+       results['DEL_out'] / cfs_tafd,
+       results['DEL_X2']]
   if plot:
     text_file = open("orca/figs/projection/datetime.txt", "w")
     text_file.write("%s\n" %now)
     text_file.write("%s" %sc)
     text_file.close()
-    calibr_pts = ['HRO_pump','TRP_pump','Combined_pump','SHA_storage','SHA_out','FOL_storage','FOL_out','ORO_storage','ORO_out','DeltaIn','DeltaOut']
+    calibr_pts = ['HRO_pump','TRP_pump','Combined_pump','SHA_storage','SHA_out','FOL_storage','FOL_out','ORO_storage','ORO_out','DeltaIn','DeltaOut','X2']
     for f in ['D','W','M','AS-OCT']:
       for s,c in zip(sim,calibr_pts):
         plotter.plotting(s, freq=f)

@@ -83,6 +83,9 @@ def scrape_cdec():
   data = cd.get_data(['OMR'], [20], ['hourly'], start='12-01-2008')
   df['OMR'] = data['OMR']['FLOW, RIVER DISCHARGE hourly']['value']
 
+  data = cd.get_data(['CX2'], [145], ['daily'], start='01-04-2007')
+
+  df['X2'] = data['CX2']['X2, DAILY CALCULATION daily']['value']
 
   # oroville release from thermalito instead?
   # no -- there is a canal diversion that isn't accounted for.
