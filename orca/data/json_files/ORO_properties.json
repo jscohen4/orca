@@ -67,6 +67,7 @@
     "D": 2,
     "C": 2
   },
+  "carryover_rule": true,
   "max_outflow": 150000,
   "delta_outflow_pct": 0.25,
   "dead_pool": 852
