@@ -9,16 +9,16 @@ now = datetime.now().strftime('Last modified %Y-%m-%d %H:%M:%S')
 #Each of these booleans determines the actions that will be run by the model 
 
 projection = False #True if running a single climate projection
-calc_R2s = False #True if calculating R2s (only relevant for historical scenario)
+calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
 plot = False #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
 
 process_hist_data = False#True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data
-cdec = True # True if downloading up-to-date cdec data
-hist_indices = True #True if running calc_indices script
+cdec = False # True if downloading up-to-date cdec data
+hist_indices = False #True if running calc_indices script
 hist_forcast = True #True if running updated forecast
 
-sc = 'access1-0_rcp85_r1i1p1' #cmip5 climate scenario to use, if projection = True
+sc = 'access1-0_rcp45_r1i1p1' #cmip5 climate scenario to use, if projection = True
 process_climate_data = False #only mark True if running climate projection and/or processing projection input data
 ####### only relevant if processing projection data
 climate_indices = True

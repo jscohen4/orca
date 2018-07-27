@@ -57,7 +57,8 @@ def rem_flow(x):
 	remaining_flow = (x.sum() - x.cumsum())
 	return remaining_flow
 
-def get_forecast_WYI(df, zscore1, zscore2): #now determining forecasting regression coefficients based off perfect foresight
+def get_forecast_WYI(df, index_exceedence_sac): #now determining forecasting regression coefficients based off perfect foresight
+	z_table_transform = [-1.645, -1.28, -1.035, -0.84, -0.675, -0.525, -0.385, -0.253, -0.125, 0, 0.125, 0.253, 0.385, 0.525, 0.675, 0.84, 1.035, 1.28, 1.645]
 	flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 	snow_sites = ['BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 
@@ -139,14 +140,14 @@ def get_forecast_WYI(df, zscore1, zscore2): #now determining forecasting regress
 	for index, row in Qm.iterrows():
 		ix = index.month
 		if (ix == 10) | (ix == 11):
-			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'])\
-			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + Qm.loc[index, 'aprjul_mean'])
+			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'] + Qm.loc[index, 'octmar_std']*z_table_transform[index_exceedence_sac])\
+			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + Qm.loc[index, 'aprjul_mean'] + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
 		elif (ix == 12) | (ix <= 4):
-			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'])\
-			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] +  (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept'])*zscore1)
+			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'] + Qm.loc[index, 'octmar_std']*z_table_transform[index_exceedence_sac])\
+			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] +  (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
 		elif ix == 5: 
 			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'])\
-			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept'])*zscore1)
+			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
 		if (ix == 9) | (ix == 8):
 			WYI = np.NaN
 		Qm.loc[index, 'WYI'] = WYI
@@ -155,7 +156,7 @@ def get_forecast_WYI(df, zscore1, zscore2): #now determining forecasting regress
 	return(Qm.WYI,stats)
 
 def forecast(df):
-	WYI_sim,WYI_stats = get_forecast_WYI(df,0.4,0) #wyt
+	WYI_sim,WYI_stats = get_forecast_WYI(df,8) #wyt
 	df['WYI_sim'] = WYI_sim
 	df.WYI_sim = df.WYI_sim.fillna(method = 'bfill')
 	df.loc[df['WYI_sim'].isnull(),'WYI_sim'] = df['SR_WYI']
@@ -243,7 +244,8 @@ def forecast(df):
 
 
 #############climate projection functions
-def get_projection_forecast_WYI(df, stats_file,zscore1, zscore2): #now determining forecasting regression coefficients based off perfect foresight
+def get_projection_forecast_WYI(df, stats_file,index_exceedence_sac): #now determining forecasting regression coefficients based off perfect foresight
+	z_table_transform = [-1.645, -1.28, -1.035, -0.84, -0.675, -0.525, -0.385, -0.253, -0.125, 0, 0.125, 0.253, 0.385, 0.525, 0.675, 0.84, 1.035, 1.28, 1.645]
 	flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 	snow_sites = ['BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 
@@ -289,15 +291,14 @@ def get_projection_forecast_WYI(df, stats_file,zscore1, zscore2): #now determini
 	for index, row in Qm.iterrows():
 		ix = index.month
 		if (ix == 10) | (ix == 11):
-			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'])\
-			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + Qm.loc[index, 'aprjul_mean'])
+			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'] + Qm.loc[index, 'octmar_std']*z_table_transform[index_exceedence_sac])\
+			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + Qm.loc[index, 'aprjul_mean'] + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
 		elif (ix == 12) | (ix <= 4):
-			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'])\
-			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] +  (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept'])*zscore1)
+			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'] + Qm.loc[index, 'octmar_std']*z_table_transform[index_exceedence_sac])\
+			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] +  (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
 		elif ix == 5: 
 			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'])\
-			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept'])*zscore1)
-#right now using zscore- more conservative- will discuss later
+			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
 		if (ix == 9) | (ix == 8):
 			WYI = np.NaN
 		Qm.loc[index, 'WYI'] = WYI
@@ -307,7 +308,7 @@ def get_projection_forecast_WYI(df, stats_file,zscore1, zscore2): #now determini
 	return(Qm.WYI)
 
 def projection_forecast(df,WYI_stats_file,carryover_stats_file):
-	WYI_sim = get_projection_forecast_WYI(df,WYI_stats_file,0.4,0) #wyt
+	WYI_sim = get_projection_forecast_WYI(df,WYI_stats_file,8) #wyt
 	df['WYI_sim'] = WYI_sim
 	df.WYI_sim = df.WYI_sim.fillna(method = 'bfill')
 	df.loc[df['WYI_sim'].isnull(),'WYI_sim'] = df['SR_WYI']

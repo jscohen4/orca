@@ -93,11 +93,12 @@ class Reservoir():
     W = self.S[t-1] + self.Q[t]
     fcr = 0.2*(W-self.tocs[t]) #flood control release
     self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin)) #target release
-    if m >= 5 and m <= 9: #from may to september, accout for carryover storage targets
-        if self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy) < self.carryover_target[wyt]: #forecasting rest-of-wateryear inflow
-            #how much to curtail releases in attempt to meet carryover targets
-            self.carryover_curtail_pct = (self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy))/self.carryover_target[wyt]
-            self.Rtarget[t] = self.Rtarget[t] * max(self.carryover_curtail_pct,self.carryover_curtail[wyt]) #update target release
+    if self.carryover_rule:
+        if m >= 5 and m <= 9: #from may to september, accout for carryover storage targets
+            if self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy) < self.carryover_target[wyt]: #forecasting rest-of-wateryear inflow
+                #how much to curtail releases in attempt to meet carryover targets
+                self.carryover_curtail_pct = (self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy))/self.carryover_target[wyt]
+                self.Rtarget[t] = self.Rtarget[t] * max(self.carryover_curtail_pct,self.carryover_curtail[wyt]) #update target release
 
     # then clip based on constraints
     self.R[t] = min(self.Rtarget[t], W - self.dead_pool) # dead-pool constraint
@@ -148,10 +149,10 @@ class Reservoir():
     ##each timestep before the reservoirs' individual step function is called
     #also used to obtain inflow forecasts
     self.exceedence_level = -1*min((self.WYI[t-1] - 10.0)*0.8,-2)##how conservative are they being about the flow forecasts (ie, 90% exceedence level, 75% exceedence level, etc)
-    self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t]) * 1000 #based on forecast regression
+    self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t] + self.std[t]*z_table_transform[self.exceedence[self.wyt[t]]]) * 1000 #based on forecast regression
     if dowy == 0:
       self.calc_expected_min_release(t)##what do they expect to need to release for env. requirements through the end of september
-      self.forecast[t] = max(0,self.slope[t+1] * self.obs_snow[t+1] + self.intercept[t+1]) * 1000 #based on forecast regression
+      self.forecast[t] = max(0,self.slope[t+1] * self.obs_snow[t+1] + self.intercept[t+1]+ self.std[t]*z_table_transform[self.exceedence[self.wyt[t]]]) * 1000 #based on forecast regression
     # if d == 0:
       # self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t]) * 1000 #based on forecast regression
 
