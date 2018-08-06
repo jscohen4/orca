@@ -214,7 +214,7 @@ def forecast(df):
 		                  res_stats[3]: stds}
 
 
-		stats = pd.DataFrame(stats, columns = [res_stats])
+		stats = pd.DataFrame(stats)
 
 		if res_id == 'SHA':
 			stats_file = stats
