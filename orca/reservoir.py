@@ -59,9 +59,11 @@ class Reservoir():
         self.tocs_index.append(np.zeros(366))
         for day in range(0, 366):  
             self.tocs_index[i][day] = np.interp(day, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
+    if key == 'ORO':
+    	self.tocs_index = np.roll(self.tocs_index, -16, axis = 1)
 
     self.nodds = np.zeros(367)
-    for i in range(0,366):  
+    for i in range(0,366):
         self.nodds[i] = np.interp(i, first_of_month, self.nodd)
 
 

@@ -148,7 +148,7 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
   df.ORO_fci.fillna(method='bfill', inplace=True)
 
   df['FOL_fci'] = rolling_fci(df['FOL_precip'], k=0.97, start=0)
-  df.ORO_fci.fillna(method='bfill', inplace=True)
+  df.FOL_fci.fillna(method='bfill', inplace=True)
 
   ### evaporation  regression
   for r in res_ids:
