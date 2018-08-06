@@ -15,7 +15,6 @@ def scrape_cdec():
   # flowrates: inflow / outflow / evap / pumping
 
   ids = ['SHA', 'ORO', 'FOL']# Main reservoir IDs
-
   data = cd.get_data(station_ids=ids, sensor_ids=[15,23,74,76,94,45], 
                      resolutions=['daily'], start=sd)
 
@@ -28,6 +27,9 @@ def scrape_cdec():
     df[k + '_precip'] = data[k]['PRECIPITATION, INCREMENTAL daily']['value']
     # fix mass balance problems in inflow
     df[k + '_in_fix'] = df[k+'_storage'].diff()/cfs_tafd + df[k+'_out'] + df[k+'_evap']
+
+  data = cd.get_data(['GKS'], [45], ['daily'], start='10-01-1998')
+  df['FOL_precip'] = data['GKS']['PRECIPITATION, INCREMENTAL daily']['value']
 
   temp_ids = ['SHS','OWS','ADR'] #IDs for reservoir temperature
 
@@ -86,6 +88,7 @@ def scrape_cdec():
   data = cd.get_data(['CX2'], [145], ['daily'], start='01-04-2007')
 
   df['X2'] = data['CX2']['X2, DAILY CALCULATION daily']['value']
+  
 
   # oroville release from thermalito instead?
   # no -- there is a canal diversion that isn't accounted for.
