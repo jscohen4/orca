@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 import warnings
-warnings.simplefilter(action='ignore', category=FutureWarning)
+# warnings.simplefilter(action='ignore', category=FutureWarning)
 from ulmo.cdec import historical as cd
 
 # first get daily FNF
@@ -11,9 +11,8 @@ from ulmo.cdec import historical as cd
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 def scrape_cdec():
   df = pd.DataFrame()
-  sd = '01-01-1996' # reliable start for CDEC daily data
+  sd ='1996-01-01' # reliable start for CDEC daily data
   # flowrates: inflow / outflow / evap / pumping
-
   ids = ['SHA', 'ORO', 'FOL']# Main reservoir IDs
   data = cd.get_data(station_ids=ids, sensor_ids=[15,23,74,76,94,45], 
                      resolutions=['daily'], start=sd)
