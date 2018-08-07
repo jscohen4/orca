@@ -336,7 +336,7 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
 def process_projection(df,df_g,df_OMR,gains_regr,inf_regr): #used to process climate projection data
   SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
   SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf']
-  df = df[(df.index > '1996-09-30')]
+  df = df[(df.index > '1951-09-30')]
   gains_reg = json.load(open(gains_regr))
   inf_reg = json.load(open(inf_regr))
 
@@ -467,7 +467,7 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr): #used to process cli
   df = df.drop(df[snow_ids],axis = 1)
   df = df.join(dfs).fillna(method = 'ffill') #snow stations now cleaned up and back in main datafile 
 
-  df = df[(df.index > '1999-09-30')]#start at 2000 water year
+  df = df[(df.index > '1951-09-30')]#start at 2000 water year
 
   #sum of stations for each basins
   df['BND_swe'] = df[['GOL_swe','CSL_swe']].mean(axis=1)

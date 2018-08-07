@@ -350,7 +350,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file):
 			yearly_stats = carryover_stats[i]
 			v = np.append(yearly_stats,np.tile(yearly_stats, 1)) #2000 WY
 			v = np.append(v,[yearly_stats[364]]) #leap year
-			for y in range(24): # 2001-2096 WYs
+			for y in range(36): # 2001-2096 WYs
 				v = np.append(v,np.tile(yearly_stats, 4))
 				v = np.append(v,[yearly_stats[364]]) #leap year
 			v = np.append(v,np.tile(yearly_stats, 2)) #2097-2099 WY
@@ -358,7 +358,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file):
 		r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
 		r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)
 		r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)
-
+		
 		r.drop(['inf','WY','DOWY'], axis=1, inplace=True)
 		df = pd.concat([df, r], axis=1, join_axes=[df.index])
 
