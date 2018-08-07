@@ -1,12 +1,11 @@
 import numpy as np
-np.warnings.filterwarnings('ignore')
+np.warnings.filterwarnings('ignore') #to not display numpy warnings... be careful
 import pandas as pd
 import matplotlib.pyplot as plt
 from orca import *
 from subprocess import call
 from datetime import datetime
 now = datetime.now().strftime('Last modified %Y-%m-%d %H:%M:%S')
-
 #Each of these booleans determines the actions that will be run by the model 
 
 projection = False #True if running a single climate projection
