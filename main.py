@@ -1,25 +1,25 @@
 import numpy as np
+np.warnings.filterwarnings('ignore') #to not display numpy warnings... be careful
 import pandas as pd
 import matplotlib.pyplot as plt
 from orca import *
 from subprocess import call
 from datetime import datetime
 now = datetime.now().strftime('Last modified %Y-%m-%d %H:%M:%S')
-
 #Each of these booleans determines the actions that will be run by the model 
 
-projection = True #True if running a single climate projection
+projection = False #True if running a single climate projection
 calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
-plot = True #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
+plot = False #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
 
-process_hist_data = False#True if changing any historical data inputs, or downloading updated data from cdec
+process_hist_data = True#True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data
-cdec = False # True if downloading up-to-date cdec data
+cdec = True # True if downloading up-to-date cdec data
 hist_indices = True #True if running calc_indices script
 hist_forcast = True #True if running updated forecast
 
 sc = 'access1-0_rcp45_r1i1p1' #cmip5 climate scenario to use, if projection = True
-process_climate_data = True #only mark True if running climate projection and/or processing projection input data
+process_climate_data = False #only mark True if running climate projection and/or processing projection input data
 ####### only relevant if processing projection data
 climate_indices = True
 climate_forecasts = True

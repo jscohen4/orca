@@ -7,5 +7,19 @@ z_table_transform = [-1.645, -1.28, -1.035, -0.84, -0.675, -0.525, -0.385, -0.25
 def water_day(d):
   return d - 274 if d >= 274 else d + 91
 
+def water_year_day(d):  #obtain day of water year, which begins on October 1st
+  if d.is_leap_year:
+    if d.dayofyear >= 275:
+      return d.dayofyear - 274
+    elif d.dayofyear <= 274 and d.dayofyear >= 59:  
+      return d.dayofyear + 92
+    else:
+      return d.dayofyear + 92
+  elif not d.is_leap_year:
+    if d.dayofyear >= 274:
+      return d.dayofyear - 273
+    else:
+      return d.dayofyear + 92
+
 def water_month(m):
   return m - 9 if m >= 9 else m + 3

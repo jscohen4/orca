@@ -16,19 +16,20 @@ water_year = lambda d: d.year+1 if d.dayofyear >= 274 else d.year
 # Sacramento Water Year Index (historical)
 get_SR_WYI = lambda x,p: 0.3*x[winter(x)].sum() + 0.4*x[summer(x)].sum() + 0.3*p
 
-def water_year_day(d):  #obtain day of water year, which begins on October 1st
-  if d.is_leap_year:
-    if d.dayofyear >= 275:
-      return d.dayofyear - 274
-    elif d.dayofyear <= 274 and d.dayofyear >= 59:  
-      return d.dayofyear + 92
-    else:
-      return d.dayofyear + 92
-  elif not d.is_leap_year:
-    if d.dayofyear >= 274:
-      return d.dayofyear - 273
-    else:
-      return d.dayofyear + 92
+# def water_year_day(d):  #obtain day of water year, which begins on October 1st
+#   if d.is_leap_year:
+#     if d.dayofyear >= 275:
+#       return d.dayofyear - 274
+#     elif d.dayofyear <= 274 and d.dayofyear >= 59:  
+#       return d.dayofyear + 92
+#     else:
+#       return d.dayofyear + 92
+#   elif not d.is_leap_year:
+#     if d.dayofyear >= 274:
+#       return d.dayofyear - 273
+#     else:
+#       return d.dayofyear + 92
+
 winter = lambda y: (y.index.month >= 10) | (y.index.month <= 3)
 summer = lambda y: (y.index.month >= 4) & (y.index.month <= 7)
 
