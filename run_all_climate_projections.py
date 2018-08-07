@@ -66,7 +66,7 @@ if consolidate_inputs:
        'SHA_std', 'ORO_snowpack', 'ORO_cum_flow_to_date', 'ORO_remaining_flow',
        'ORO_slope', 'ORO_intercept', 'ORO_mean', 'ORO_std', 'FOL_snowpack',
        'FOL_cum_flow_to_date', 'FOL_remaining_flow', 'FOL_slope',
-       'FOL_intercept', 'FOL_mean', 'FOL_std']
+       'FOL_intercept', 'FOL_mean', 'FOL_std', 'X2']
 
 	for obj in input_ids:
 		df = pd.DataFrame()
