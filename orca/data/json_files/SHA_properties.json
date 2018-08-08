@@ -64,5 +64,6 @@
   "carryover_rule": true,
   "max_outflow": 79000,
   "delta_outflow_pct": 0.6,
-  "dead_pool": 550
+  "dead_pool": 550,
+  "FCR_shift": 0
 }
