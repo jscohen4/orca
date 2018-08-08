@@ -41,9 +41,9 @@ class Model():
       doy = dowy
       m = self.month[t]
       wyt = self.wyt[t]
-      self.oroville.find_available_storage(t,d,dowy,self.oroville.exceedence[wyt])
-      self.folsom.find_available_storage(t,d,dowy,self.folsom.exceedence[wyt])
-      self.shasta.find_available_storage(t,d,dowy,self.shasta.exceedence[wyt])   
+      self.oroville.find_available_storage(t,d,dowy)#,self.oroville.exceedence[wyt])
+      self.folsom.find_available_storage(t,d,dowy)#,self.folsom.exceedence[wyt])
+      self.shasta.find_available_storage(t,d,dowy)#,self.shasta.exceedence[wyt])   
       self.delta.calc_flow_bounds(t, d, m, wyt, dowy, self.sumnodds[d], self.oroville.available_storage[t], self.shasta.available_storage[t], self.folsom.available_storage[t])
       self.shasta.sodd_pct = self.delta.shastaSODDPCT
       self.folsom.sodd_pct = self.delta.folsomSODDPCT

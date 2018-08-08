@@ -145,7 +145,7 @@ class Reservoir():
         m = self.month[x-1]
         self.cum_min_release[x] = max(self.cum_min_release[x-1] - self.env_min_flow[wyt][m-1] * cfs_tafd - self.nodds[d], self.temp_releases[wyt][m-1] * cfs_tafd) 
 
-  def find_available_storage(self, t, d,dowy, exceedence_level):
+  def find_available_storage(self, t, d,dowy):#, exceedence_level):
     ##this function uses the linear regression variables calculated in find_release_func (called before simulation loop) to figure out how
     ##much 'excess' storage is available to bešreleased to the delta with the explicit intention of running the pumps.  This function is calculated
     ##each timestep before the reservoirs' individual step function is called
@@ -157,8 +157,9 @@ class Reservoir():
       self.forecast[t] = max(0,self.slope[t+1] * self.obs_snow[t+1] + self.intercept[t+1]+ self.std[t]*z_table_transform[self.exceedence[self.wyt[t]]]) * 1000 #based on forecast regression
     # if d == 0:
       # self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t]) * 1000 #based on forecast regression
-
+    # self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]] + self.forecast[t] - self.cum_min_release[dowy])
     self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]]/self.exceedence_level + self.forecast[t] - self.cum_min_release[dowy])
+
   def results_as_df(self, index):
     df = pd.DataFrame()
     names = ['storage', 'out', 'target', 'out_to_delta', 'tocs','sodd','spill']

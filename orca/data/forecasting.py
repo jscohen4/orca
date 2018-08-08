@@ -155,8 +155,8 @@ def get_forecast_WYI(df, index_exceedence_sac): #now determining forecasting reg
 	Qm.WYI = Qm.WYI.shift(periods=-1)
 	return(Qm.WYI,stats)
 
-def forecast(df):
-	WYI_sim,WYI_stats = get_forecast_WYI(df,8) #wyt
+def forecast(df,index_exceedence_sac):
+	WYI_sim,WYI_stats = get_forecast_WYI(df,index_exceedence_sac) #wyt
 	df['WYI_sim'] = WYI_sim
 	df.WYI_sim = df.WYI_sim.fillna(method = 'bfill')
 	df.loc[df['WYI_sim'].isnull(),'WYI_sim'] = df['SR_WYI']
@@ -307,8 +307,8 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedence_sac): #now deter
 	# Qm.WYI = Qm.WYI.fillna(method = 'bfill')
 	return(Qm.WYI)
 
-def projection_forecast(df,WYI_stats_file,carryover_stats_file):
-	WYI_sim = get_projection_forecast_WYI(df,WYI_stats_file,8) #wyt
+def projection_forecast(df,WYI_stats_file,carryover_stats_file,index_exceedence_sac):
+	WYI_sim = get_projection_forecast_WYI(df,WYI_stats_file,index_exceedence_sac) #wyt
 	df['WYI_sim'] = WYI_sim
 	df.WYI_sim = df.WYI_sim.fillna(method = 'bfill')
 	df.loc[df['WYI_sim'].isnull(),'WYI_sim'] = df['SR_WYI']
