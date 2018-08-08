@@ -5,6 +5,7 @@ from .write_json import modify
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 pd.options.mode.chained_assignment = None  # default='warn'
+from .util import *
 
 def WYI_to_WYT(WYI, thresholds, values):
   for t,v in zip(thresholds,values):
@@ -58,7 +59,6 @@ def rem_flow(x):
 	return remaining_flow
 
 def get_forecast_WYI(df, index_exceedence_sac): #now determining forecasting regression coefficients based off perfect foresight
-	z_table_transform = [-1.645, -1.28, -1.035, -0.84, -0.675, -0.525, -0.385, -0.253, -0.125, 0, 0.125, 0.253, 0.385, 0.525, 0.675, 0.84, 1.035, 1.28, 1.645]
 	flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 	snow_sites = ['BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 
@@ -245,7 +245,6 @@ def forecast(df,index_exceedence_sac):
 
 #############climate projection functions
 def get_projection_forecast_WYI(df, stats_file,index_exceedence_sac): #now determining forecasting regression coefficients based off perfect foresight
-	z_table_transform = [-1.645, -1.28, -1.035, -0.84, -0.675, -0.525, -0.385, -0.253, -0.125, 0, 0.125, 0.253, 0.385, 0.525, 0.675, 0.84, 1.035, 1.28, 1.645]
 	flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 	snow_sites = ['BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 

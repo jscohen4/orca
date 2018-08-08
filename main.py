@@ -54,7 +54,7 @@ if process_hist_data:
   if hist_forcast:
     if not hist_indices:
       ind_df = pd.read_csv('orca/data/historical_runs_data/orca-data-processed.csv', index_col=0, parse_dates=True)
-    forc_df, stats_df, WYI_stats= forecast(ind_df)
+    forc_df, stats_df, WYI_stats= forecast(ind_df,8)
     forc_df.to_csv('orca/data/historical_runs_data/orca-data-forecasted.csv')
     stats_df.to_csv('orca/data/forecast_regressions/carryover_regression_statistics.csv')
     WYI_stats.to_csv('orca/data/forecast_regressions/WYI_forcasting_regression_stats.csv')
@@ -116,7 +116,7 @@ if process_climate_data:
       proj_ind_df = pd.read_csv('orca/data/individual_projection_runs/%s/orca-data-processed-%s.csv'%(sc,sc), index_col = 0, parse_dates = True)
     WYI_stats_file = pd.read_csv('orca/data/forecast_regressions/WYI_forcasting_regression_stats.csv', index_col = 0, parse_dates = True)
     carryover_stats_file = pd.read_csv('orca/data/forecast_regressions/carryover_regression_statistics.csv', index_col = 0, parse_dates = True)
-    forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file)
+    forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file,8)
     forc_df.to_csv('orca/data/individual_projection_runs/%s/orca-data-climate-forecasted-%s.csv'%(sc,sc))
 
 if projection:
