@@ -65,5 +65,5 @@
   "max_outflow": 79000,
   "delta_outflow_pct": 0.6,
   "dead_pool": 550,
-  "FCR_shift": -15
+  "FCR_shift": 0
 }
