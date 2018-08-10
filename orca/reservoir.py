@@ -95,13 +95,14 @@ class Reservoir():
     W = self.S[t-1] + self.Q[t]
     fcr = 0.2*(W-self.tocs[t]) #flood control release
     self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin)) #target release
+    self.curt = False
     if self.carryover_rule:
         if m >= 5 and m <= 9: #from may to september, accout for carryover storage targets
             if self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy) < self.carryover_target[wyt]: #forecasting rest-of-wateryear inflow
                 #how much to curtail releases in attempt to meet carryover targets
                 self.carryover_curtail_pct = (self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy))/self.carryover_target[wyt]
                 self.Rtarget[t] = self.Rtarget[t] * max(self.carryover_curtail_pct,self.carryover_curtail[wyt]) #update target release
-
+                self.curt = True
     # then clip based on constraints
     self.R[t] = min(self.Rtarget[t], W - self.dead_pool) # dead-pool constraint
     self.R[t] = min(self.R[t], self.max_outflow * cfs_tafd) #max outflow constraint
@@ -120,6 +121,8 @@ class Reservoir():
         self.E[t] = max((np.sum(X * self.evap_coeffs) + self.evap_int) * cfs_tafd,0) #evaporation variable
     self.S[t] = W - self.R[t] - self.E[t] # mass balance update
     self.R_to_delta[t] = max(self.R[t] - nodd, 0) # delta calcs need this
+    if self.curt:
+        self.R_to_delta[t] = max(self.R[t] - nodd*max(self.carryover_curtail_pct,self.carryover_curtail[wyt]), 0) # delta calcs need this
 
   def calc_expected_min_release(self,t):
     ##this function calculates the total expected releases needed to meet environmental minimums used in the find_available_storage function
