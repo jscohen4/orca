@@ -142,12 +142,14 @@ def get_forecast_WYI(df, index_exceedence_sac): #now determining forecasting reg
 		if (ix == 10) | (ix == 11):
 			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'] + Qm.loc[index, 'octmar_std']*z_table_transform[index_exceedence_sac])\
 			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + Qm.loc[index, 'aprjul_mean'] + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
-		elif (ix == 12) | (ix <= 4):
+		elif (ix == 12) | (ix <= 3):
 			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'] + Qm.loc[index, 'octmar_std']*z_table_transform[index_exceedence_sac])\
 			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] +  (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
-		elif ix == 5: 
-			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'])\
+		
+		elif (ix == 4) | (ix == 5): 
+			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'])\
 			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
+			
 		if (ix == 9) | (ix == 8):
 			WYI = np.NaN
 		Qm.loc[index, 'WYI'] = WYI

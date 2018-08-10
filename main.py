@@ -12,7 +12,7 @@ projection = False #True if running a single climate projection
 calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
 plot = True #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
 
-process_hist_data = False#True if changing any historical data inputs, or downloading updated data from cdec
+process_hist_data = True#True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data
 cdec = True # True if downloading up-to-date cdec data
 hist_indices = True #True if running calc_indices script
