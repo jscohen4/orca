@@ -80,7 +80,7 @@ class Reservoir():
     m = self.month[t]
     wyt = self.wyt[t]
     envmin = self.env_min_flow[wyt][m-1] * cfs_tafd #minimum allowed environmental flows
-    nodd = np.interp(d, first_of_month, self.nodd)  #north of delta demands
+    nodd = self.nodds[d]  #north of delta demands
     # sodd *= self.sodd_pct_var
     sodd *= self.sodd_pct * self.sodd_curtail_pct[wyt] #south of delta demands
     self.soddp[t] = sodd
