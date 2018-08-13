@@ -179,8 +179,8 @@ class Delta():
         Tracy= self.maxTotPump*0.55
     return Tracy, Banks
 
-  def step(self, t, d, m, wyt, dowy, cvp_flows, swp_flows, orovilleAS, shastaAS, folsomAS,sumnodds):
-    self.gains[t] = self.netgains[t] + sumnodds
+  def step(self, t, d, m, wyt, dowy, cvp_flows, swp_flows, orovilleAS, shastaAS, folsomAS, sumnodds):
+    self.gains[t] = self.netgains[t] #+ sumnodds
     self.inflow[t] = max(self.gains[t] + cvp_flows + swp_flows, 0) # realinflow * cfs_tafd
     if dowy > 180 and dowy < 318:
       if self.x2[t-1] > self.x2constraint[wyt][dowy]:
@@ -193,7 +193,7 @@ class Delta():
     salinity_rule = min(x2outflow*cfs_tafd,12000.0*cfs_tafd)
     outflow_rule = self.min_outflow[wyt][m-1] * cfs_tafd
 
-    min_rule = max(outflow_rule, salinity_rule)
+    min_rule = max(outflow_rule, 0)
     # min_rule = self.min_outflow[wyt][m-1] * cfs_tafd
     export_ratio = self.export_ratio[wyt][m-1]
     cvp_max = self.cvp_pmax[d-1] #max pumping allowed 

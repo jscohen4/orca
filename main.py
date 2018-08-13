@@ -15,7 +15,7 @@ plot = True #True if plotting outputs, need calc_R2s to also be true if plotting
 process_hist_data = False#True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data
 cdec = True # True if downloading up-to-date cdec data
-hist_indices = True #True if running calc_indices script
+hist_indices = True #True if running calc_indices scriptwater_day
 hist_forcast = True #True if running updated forecast
 
 sc = 'access1-0_rcp45_r1i1p1' #cmip5 climate scenario to use, if projection = True
