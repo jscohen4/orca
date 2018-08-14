@@ -8,9 +8,9 @@ from datetime import datetime
 now = datetime.now().strftime('Last modified %Y-%m-%d %H:%M:%S')
 #Each of these booleans determines the actions that will be run by the model 
 
-projection = False #True if running a single climate projection
+projection = True #True if running a single climate projection
 calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
-plot = True #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
+plot = False #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
 
 process_hist_data = False#True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data
@@ -19,9 +19,9 @@ hist_indices = True #True if running calc_indices scriptwater_day
 hist_forcast = True #True if running updated forecast
 
 sc = 'access1-0_rcp45_r1i1p1' #cmip5 climate scenario to use, if projection = True
-process_climate_data = False #only mark True if running climate projection and/or processing projection input data
+process_climate_data = True #only mark True if running climate projection and/or processing projection input data
 ####### only relevant if processing projection data
-climate_indices = True
+climate_indices = False
 climate_forecasts = True
 #Nothing below here should be changed!
 ###############################################
@@ -116,7 +116,7 @@ if process_climate_data:
       proj_ind_df = pd.read_csv('orca/data/individual_projection_runs/%s/orca-data-processed-%s.csv'%(sc,sc), index_col = 0, parse_dates = True)
     WYI_stats_file = pd.read_csv('orca/data/forecast_regressions/WYI_forcasting_regression_stats.csv', index_col = 0, parse_dates = True)
     carryover_stats_file = pd.read_csv('orca/data/forecast_regressions/carryover_regression_statistics.csv', index_col = 0, parse_dates = True)
-    forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file,8)
+    forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file,window_type = 'expanding',window_length = 30, index_exceedence_sac = 8)
     forc_df.to_csv('orca/data/individual_projection_runs/%s/orca-data-climate-forecasted-%s.csv'%(sc,sc))
 
 if projection:
