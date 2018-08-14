@@ -8,15 +8,15 @@ import matplotlib.pyplot as plt
 
 class Model(): 
 
-  def __init__(self, datafile, hist_datafile, sd='10-01-1999',projection = False, sim_gains = False):
+  def __init__(self, datafile, hist_datafile, SHA_shift, ORO_shift, FOL_shift, sd='10-01-1999',projection = False, sim_gains = False):
     self.df = pd.read_csv(datafile, index_col=0, parse_dates=True)
     self.dfh = pd.read_csv(hist_datafile, index_col=0, parse_dates=True)
     self.sim_gains = sim_gains
     self.projection = projection
     self.T = len(self.df)
-    self.shasta = Reservoir(self.df, self.dfh, 'SHA', self.projection)
-    self.folsom = Reservoir(self.df, self.dfh, 'FOL', self.projection)
-    self.oroville = Reservoir(self.df, self.dfh, 'ORO', self.projection)
+    self.shasta = Reservoir(self.df, self.dfh, 'SHA', SHA_shift, self.projection)
+    self.folsom = Reservoir(self.df, self.dfh, 'FOL', FOL_shift, self.projection)
+    self.oroville = Reservoir(self.df, self.dfh, 'ORO', ORO_shift, self.projection)
     self.reservoirs = [self.shasta, self.folsom, self.oroville]
     self.delta = Delta(self.df, 'DEL', self.sim_gains)
     self.dayofyear = self.df.index.dayofyear

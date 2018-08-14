@@ -12,6 +12,13 @@ projection = True #True if running a single climate projection
 calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
 plot = False #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
 
+SHA_shift = 0
+ORO_shift = 0
+FOL_shift = 0
+index_exceedence_sac = 8
+window_type = 'historical'
+window_length = 50
+
 process_hist_data = False#True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data
 cdec = True # True if downloading up-to-date cdec data
@@ -60,7 +67,7 @@ if process_hist_data:
     WYI_stats.to_csv('orca/data/forecast_regressions/WYI_forcasting_regression_stats.csv')
 
 if not projection:
-  model = Model('orca/data/historical_runs_data/orca-data-forecasted.csv', 'orca/data/historical_runs_data/orca-data-forecasted.csv',sd='10-01-1999',projection = False, sim_gains = False) #beacuse of rolling calc in gains, we start on 10th day of
+  model = Model('orca/data/historical_runs_data/orca-data-forecasted.csv', 'orca/data/historical_runs_data/orca-data-forecasted.csv',SHA_shift, ORO_shift, FOL_shift,sd='10-01-1999',projection = False, sim_gains = False) #beacuse of rolling calc in gains, we start on 10th day of
   results = model.simulate() # takes a while... save results
   results.to_csv('orca/data/historical_runs_data/results.csv')
   if calc_R2s:
@@ -116,11 +123,11 @@ if process_climate_data:
       proj_ind_df = pd.read_csv('orca/data/individual_projection_runs/%s/orca-data-processed-%s.csv'%(sc,sc), index_col = 0, parse_dates = True)
     WYI_stats_file = pd.read_csv('orca/data/forecast_regressions/WYI_forcasting_regression_stats.csv', index_col = 0, parse_dates = True)
     carryover_stats_file = pd.read_csv('orca/data/forecast_regressions/carryover_regression_statistics.csv', index_col = 0, parse_dates = True)
-    forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file,window_type = 'expanding',window_length = 30, index_exceedence_sac = 8)
+    forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file,window_type,window_length, index_exceedence_sac)
     forc_df.to_csv('orca/data/individual_projection_runs/%s/orca-data-climate-forecasted-%s.csv'%(sc,sc))
 
 if projection:
-  model = Model('orca/data/individual_projection_runs/%s/orca-data-climate-forecasted-%s.csv'%(sc,sc), 'orca/data/historical_runs_data/results.csv',sd='10-01-1999',projection = True, sim_gains = True) #climate scenario test
+  model = Model('orca/data/individual_projection_runs/%s/orca-data-climate-forecasted-%s.csv'%(sc,sc), 'orca/data/historical_runs_data/results.csv',SHA_shift, ORO_shift, FOL_shift,sd='10-01-1999',projection = True, sim_gains = True) #climate scenario test
   results = model.simulate() # takes a while... save results
   results.to_csv('orca/data/individual_projection_runs/%s/%s-results.csv'%(sc,sc))
 # calibration points (lists of pandas series)
