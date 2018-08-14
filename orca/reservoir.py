@@ -7,7 +7,7 @@ from .util import *
 
 class Reservoir():
 
-  def __init__(self, df, dfh, key, projection = False):
+  def __init__(self, df, dfh, key, FCR_shift, projection = False):
     T = len(df)
     self.projection = projection
     self.dayofyear = df.index.dayofyear
@@ -30,6 +30,7 @@ class Reservoir():
     self.slope =  df['%s_slope' % key].values
     self.intercept = df['%s_intercept' % key].values
     self.rem_flow = df['%s_remaining_flow' % key].values
+    self.FCR_shift = FCR_shift
 
     self.mean = df['%s_mean' % key].values
     self.std = df['%s_std' % key].values  
@@ -59,8 +60,11 @@ class Reservoir():
         self.tocs_index.append(np.zeros(366))
         for day in range(0, 366):  
             self.tocs_index[i][day] = np.interp(day, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
+
     if key == 'ORO':
-    	self.tocs_index = np.roll(self.tocs_index, -16, axis = 1)
+        self.tocs_index = np.roll(self.tocs_index, -16 + self.FCR_shift, axis = 1)
+    else: 
+        self.tocs_index = np.roll(self.tocs_index,self.FCR_shift, axis = 1)
 
     self.nodds = np.zeros(367)
     for i in range(0,366):
