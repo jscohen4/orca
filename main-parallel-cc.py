@@ -34,8 +34,9 @@ proj_ind_df = pd.read_csv('orca/data/scenario_runs/%s/orca-data-processed-%s.csv
 WYI_stats_file = pd.read_csv('orca/data/forecast_regressions/WYI_forcasting_regression_stats.csv', index_col = 0, parse_dates = True)
 carryover_stats_file = pd.read_csv('orca/data/forecast_regressions/carryover_regression_statistics.csv', index_col = 0, parse_dates = True)
 
-index_exceedence_sac = 8
-
+window_type = 'historical'
+window_length = 50
+# index_exceedence_sac
 for index_exceedence_sac in np.arange(6,10):
 	forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file,index_exceedence_sac)
 	forc_df.to_csv('orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s-excdn_%s.csv'%(s,s,index_exceedence_sac))
@@ -74,6 +75,3 @@ for index_exceedence_sac in np.arange(6,10):
 
 comm.barrier()
 call(['rm', 'orca/data/scenario_runs/%s/orca-data-processed-%s.csv'%(s,s)])
-
-
-
