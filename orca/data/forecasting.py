@@ -58,7 +58,7 @@ def rem_flow(x):
 	remaining_flow = (x.sum() - x.cumsum())
 	return remaining_flow
 
-def get_forecast_WYI(df, index_exceedence_sac): #now determining forecasting regression coefficients based off perfect foresight
+def get_forecast_WYI(df, index_exceedance_sac): #now determining forecasting regression coefficients based off perfect foresight
 	flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 	snow_sites = ['BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 
@@ -140,15 +140,15 @@ def get_forecast_WYI(df, index_exceedence_sac): #now determining forecasting reg
 	for index, row in Qm.iterrows():
 		ix = index.month
 		if (ix == 10) | (ix == 11):
-			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'] + Qm.loc[index, 'octmar_std']*z_table_transform[index_exceedence_sac])\
-			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + Qm.loc[index, 'aprjul_mean'] + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
+			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'] + Qm.loc[index, 'octmar_std']*z_table_transform[index_exceedance_sac])\
+			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + Qm.loc[index, 'aprjul_mean'] + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedance_sac])
 		elif (ix == 12) | (ix <= 3):
-			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'] + Qm.loc[index, 'octmar_std']*z_table_transform[index_exceedence_sac])\
-			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] +  (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
+			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'] + Qm.loc[index, 'octmar_std']*z_table_transform[index_exceedance_sac])\
+			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] +  (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedance_sac])
 		
 		elif (ix == 4) | (ix == 5): 
 			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'])\
-			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
+			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedance_sac])
 			
 		if (ix == 9) | (ix == 8):
 			WYI = np.NaN
@@ -157,8 +157,8 @@ def get_forecast_WYI(df, index_exceedence_sac): #now determining forecasting reg
 	Qm.WYI = Qm.WYI.shift(periods=-1)
 	return(Qm.WYI,stats)
 
-def forecast(df,index_exceedence_sac):
-	WYI_sim,WYI_stats = get_forecast_WYI(df,index_exceedence_sac) #wyt
+def forecast(df,index_exceedance_sac):
+	WYI_sim,WYI_stats = get_forecast_WYI(df,index_exceedance_sac) #wyt
 	df['WYI_sim'] = WYI_sim
 	df.WYI_sim = df.WYI_sim.fillna(method = 'bfill')
 	df.loc[df['WYI_sim'].isnull(),'WYI_sim'] = df['SR_WYI']
@@ -246,7 +246,7 @@ def forecast(df,index_exceedence_sac):
 
 
 #############climate projection functions
-def get_projection_forecast_WYI(df, stats_file,index_exceedence_sac): #now determining forecasting regression coefficients based off perfect foresight
+def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now determining forecasting regression coefficients based off perfect foresight
 	flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 	snow_sites = ['BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 
@@ -292,15 +292,15 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedence_sac): #now deter
 	for index, row in Qm.iterrows():
 		ix = index.month
 		if (ix == 10) | (ix == 11):
-			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'] + Qm.loc[index, 'octmar_std']*z_table_transform[index_exceedence_sac])\
-			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + Qm.loc[index, 'aprjul_mean'] + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
+			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'] + Qm.loc[index, 'octmar_std']*z_table_transform[index_exceedance_sac])\
+			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + Qm.loc[index, 'aprjul_mean'] + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedance_sac])
 		elif (ix == 12) | (ix <= 3):
-			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'] + Qm.loc[index, 'octmar_std']*z_table_transform[index_exceedence_sac])\
-			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] +  (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
+			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'] + Qm.loc[index, 'octmar_mean'] + Qm.loc[index, 'octmar_std']*z_table_transform[index_exceedance_sac])\
+			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] +  (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedance_sac])
 		
 		elif (ix == 4) | (ix == 5): 
 			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'])\
-			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedence_sac])
+			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedance_sac])
 			
 		if (ix == 9) | (ix == 8):
 			WYI = np.NaN
@@ -310,13 +310,13 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedence_sac): #now deter
 	# Qm.WYI = Qm.WYI.fillna(method = 'bfill')
 	return(Qm.WYI)
 
-def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,window_length,index_exceedence_sac):
-	# WYI_sim = get_projection_forecast_WYI(df,WYI_stats_file,index_exceedence_sac) #wyt
+def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,window_length,index_exceedance_sac):
+	# WYI_sim = get_projection_forecast_WYI(df,WYI_stats_file,index_exceedance_sac) #wyt
 	# decade_thresh = ['1999-10-01','2009-10-01','2019-10-01','2029-10-01','2039-10-01','2049-10-01','2059-10-01','2069-10-01',
 	# '2079-10-01','2089-10-01','2099-12-31']
 	if window_type == 'historical':
 
-		WYI_sim = get_projection_forecast_WYI(df,WYI_stats_file,index_exceedence_sac)
+		WYI_sim = get_projection_forecast_WYI(df,WYI_stats_file,index_exceedance_sac)
 		
 		snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
 		res_ids = ['SHA','ORO','FOL']
@@ -363,11 +363,11 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 		# decade_thresh_done = pd.date_range('1951-09-30','2099-09-30',freq =' AS-OCT')
 
 		# start_moving = decade_thresh[48+window_length]#'2029-10-01'
-		WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[50]),index_exceedence_sac)
-		WYI_sim = get_projection_forecast_WYI(df.truncate(before=decade_thresh[0], after=decade_thresh[50]),WYI_mov_stats,index_exceedence_sac)
+		WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[50]),index_exceedance_sac)
+		WYI_sim = get_projection_forecast_WYI(df.truncate(before=decade_thresh[0], after=decade_thresh[50]),WYI_mov_stats,index_exceedance_sac)
 		for i in range(50,148):
-			WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[i-window_length], after=decade_thresh[i]),index_exceedence_sac)
-			WYI_dec = get_projection_forecast_WYI(df.truncate(before=decade_thresh[i], after=decade_thresh[i+1]),WYI_mov_stats,index_exceedence_sac)
+			WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[i-window_length], after=decade_thresh[i]),index_exceedance_sac)
+			WYI_dec = get_projection_forecast_WYI(df.truncate(before=decade_thresh[i], after=decade_thresh[i+1]),WYI_mov_stats,index_exceedance_sac)
 			WYI_sim = pd.concat([WYI_sim,WYI_dec])
 
 
@@ -486,11 +486,11 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 	elif window_type == 'expanding':
 		decade_thresh = pd.date_range('1951-10-01','2099-10-01',freq ='AS-OCT')
 		start_expanding = decade_thresh[50+window_length]#'2029-10-01'
-		WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[50]),index_exceedence_sac)
-		WYI_sim = get_projection_forecast_WYI(df.truncate(before=decade_thresh[0], after=decade_thresh[50]),WYI_mov_stats,index_exceedence_sac)
+		WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[50]),index_exceedance_sac)
+		WYI_sim = get_projection_forecast_WYI(df.truncate(before=decade_thresh[0], after=decade_thresh[50]),WYI_mov_stats,index_exceedance_sac)
 		for i in range(50+window_length,148):
-			WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[50], after=decade_thresh[i]),index_exceedence_sac)
-			WYI_dec = get_projection_forecast_WYI(df.truncate(before=decade_thresh[i], after=decade_thresh[i+1]),WYI_mov_stats,index_exceedence_sac)
+			WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[50], after=decade_thresh[i]),index_exceedance_sac)
+			WYI_dec = get_projection_forecast_WYI(df.truncate(before=decade_thresh[i], after=decade_thresh[i+1]),WYI_mov_stats,index_exceedance_sac)
 			WYI_sim = pd.concat([WYI_sim,WYI_dec])
 
 		snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
@@ -622,7 +622,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 	df = df[(df.index < '2099-10-01')]
 	return df
 
-def get_forecast_WYI_stats(df, index_exceedence_sac): #now determining forecasting regression coefficients based off perfect foresight
+def get_forecast_WYI_stats(df, index_exceedance_sac): #now determining forecasting regression coefficients based off perfect foresight
 	flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 	snow_sites = ['BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 

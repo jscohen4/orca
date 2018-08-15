@@ -5,5 +5,5 @@ def modify(file,obj,value):
 	tmp = data[obj]
 	data[obj] = value
 	with open(file, "w+") as jsonFile:
-	    json.dump(data, jsonFile, indent = 4)
+	    json.dump(data, jsonFile, indent = 4,separators=(',', ': '))
 	

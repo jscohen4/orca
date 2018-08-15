@@ -3,21 +3,39 @@ np.warnings.filterwarnings('ignore') #to not display numpy warnings... be carefu
 import pandas as pd
 import matplotlib.pyplot as plt
 from orca import *
+from orca.data import *
 from subprocess import call
 from datetime import datetime
 now = datetime.now().strftime('Last modified %Y-%m-%d %H:%M:%S')
 #Each of these booleans determines the actions that will be run by the model 
 
 projection = False #True if running a single climate projection
-calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
-plot = True #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
+calc_R2s = False #True if calculating R2s (only relevant for historical scenario)
+plot = False #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
+change_inflow_exeedance = True
 
+#######Define a few parameters
 SHA_shift = 0
 ORO_shift = 0
 FOL_shift = 0
-index_exceedence_sac = 8
+index_exceedance_sac = 8
 window_type = 'historical'
 window_length = 50
+SHA_exceedance = {"W": 2, "AN": 2, "BN": 6, "D": 2, "C": 2}
+ORO_exceedance = {"W": 2, "AN": 2, "BN": 2, "D": 2, "C": 2}
+FOL_exceedance = {"W": 10, "AN": 10, "BN": 5, "D": 2, "C": 1}
+
+#########these are the parameters originally used for historical runs
+# SHA_shift = 0
+# ORO_shift = 0
+# FOL_shift = 0
+# index_exceedance_sac = 8
+# window_type = 'historical'
+# window_length = 50
+SHA_exceedance_hist = {"W": 2, "AN": 2, "BN": 2, "D": 2, "C": 2}
+ORO_exceedance_hist = {"W": 2, "AN": 2, "BN": 2, "D": 2, "C": 2}
+FOL_exceedance_hist = {"W": 10, "AN": 10, "BN": 5, "D": 2, "C": 1}
+
 
 process_hist_data = False#True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data
@@ -33,7 +51,7 @@ climate_forecasts = True
 #Nothing below here should be changed!
 ###############################################
 ###############################################
-###########`s####################################
+###############################################
 if process_hist_data or not projection: 
   text_file = open("orca/data/historical_runs_data/datetime.txt", "w")
   text_file.write("%s" %now)
@@ -65,6 +83,11 @@ if process_hist_data:
     forc_df.to_csv('orca/data/historical_runs_data/orca-data-forecasted.csv')
     stats_df.to_csv('orca/data/forecast_regressions/carryover_regression_statistics.csv')
     WYI_stats.to_csv('orca/data/forecast_regressions/WYI_forcasting_regression_stats.csv')
+
+if change_inflow_exeedance:
+  write_json.modify('orca/data/json_files/SHA_properties.json', 'exceedance', SHA_exceedance)
+  write_json.modify('orca/data/json_files/ORO_properties.json', 'exceedance', ORO_exceedance)
+  write_json.modify('orca/data/json_files/FOL_properties.json', 'exceedance', FOL_exceedance)
 
 if not projection:
   model = Model('orca/data/historical_runs_data/orca-data-forecasted.csv', 'orca/data/historical_runs_data/orca-data-forecasted.csv',SHA_shift, ORO_shift, FOL_shift,sd='10-01-1999',projection = False, sim_gains = False) #beacuse of rolling calc in gains, we start on 10th day of
@@ -123,7 +146,7 @@ if process_climate_data:
       proj_ind_df = pd.read_csv('orca/data/individual_projection_runs/%s/orca-data-processed-%s.csv'%(sc,sc), index_col = 0, parse_dates = True)
     WYI_stats_file = pd.read_csv('orca/data/forecast_regressions/WYI_forcasting_regression_stats.csv', index_col = 0, parse_dates = True)
     carryover_stats_file = pd.read_csv('orca/data/forecast_regressions/carryover_regression_statistics.csv', index_col = 0, parse_dates = True)
-    forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file,window_type,window_length, index_exceedence_sac)
+    forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file,window_type,window_length, index_exceedance_sac)
     forc_df.to_csv('orca/data/individual_projection_runs/%s/orca-data-climate-forecasted-%s.csv'%(sc,sc))
 
 if projection:
@@ -157,4 +180,9 @@ if projection:
         plotter.plotting(s, freq=f)
         plt.savefig('orca/figs/projection/%s_%s.png' % (f,c), dpi=150)
         plt.close()  
+
+if change_inflow_exeedance:
+  write_json.modify('orca/data/json_files/SHA_properties.json', 'exceedance', SHA_exceedance_hist)
+  write_json.modify('orca/data/json_files/ORO_properties.json', 'exceedance', ORO_exceedance_hist)
+  write_json.modify('orca/data/json_files/FOL_properties.json', 'exceedance', FOL_exceedance_hist)
 
