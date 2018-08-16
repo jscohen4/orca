@@ -19,7 +19,7 @@ result_ids = ['SHA_storage','SHA_out','SHA_target','SHA_out_to_delta','SHA_tocs'
 					'ORO_sodd','ORO_spill','FOL_sodd','FOL_spill', 'DEL_X2']
 
 input_ids = ['SHA_in_tr', 'ORO_in_tr','FOL_in_tr','ORO_fnf','BND_fnf', 'SHA_fnf','SR_WYT_rolling',
-       'SJR_WYI', 'SJR_WYT', 'SHA_fci', 'ORO_fci', 'FOL_fci', 'BND_swe', 'ORO_swe', 'YRS_swe']
+       'SJR_WYI', 'SJR_WYT', 'SHA_fci', 'ORO_fci', 'FOL_fci', 'BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 
 comm = MPI.COMM_WORLD # communication object
 rank = comm.rank # what number processor am I?
@@ -38,11 +38,11 @@ window_type = 'historical'
 window_length = 50
 # index_exceedence_sac
 for index_exceedence_sac in np.arange(6,10):
-	forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file,index_exceedence_sac)
+	forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file,window_type,window_length, index_exceedence_sac)
 	forc_df.to_csv('orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s-excdn_%s.csv'%(s,s,index_exceedence_sac))
 	# forc_df = pd.read_csv('orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s-excdn_%s.csv'%(s,s), index_col = 0, parse_dates = True)
 
-	for shift in np.arange(-60,60,30):
+	for shift in np.arange(-60,60,15):
 		SHA_shift = shift
 		ORO_shift = shift
 		FOL_shift = shift
@@ -61,8 +61,8 @@ for index_exceedence_sac in np.arange(6,10):
 			dfobj.to_csv('orca/data/climate_results/%s-FCR_%s-excd_%s.csv'%(obj,shift,index_exceedence_sac))
 		# comm.barrier()	
 	# call(['rm', 'orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s-excdn_%s.csv'%(s,s,index_exceedence_sac)])
-		if comm.rank >= 26 and comm.rank <=40: 
-			obj = input_ids[comm.rank]
+		if comm.rank >= 26 and comm.rank <=41: 
+			obj = input_ids[comm.rank-26]
 			dfobj = pd.DataFrame()
 			for sc in scenarios: 	
 				projection_results = pd.read_csv('orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s-excdn_%s.csv'%(s,s,index_exceedence_sac), index_col = 0, parse_dates = True)
@@ -75,3 +75,6 @@ for index_exceedence_sac in np.arange(6,10):
 
 comm.barrier()
 call(['rm', 'orca/data/scenario_runs/%s/orca-data-processed-%s.csv'%(s,s)])
+
+
+
