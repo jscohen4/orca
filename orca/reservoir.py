@@ -110,8 +110,8 @@ class Reservoir():
     # then clip based on constraints
     self.R[t] = min(self.Rtarget[t], W - self.dead_pool) # dead-pool constraint
     self.R[t] = min(self.R[t], self.max_outflow * cfs_tafd) #max outflow constraint
-    self.R[t] +=  max(W - self.R[t] - self.capacity, 0) # spill
     self.spill[t] = max(W - self.R[t] - self.capacity,0)
+    self.R[t] +=  max(W - self.R[t] - self.capacity, 0) # spill
 
     if self.projection: # if projection mode, calculate evaporation
         X=[]
