@@ -31,6 +31,13 @@ def scrape_cdec():
 
   data = cd.get_data(['GKS'], [45], ['daily'], start='10-01-1998',end = now)
   df['FOL_precip'] = data['GKS']['PRECIPITATION, INCREMENTAL daily']['value']
+  
+
+  pr_ids = ['SVL','FRD','DAV','SBY','CHS','BRS','QCY','DES','BLC','GTW','PFH']
+  data = cd.get_data(station_ids=pr_ids, sensor_ids=[45], 
+                     resolutions=['daily'], start=sd,end = now)
+  for k in pr_ids:
+    df[k + '_pr'] = data[k]['PRECIPITATION, INCREMENTAL daily']['value']
 
   temp_ids = ['SHS','OWS','ADR'] #IDs for reservoir temperature
 

@@ -140,7 +140,8 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
         intercepts.append(fit[1])
     modify(inf_regr,"%s_inf_coeffs" %r, coeffs)
     modify(inf_regr,"%s_inf_int"%r, intercepts)
-
+  df['ORO_precip'] = df[['SVL_pr','FRD_pr','DAV_pr','SBY_pr','CHS_pr','BRS_pr','QCY_pr','DES_pr']].mean(axis=1)
+  df['FOL_precip'] = df[['BLC_pr','GTW_pr','PFH_pr']].mean(axis=1)
   # flood control indices
   df['SHA_fci'] = rolling_fci(df['SHA_in_tr'], k=0.95, start=100000)
   df.SHA_fci.fillna(method='bfill', inplace=True)
