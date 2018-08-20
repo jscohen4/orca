@@ -39,7 +39,7 @@ FOL_exceedance_hist = {"W": 10, "AN": 10, "BN": 5, "D": 2, "C": 1}
 
 process_hist_data = True#True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data
-cdec = True # True if downloading up-to-date cdec data
+cdec = False # True if downloading up-to-date cdec data
 hist_indices = True #True if running calc_indices scriptwater_day
 hist_forcast = True #True if running updated forecast
 

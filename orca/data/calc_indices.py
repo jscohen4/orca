@@ -142,6 +142,8 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
     modify(inf_regr,"%s_inf_int"%r, intercepts)
   df['ORO_precip'] = df[['SVL_pr','FRD_pr','DAV_pr','SBY_pr','CHS_pr','BRS_pr','QCY_pr','DES_pr']].mean(axis=1)
   df['FOL_precip'] = df[['BLC_pr','GTW_pr','PFH_pr']].mean(axis=1)
+  df = df.drop(df[['SVL_pr','FRD_pr','DAV_pr','SBY_pr','CHS_pr','BRS_pr','QCY_pr','DES_pr','BLC_pr','GTW_pr','PFH_pr']],axis = 1)
+
   # flood control indices
   df['SHA_fci'] = rolling_fci(df['SHA_in_tr'], k=0.95, start=100000)
   df.SHA_fci.fillna(method='bfill', inplace=True)
@@ -190,6 +192,7 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
   dfs = dfs.interpolate(method = 'linear')
   dfs = dfs.resample('M').mean()
   df = df.drop(df[snow_ids],axis = 1)
+
   df = df.join(dfs).fillna(method = 'ffill') #snow stations now cleaned up and back in main datafile 
 
   df = df[(df.index > '1996-09-30')]#start at 1997 water year
