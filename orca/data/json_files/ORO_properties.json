@@ -333,7 +333,7 @@
     },
     "carryover_rule": true,
     "max_outflow": 150000,
-    "delta_outflow_pct": 0.2,
+    "delta_outflow_pct": 0.25,
     "dead_pool": 852,
     "FCR_shift": 0
 }
