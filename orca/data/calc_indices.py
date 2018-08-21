@@ -338,7 +338,7 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
   df['OMR_sim']=df.OMR_sim.fillna(method='ffill')
   return df, df_g, df_OM
 
-def process_projection(df,df_g,df_OMR,gains_regr,inf_regr): #used to process climate projection data
+def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to process climate projection data
   SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
   SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf']
   df = df[(df.index > '1951-09-30')]
@@ -359,23 +359,6 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr): #used to process cli
   snow_ids = ['MED_swe','SDF_swe','SLT_swe','BKL_swe','HMB_swe','FOR_swe','RTL_swe',
                   'GRZ_swe','GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','RBP_swe','CAP_swe']
   # convert snow to inches
-  for sn in snow_ids:
-    df[sn] = df[sn]/25.4
-  #snow bias correction (none for RBP and CAP)
-  df['MED_swe'] = df['MED_swe'] * 8.0
-  df['SDF_swe'] = df['SDF_swe'] * 0.6
-  df['SNM_swe'] = df['SDF_swe'] * 0.9
-  df['SLT_swe'] = df['SLT_swe'] * 2.7
-  df['BKL_swe'] = df['BKL_swe'] * 0.6*0.65
-  df['HMB_swe'] = df['HMB_swe'] * 3.2
-  df['FOR_swe'] = df['FOR_swe'] * 4.8
-  df['RTL_swe'] = df['RTL_swe'] * 2.3
-  df['GRZ_swe'] = df['GRZ_swe'] * 1.8
-  df['GOL_swe'] = df['GOL_swe'] * 2.0
-  df['CSL_swe'] = df['CSL_swe'] * 1.2
-  df['HYS_swe'] = df['HYS_swe'] * 0.85
-  df['SCN_swe'] = df['SCN_swe'] * 1.7
-  df['RBB_swe'] = df['RBB_swe'] * 1.7
 
   #temp conversion and bias correction
   df['SHA_tas'] = (df['SHA_tas'] * 9/5 + 32) * 1.06
@@ -458,31 +441,69 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr): #used to process cli
   df['FOL_fci'] = rolling_fci(df['FOL_pr'], k=0.97, start=0)
   df.ORO_fci.fillna(method='bfill', inplace=True)
 
-
-
-  ##clean up snowpack data and resample monthly 
   snow_ids = ['GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','CAP_swe','RBP_swe',
-          'HMB_swe','FOR_swe','RTL_swe','GRZ_swe','SDF_swe','SLT_swe','MED_swe']
-  dfs = df[snow_ids] #working with only snow for these calculations
-  num = dfs._get_numeric_data()
-  num[num < 0 ] = np.NaN
-  #num[num > 150 ] = np.NaN#oroville,folsom,shast,new bullards
-  num[num > 150 ] = np.NaN
-  dfs = dfs.interpolate(method = 'linear')
-  dfs = dfs.resample('M').mean()
+            'HMB_swe','FOR_swe','RTL_swe','GRZ_swe','SDF_swe','SLT_swe','MED_swe']
+
+  if window == 'historical':
+    for sn in snow_ids:
+      df[sn] = df[sn]/25.4
+    #snow bias correction (none for RBP and CAP)
+    df['MED_swe'] = df['MED_swe'] * 8.0
+    df['SDF_swe'] = df['SDF_swe'] * 0.6
+    df['SNM_swe'] = df['SDF_swe'] * 0.9
+    df['SLT_swe'] = df['SLT_swe'] * 2.7
+    df['KTL_swe'] = df['BKL_swe'] * 0.6*0.65
+    df['HMB_swe'] = df['HMB_swe'] * 3.2
+    df['FOR_swe'] = df['FOR_swe'] * 4.8
+    df['RTL_swe'] = df['RTL_swe'] * 2.3
+    df['GRZ_swe'] = df['GRZ_swe'] * 1.8
+    df['GOL_swe'] = df['GOL_swe'] * 2.0
+    df['CSL_swe'] = df['CSL_swe'] * 1.2
+    df['HYS_swe'] = df['HYS_swe'] * 0.85
+    df['SCN_swe'] = df['SCN_swe'] * 1.7
+    df['RBB_swe'] = df['RBB_swe'] * 1.7
+
+    ##clean up snowpack data and resample monthly 
+    dfs = df[snow_ids] #working with only snow for these calculations
+    num = dfs._get_numeric_data()
+    num[num < 0 ] = np.NaN
+    #num[num > 150 ] = np.NaN#oroville,folsom,shast,new bullards
+    num[num > 150 ] = np.NaN
+    dfs = dfs.interpolate(method = 'linear')
+    dfs = dfs.resample('M').mean()
+    df = df.drop(df[snow_ids],axis = 1)
+    df = df.join(dfs).fillna(method = 'ffill') #snow stations now cleaned up and back in main datafile 
+
+    df = df[(df.index > '1951-09-30')]#start at 2000 water year
+
+    #sum of stations for each basins
+    df['YRS_swe'] = df[['GOL_swe','CSL_swe']].mean(axis=1)
+    df['FOL_swe'] = df[['HYS_swe', 'SCN_swe', 'RBB_swe', 'CAP_swe']].mean(axis = 1) #taking out RBP (for this time), also test taking out RBB later
+    df['ORO_swe'] = df[['KTL_swe', 'HMB_swe', 'FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
+    df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'SLT_swe']].mean(axis = 1)
+
+  elif (window == 'rolling') | (window =='expanding'):
+    # df['YRS_swe'] = df['YUB_swe']
+    # df['BND_swe'] = df['SHA_swe']
+    snow_basins = ['BND_swe','FOL_swe','ORO_swe','YRS_swe']
+    for sn in snow_basins:
+      df[sn] = df[sn]/25.4
+
+    dfs = df[snow_basins] #working with only snow for these calculations
+    num = dfs._get_numeric_data()
+    num[num < 0 ] = np.NaN
+    #num[num > 150 ] = np.NaN#oroville,folsom,shast,new bullards
+    num[num > 150 ] = np.NaN
+    dfs = dfs.interpolate(method = 'linear')
+    dfs = dfs.resample('M').mean()
+    df = df.drop(df[snow_basins],axis = 1)
+    df = df.join(dfs).fillna(method = 'ffill') #snow stations now cleaned up and back in main datafile 
+  
+    df = df[(df.index > '1951-09-30')]#start at 2000 water year
+
   df = df.drop(df[snow_ids],axis = 1)
-  df = df.join(dfs).fillna(method = 'ffill') #snow stations now cleaned up and back in main datafile 
-
-  df = df[(df.index > '1951-09-30')]#start at 2000 water year
-
-  #sum of stations for each basins
-  df['YRS_swe'] = df[['GOL_swe','CSL_swe']].mean(axis=1)
-  df['FOL_swe'] = df[['HYS_swe', 'SCN_swe', 'RBB_swe', 'CAP_swe']].mean(axis = 1) #taking out RBP (for this time), also test taking out RBB later
-  df['ORO_swe'] = df[['KTL_swe', 'HMB_swe', 'FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
-  df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'SLT_swe']].mean(axis = 1)
-
-
-
+  # df = df.drop(df[['YUB_swe']],axis = 1)
+  # df = df.drop(df[['SHA_swe']],axis = 1)
   BND = (df['BND_fnf'].to_frame(name='inf'))
   ORO = (df['ORO_fnf'].to_frame(name='inf'))
   YRS = (df['YRS_fnf'].to_frame(name='inf'))

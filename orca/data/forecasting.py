@@ -256,7 +256,9 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now deter
 	Qm['WY'] = df.WY.resample('M').first() # need this for grouping
 
 	Qm['snow'] = df[snow_sites].sum(axis=1).resample('M').first()
+
 	Qm = Qm[Qm.WY != Qm.WY[-1]] 
+
 	Qm['octmar_cumulative'] = (Qm.groupby('WY').flow
 	                          .apply(octmar_cumulative)
 	                          .reset_index(level=0)
