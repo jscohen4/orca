@@ -363,8 +363,9 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr): #used to process cli
   #snow bias correction (none for RBP and CAP)
   df['MED_swe'] = df['MED_swe'] * 8.0
   df['SDF_swe'] = df['SDF_swe'] * 0.6
+  df['SNM_swe'] = df['SDF_swe'] * 0.9
   df['SLT_swe'] = df['SLT_swe'] * 2.7
-  df['BKL_swe'] = df['BKL_swe'] * 0.6
+  df['BKL_swe'] = df['BKL_swe'] * 0.6*0.65
   df['HMB_swe'] = df['HMB_swe'] * 3.2
   df['FOR_swe'] = df['FOR_swe'] * 4.8
   df['RTL_swe'] = df['RTL_swe'] * 2.3
