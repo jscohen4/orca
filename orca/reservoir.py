@@ -170,8 +170,8 @@ class Reservoir():
 
   def results_as_df(self, index):
     df = pd.DataFrame()
-    names = ['storage', 'out', 'target', 'out_to_delta', 'tocs', 'sodd', 'spill']
-    things = [self.S, self.R, self.Rtarget, self.R_to_delta, self.tocs,self.soddp,self.spill]
+    names = ['storage', 'out', 'target', 'out_to_delta', 'tocs', 'sodd', 'spill', 'forecast']
+    things = [self.S, self.R, self.Rtarget, self.R_to_delta, self.tocs,self.soddp,self.spill,self.forecast]
     for n,t in zip(names,things):
       df['%s_%s' % (self.key,n)] = pd.Series(t, index=index)
     return df

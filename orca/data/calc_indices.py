@@ -153,7 +153,8 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
 
   df['FOL_fci'] = rolling_fci(df['FOL_precip'], k=0.97, start=0)
   df.FOL_fci.fillna(method='bfill', inplace=True)
-
+  df.loc['2014-01-14','ORO_tas'] = df.loc['2014-01-13','ORO_tas']
+  df.loc['2012-06-21','ORO_tas'] = df.loc['2012-06-20','ORO_tas']
   ### evaporation  regression
   for r in res_ids:
     dfe = df[['%s_storage'%r,'%s_evap'%r,'%s_tas'%r]] #evaporation datafile
