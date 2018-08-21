@@ -304,9 +304,11 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now deter
 		elif (ix == 4) | (ix == 5): 
 			WYI = 0.3 * prev + 0.3 * (Qm.loc[index, 'octmar_flow_to_date'])\
 			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedance_sac])
-			
+			WYI_rem = WYI
+
 		if (ix <= 9 & ix>=6):
-			WYI = np.NaN
+			WYI = WYI_rem
+			prev = WYI_rem
 		Qm.loc[index, 'WYI'] = WYI
 
 	Qm.WYI = Qm.WYI.shift(periods=-1)
