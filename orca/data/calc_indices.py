@@ -197,10 +197,10 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
 
   df = df[(df.index > '1996-09-30')]#start at 1997 water year
   #sum of stations for each basin
-  df['BND_swe'] = df[['GOL_swe','CSL_swe']].mean(axis=1)
-  df['ORO_swe'] = df[['HYS_swe', 'SCN_swe', 'RBB_swe', 'CAP_swe']].mean(axis = 1) #taking out RBP (for this time), also test taking out RBB later
-  df['YRS_swe'] = df[['KTL_swe', 'HMB_swe', 'FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
-  df['FOL_swe'] = df[['SDF_swe', 'SNM_swe', 'SLT_swe']].mean(axis = 1)
+  df['YRS_swe'] = df[['GOL_swe','CSL_swe']].mean(axis=1)
+  df['FOL_swe'] = df[['HYS_swe', 'SCN_swe', 'RBB_swe', 'CAP_swe']].mean(axis = 1) #taking out RBP (for this time), also test taking out RBB later
+  df['ORO_swe'] = df[['KTL_swe', 'HMB_swe', 'FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
+  df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'SLT_swe']].mean(axis = 1)
 
   BND = (df['BND_fnf'].to_frame(name='inf'))
   ORO = (df['ORO_fnf'].to_frame(name='inf'))
@@ -474,10 +474,10 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr): #used to process cli
   df = df[(df.index > '1951-09-30')]#start at 2000 water year
 
   #sum of stations for each basins
-  df['BND_swe'] = df[['GOL_swe','CSL_swe']].mean(axis=1)
-  df['ORO_swe'] = df[['HYS_swe', 'SCN_swe', 'RBB_swe', 'CAP_swe']].mean(axis = 1) #taking out RBP (for this time), also test taking out RBB later
-  df['YRS_swe'] = df[['HMB_swe', 'FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
-  df['FOL_swe'] = df[['SDF_swe','SLT_swe']].mean(axis = 1)
+  df['YRS_swe'] = df[['GOL_swe','CSL_swe']].mean(axis=1)
+  df['FOL_swe'] = df[['HYS_swe', 'SCN_swe', 'RBB_swe', 'CAP_swe']].mean(axis = 1) #taking out RBP (for this time), also test taking out RBB later
+  df['ORO_swe'] = df[['KTL_swe', 'HMB_swe', 'FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
+  df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'SLT_swe']].mean(axis = 1)
 
 
 
