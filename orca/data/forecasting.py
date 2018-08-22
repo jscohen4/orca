@@ -490,11 +490,11 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 
 	elif window_type == 'expanding':
 		decade_thresh = pd.date_range('1951-10-01','2099-10-01',freq ='AS-OCT')
-		start_expanding = decade_thresh[50]#'2029-10-01'
+		# start_expanding = decade_thresh[50]#'2029-10-01'
 		WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[50]),index_exceedance_sac)
 		WYI_sim = get_projection_forecast_WYI(df.truncate(before=decade_thresh[0], after=decade_thresh[50]),WYI_mov_stats,index_exceedance_sac)
-		for i in range(50+window_length,148):
-			WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[50], after=decade_thresh[i]),index_exceedance_sac)
+		for i in range(50,148):
+			WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[i]),index_exceedance_sac)
 			WYI_dec = get_projection_forecast_WYI(df.truncate(before=decade_thresh[i], after=decade_thresh[i+1]),WYI_mov_stats,index_exceedance_sac)
 			WYI_sim = pd.concat([WYI_sim,WYI_dec])
 
@@ -560,8 +560,8 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 				
 				rstats[res_stats[i]] = pd.Series(v,index=rstatsind)
 				
-			for y in range(50+window_length,148):
-				rnext = r.truncate(before = decade_thresh[50], after=decade_thresh[y])
+			for y in range(50,148):
+				rnext = r.truncate(before = decade_thresh[2], after=decade_thresh[y])
 				rnext = rstart[(rstart.index < decade_thresh[y])]
 				rnow_ind = r.truncate(before=decade_thresh[y], after=decade_thresh[y+1])
 				rnow_ind = rnow_ind[(rnow_ind.index < decade_thresh[y+1])].index
