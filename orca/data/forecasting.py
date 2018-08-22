@@ -155,7 +155,7 @@ def get_forecast_WYI(df, index_exceedance_sac): #now determining forecasting reg
 			prev = WYI_rem
 		Qm.loc[index, 'WYI'] = WYI
 
-	Qm.WYI = Qm.WYI.shift(periods=-1)
+	# Qm.WYI = Qm.WYI.shift(periods=-1)
 	return(Qm.WYI,stats)
 
 def forecast(df,index_exceedance_sac):
@@ -311,7 +311,7 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now deter
 			prev = WYI_rem
 		Qm.loc[index, 'WYI'] = WYI
 
-	Qm.WYI = Qm.WYI.shift(periods=-1)
+	# Qm.WYI = Qm.WYI.shift(periods=-1)
 	# Qm.WYI = Qm.WYI.fillna(method = 'bfill')
 	return(Qm.WYI)
 
