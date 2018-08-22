@@ -327,9 +327,9 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
       means = dfw.OMR.groupby([dfw.index.strftime('%m-%d')]).mean()
     df_OM[WYT] = means
     dfh = df[(df.SR_WYT == WYT)]
+
     days = [dfh.index.strftime('%Y-%m-%d')]
     days = days[0]
-
     for i,d in enumerate(days):
       if d[5:] != '02-29':
         df.loc[df.index == d,'OMR_sim'] = means[d[5:]]
@@ -604,9 +604,9 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
     days = days[0]
     for i,d in enumerate(days):
       if d[5:] != '02-29':
-        df.loc[df.index == d,'OMR_sim'] = means[d[5:]]
+        df.loc[df.index == d,'OMR_sim'] = df_OMR[WYT][d[5:]]
       elif d[5:] == '02-29':
-        df.loc[df.index == d,'OMR_sim'] = means[days[i-1][5:]]
+        df.loc[df.index == d,'OMR_sim'] = df_OMR[WYT][days[i-1][5:]]
   df['OMR_sim'] = df.OMR_sim.rolling(5).mean()
   df['OMR_sim']=df.OMR_sim.fillna(method='bfill')
   return df

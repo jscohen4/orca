@@ -9,7 +9,7 @@ from datetime import datetime
 now = datetime.now().strftime('Last modified %Y-%m-%d %H:%M:%S')
 #Each of these booleans determines the actions that will be run by the model 
 
-projection = True #True if running a single climate projection
+projection = False #True if running a single climate projection
 calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
 plot = False #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
 change_inflow_exeedance = True
