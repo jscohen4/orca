@@ -490,7 +490,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 
 	elif window_type == 'expanding':
 		decade_thresh = pd.date_range('1951-10-01','2099-10-01',freq ='AS-OCT')
-		start_expanding = decade_thresh[50+window_length]#'2029-10-01'
+		start_expanding = decade_thresh[50]#'2029-10-01'
 		WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[50]),index_exceedance_sac)
 		WYI_sim = get_projection_forecast_WYI(df.truncate(before=decade_thresh[0], after=decade_thresh[50]),WYI_mov_stats,index_exceedance_sac)
 		for i in range(50+window_length,148):
