@@ -9,17 +9,17 @@ from datetime import datetime
 now = datetime.now().strftime('Last modified %Y-%m-%d %H:%M:%S')
 #Each of these booleans determines the actions that will be run by the model 
 
-projection = False #True if running a single climate projection
+projection = True #True if running a single climate projection
 calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
 plot = True #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
-change_inflow_exeedance = True
+change_inflow_exeedance = False
 
 #######Define a few parameters
 SHA_shift = 0
 ORO_shift = 0
 FOL_shift = 0
 index_exceedance_sac = 8
-window_type = 'rolling'
+window_type = 'expanding'
 window_length = 50
 SHA_exceedance = {"W": 2, "AN": 2, "BN": 2, "D": 2, "C": 2}
 ORO_exceedance = {"W": 2, "AN": 2, "BN": 2, "D": 2, "C": 2}
@@ -37,7 +37,7 @@ ORO_exceedance_hist = {"W": 2, "AN": 2, "BN": 2, "D": 2, "C": 2}
 FOL_exceedance_hist = {"W": 10, "AN": 10, "BN": 5, "D": 2, "C": 1}
 
 
-process_hist_data = True#True if changing any historical data inputs, or downloading updated data from cdec
+process_hist_data = False#True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data
 cdec = False # True if downloading up-to-date cdec data
 hist_indices = False #True if running calc_indices scriptwater_day
@@ -46,7 +46,7 @@ hist_forcast = True #True if running updated forecast
 sc = 'access1-0_rcp45_r1i1p1' #cmip5 climate scenario to use, if projection = True
 process_climate_data = False #only mark True if running climate projection and/or processing projection input data
 ####### only relevant if processing projection data
-climate_indices = True
+climate_indices = False
 climate_forecasts = True
 #Nothing below here should be changed!
 ###############################################
