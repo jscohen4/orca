@@ -173,9 +173,9 @@ def forecast(df,index_exceedance_sac):
 	snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
 	res_ids = ['SHA','ORO','FOL']
 
-	SHA_inf = (df['SHA_in_tr'].to_frame(name='inf') * cfsd_mafd)  
-	ORO_inf = (df['ORO_in_tr'].to_frame(name='inf') * cfsd_mafd)
-	FOL_inf = (df['FOL_in_tr'].to_frame(name='inf') * cfsd_mafd)
+	SHA_inf = (df['SHA_in_tr'].to_frame(name='inf') * cfs_tafd)  
+	ORO_inf = (df['ORO_in_tr'].to_frame(name='inf') * cfs_tafd)
+	FOL_inf = (df['FOL_in_tr'].to_frame(name='inf') * cfs_tafd)
 
 
 	res_frames = [SHA_inf,ORO_inf,FOL_inf]
@@ -251,7 +251,7 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now deter
 	flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 	snow_sites = ['BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 
-	Qm = (df[flow_sites].sum(axis=1).resample('M').sum().to_frame(name='flow') * cfsd_mafd)
+	Qm = (df[flow_sites].sum(axis=1).resample('M').sum().to_frame(name='flow') * cfs_mafd)
 
 	Qm['WY'] = df.WY.resample('M').first() # need this for grouping
 
@@ -325,9 +325,9 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 		
 		snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
 		res_ids = ['SHA','ORO','FOL']
-		SHA_inf = (df['SHA_in_tr'].to_frame(name='inf') * cfsd_mafd)  
-		ORO_inf = (df['ORO_in_tr'].to_frame(name='inf') * cfsd_mafd)
-		FOL_inf = (df['FOL_in_tr'].to_frame(name='inf') * cfsd_mafd)
+		SHA_inf = (df['SHA_in_tr'].to_frame(name='inf') * cfs_tafd)  
+		ORO_inf = (df['ORO_in_tr'].to_frame(name='inf') * cfs_tafd)
+		FOL_inf = (df['FOL_in_tr'].to_frame(name='inf') * cfs_tafd)
 		res_frames = [SHA_inf,ORO_inf,FOL_inf]
 
 		for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
@@ -378,9 +378,9 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 
 		snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
 		res_ids = ['SHA','ORO','FOL']
-		SHA_inf = (df['SHA_in_tr'].to_frame(name='inf') * cfsd_mafd)  
-		ORO_inf = (df['ORO_in_tr'].to_frame(name='inf') * cfsd_mafd)
-		FOL_inf = (df['FOL_in_tr'].to_frame(name='inf') * cfsd_mafd)
+		SHA_inf = (df['SHA_in_tr'].to_frame(name='inf') * cfs_tafd)  
+		ORO_inf = (df['ORO_in_tr'].to_frame(name='inf') * cfs_tafd)
+		FOL_inf = (df['FOL_in_tr'].to_frame(name='inf') * cfs_tafd)
 		res_frames = [SHA_inf,ORO_inf,FOL_inf]
 
 		for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
@@ -500,9 +500,9 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 
 		snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
 		res_ids = ['SHA','ORO','FOL']
-		SHA_inf = (df['SHA_in_tr'].to_frame(name='inf') * cfsd_mafd)  
-		ORO_inf = (df['ORO_in_tr'].to_frame(name='inf') * cfsd_mafd)
-		FOL_inf = (df['FOL_in_tr'].to_frame(name='inf') * cfsd_mafd)
+		SHA_inf = (df['SHA_in_tr'].to_frame(name='inf') * cfs_tafd)  
+		ORO_inf = (df['ORO_in_tr'].to_frame(name='inf') * cfs_tafd)
+		FOL_inf = (df['FOL_in_tr'].to_frame(name='inf') * cfs_tafd)
 		res_frames = [SHA_inf,ORO_inf,FOL_inf]
 
 		for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
