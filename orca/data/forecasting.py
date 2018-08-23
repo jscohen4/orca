@@ -152,7 +152,7 @@ def get_forecast_WYI(df, index_exceedance_sac): #now determining forecasting reg
 			WYI_rem = WYI
 		elif (ix <= 9 & ix >= 6):
 			WYI = WYI_rem
-			prev = WYI_rem
+			prev = min(WYI_rem,10)
 		Qm.loc[index, 'WYI'] = WYI
 
 	# Qm.WYI = Qm.WYI.shift(periods=-1)
@@ -308,7 +308,7 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now deter
 
 		if (ix <= 9 & ix>=6):
 			WYI = WYI_rem
-			prev = WYI_rem
+			prev = min(WYI_rem,10)
 		Qm.loc[index, 'WYI'] = WYI
 
 	# Qm.WYI = Qm.WYI.shift(periods=-1)
