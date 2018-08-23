@@ -72,7 +72,7 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
 
   df['SR_WYI'] = pd.Series(index=df.index)
 
-  prev_year = 9.8 # WY 1999 was 9.8
+  prev_year = 12.89 # WY 1999 was 9.8
   for y,g in df.groupby('WY'):
     flow = (g[SR_pts] * cfsd_mafd).sum(axis=1)
     WYI = get_SR_WYI(flow, prev_year)
