@@ -372,7 +372,6 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[i-window_length], after=decade_thresh[i]),index_exceedance_sac)
 			WYI_dec = get_projection_forecast_WYI(df.truncate(before=decade_thresh[i], after=decade_thresh[i+1]),WYI_mov_stats,index_exceedance_sac)
 			WYI_sim = pd.concat([WYI_sim,WYI_dec])
-			print(WYI_sim)
 
 		snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
 		res_ids = ['SHA','ORO','FOL']
