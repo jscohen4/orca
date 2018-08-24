@@ -6,7 +6,7 @@ cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 pd.options.mode.chained_assignment = None  # default='warn'
 from .util import *
-
+# import matplotlib.pyplot as plt
 def WYI_to_WYT(WYI, thresholds, values):
   for t,v in zip(thresholds,values):
     if WYI > t:
@@ -251,7 +251,7 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now deter
 	flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 	snow_sites = ['BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 
-	Qm = (df[flow_sites].sum(axis=1).resample('M').sum().to_frame(name='flow') * cfs_mafd)
+	Qm = (df[flow_sites].sum(axis=1).resample('M').sum().to_frame(name='flow') * cfsd_mafd)
 
 	Qm['WY'] = df.WY.resample('M').first() # need this for grouping
 
@@ -360,8 +360,6 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			r.drop(['inf','WY','DOWY'], axis=1, inplace=True)
 			df = pd.concat([df, r], axis=1, join_axes=[df.index])
 
-
-
 	elif window_type == 'rolling':
 
 		decade_thresh = pd.date_range('1951-10-01','2099-10-01',freq =' AS-OCT')
@@ -374,7 +372,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[i-window_length], after=decade_thresh[i]),index_exceedance_sac)
 			WYI_dec = get_projection_forecast_WYI(df.truncate(before=decade_thresh[i], after=decade_thresh[i+1]),WYI_mov_stats,index_exceedance_sac)
 			WYI_sim = pd.concat([WYI_sim,WYI_dec])
-
+			print(WYI_sim)
 
 		snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
 		res_ids = ['SHA','ORO','FOL']
@@ -404,7 +402,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			means = np.zeros(365)
 			stds = np.zeros(365)
 			snowpack = rstart.snowpack + 0.0001
-			remaining_flow = rstart.remaining_flow 
+			remaining_flow = rstart.remaining_flow + 0.0001
 			DOWY = rstart.DOWY
 			for d in range(1,365):
 				ix = (DOWY == d)
@@ -428,18 +426,52 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			stats = stats.values.T
 			rstatsind = r.truncate(before = decade_thresh[0], after=decade_thresh[50])
 			rstatsind = rstatsind[(rstatsind.index < decade_thresh[50])].index
+			res_slope = []
+			res_int = []
+			res_mean = []
+			res_std = []
+
 			for i,s in enumerate(stats):
 				yearly_stats = stats[i]
-				v = np.append(yearly_stats,[yearly_stats[364]]) #1952 WY
-				for y in range(12): # 1951-2096 WYs
-					v = np.append(v,np.tile(yearly_stats, 4))
-					v = np.append(v,[yearly_stats[364]]) #leap year
-				v = np.append(v,np.tile(yearly_stats, 1))
+				if i == 0:
+					res_slope = np.append(yearly_stats,[yearly_stats[364]]) #1952 WY
+					for y in range(12): # 1951  WYs
+						res_slope = np.append(res_slope,np.tile(yearly_stats, 4))
+						res_slope = np.append(res_slope,[yearly_stats[364]]) #leap year
+					res_slope = np.append(res_slope,np.tile(yearly_stats, 1))
 				
-				rstats[res_stats[i]] = pd.Series(v,index=rstatsind)
+				elif i == 1:
+					res_intercept = np.append(yearly_stats,[yearly_stats[364]]) #1952 WY
+					for y in range(12): # 1951  WYs
+						res_intercept = np.append(res_intercept,np.tile(yearly_stats, 4))
+						res_intercept = np.append(res_intercept,[yearly_stats[364]]) #leap year
+					res_intercept = np.append(res_intercept,np.tile(yearly_stats, 1))
+				
+				elif i == 2:
+					res_mean = np.append(yearly_stats,[yearly_stats[364]]) #1952 WY
+					for y in range(12): # 1951  WYs
+						res_mean = np.append(res_mean,np.tile(yearly_stats, 4))
+						res_mean = np.append(res_mean,[yearly_stats[364]]) #leap year
+					res_mean = np.append(res_mean,np.tile(yearly_stats, 1))
+
+				elif i == 3:
+					res_std = np.append(yearly_stats,[yearly_stats[364]]) #1952 WY
+					for y in range(12): # 1951  WYs
+						res_std = np.append(res_std,np.tile(yearly_stats, 4))
+						res_std = np.append(res_std,[yearly_stats[364]]) #leap year
+					res_std = np.append(res_std,np.tile(yearly_stats, 1))
+
+
+				# rstats[res_stats[i]] = pd.Series(v,index=rstatsind)
+			# rsc = pd.DataFrame()
+			# rsc[res_stats[i]] = rstats[res_stats[i]]
 			for y in range(50,148):
-				rnext = r.truncate(before = decade_thresh[y-window_length], after=decade_thresh[y])
-				rnext = rstart[(rstart.index < decade_thresh[y])]
+				if window_length >= 49 & ((y == 50) | (y ==51)):
+					wl = 48
+				else:
+					wl = window_length 
+				rnext = r.truncate(before = decade_thresh[y-wl], after=decade_thresh[y])
+				rnext = rnext[(rnext.index < decade_thresh[y])]
 				rnow_ind = r.truncate(before = decade_thresh[y], after=decade_thresh[y+1])
 				rnow_ind = rnow_ind[(rnow_ind.index < decade_thresh[y+1])].index
 				slopes = np.zeros(365)
@@ -447,7 +479,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 				means = np.zeros(365)
 				stds = np.zeros(365)
 				snowpack = rnext.snowpack + 0.0001
-				remaining_flow = rnext.remaining_flow
+				remaining_flow = rnext.remaining_flow + 0.0001
 				DOWY = rnext.DOWY
 				for d in range(1,365):
 					ix = (DOWY == d)
@@ -470,22 +502,55 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 					stats_file[res_stats] = stats
 				stats = stats.values.T
 				for i,s in enumerate(stats):
-					yearly_stats = stats[i]
-					# v = np.append(yearly_stats,np.tile(yearly_stats, 1)) #1951 
-					v = yearly_stats
-					if decade_thresh[y+1].is_leap_year:
-					# v = np.append(v,np.tile(yearly_stats, 2)) #2097-2099 WY
-						v = np.append(v,[yearly_stats[364]])
+					# yearly_stats = stats[i]
+					# # v = np.append(yearly_stats,np.tile(yearly_stats, 1)) #1951 
+					# v = yearly_stats
+					# if decade_thresh[y+1].is_leap_year:
+					# # v = np.append(v,np.tile(yearly_stats, 2)) #2097-2099 WY
+					# 	v = np.append(v,[yearly_stats[364]])
+					# rs = pd.DataFrame(v,columns = [res_stats[i]], index = rnow_ind)
+					# if i == 0:
+					# 	x = pd.concat([rstats[res_stats[i]],rs[res_stats[i]]])
+					# elif i > 0:
+					# 	x = pd.concat([x,rs[res_stats[i]]])
 
-					rs = pd.DataFrame(v,columns = [res_stats[i]], index = rnow_ind)
-					rstats[res_stats[i]] = pd.concat([rstats[res_stats[i]],rs[res_stats[i]]])
-			r[res_stats] = rstats
+					yearly_stats = stats[i]
+					if i == 0:
+						res_slope = np.append(res_slope,np.tile(yearly_stats, 1)) #1951 
+						if decade_thresh[y+1].is_leap_year:
+							res_slope = np.append(res_slope,[yearly_stats[364]])
+					elif i == 1:
+						res_intercept = np.append(res_intercept,np.tile(yearly_stats, 1)) #1951 
+						if decade_thresh[y+1].is_leap_year:
+							res_intercept = np.append(res_intercept,[yearly_stats[364]])
+					elif i == 2:
+						res_mean = np.append(res_mean,np.tile(yearly_stats, 1)) #1951 
+						if decade_thresh[y+1].is_leap_year:
+							res_mean = np.append(res_mean,[yearly_stats[364]])
+					elif i == 3:
+						res_std = np.append(res_std,np.tile(yearly_stats, 1)) #1951 
+						if decade_thresh[y+1].is_leap_year:
+							res_std = np.append(res_std,[yearly_stats[364]])
+
+
+			# rsl = pd.DataFrame(v,columns = [res_stat, index = rnow_ind])
+			# ri = pd.DataFrame(v,columns = [res_stat, index = rnow_ind])
+			# rm = pd.DataFrame(v,columns = [res_stat, index = rnow_ind])
+			# rst = pd.DataFrame(v,columns = [res_stat, index = rnow_ind])
+
+			r[res_stats[0]] = pd.Series(res_slope,index=r.index)
+			r[res_stats[1]] = pd.Series(res_intercept,index=r.index)
+			r[res_stats[2]] = pd.Series(res_mean,index=r.index)
+			r[res_stats[3]] = pd.Series(res_std,index=r.index)
+
+			# print(r[res_stats])
 			r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
 			r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)
 			r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)
 			r.drop(['inf','WY','DOWY'], axis=1, inplace=True)
+			# plt.plot((r[res_stats]))
+			# plt.show()
 			df = pd.concat([df, r], axis=1, join_axes=[df.index])
-
 
 
 	elif window_type == 'expanding':
@@ -518,7 +583,8 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			r['remaining_flow'] = (r.groupby('WY').inf
 			                            .apply(rem_flow))
 			r.cum_flow_to_date.fillna(method='ffill', inplace=True)
-
+			r = r.replace([np.inf, -np.inf], np.nan)
+			r = r.fillna(method = 'ffill')
 			rstart = r.truncate(before = decade_thresh[2], after=decade_thresh[50])
 			rstart = rstart[(rstart.index < decade_thresh[50])]
 			slopes = np.zeros(365)
@@ -550,19 +616,49 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			stats = stats.values.T
 			rstatsind = r.truncate(before = decade_thresh[0], after=decade_thresh[50])
 			rstatsind = rstatsind[(rstatsind.index < decade_thresh[50])].index
+			# for i,s in enumerate(stats):
+			# 	yearly_stats = stats[i]
+			# 	v = np.append(yearly_stats,[yearly_stats[364]]) #1952 WY
+			# 	for y in range(12): # 1951-2096 WYs
+			# 		v = np.append(v,np.tile(yearly_stats, 4))
+			# 		v = np.append(v,[yearly_stats[364]]) #leap year
+			# 	v = np.append(v,np.tile(yearly_stats, 1))
+
 			for i,s in enumerate(stats):
 				yearly_stats = stats[i]
-				v = np.append(yearly_stats,[yearly_stats[364]]) #1952 WY
-				for y in range(12): # 1951-2096 WYs
-					v = np.append(v,np.tile(yearly_stats, 4))
-					v = np.append(v,[yearly_stats[364]]) #leap year
-				v = np.append(v,np.tile(yearly_stats, 1))
+				if i == 0:
+					res_slope = np.append(yearly_stats,[yearly_stats[364]]) #1952 WY
+					for y in range(12): # 1951  WYs
+						res_slope = np.append(res_slope,np.tile(yearly_stats, 4))
+						res_slope = np.append(res_slope,[yearly_stats[364]]) #leap year
+					res_slope = np.append(res_slope,np.tile(yearly_stats, 1))
 				
-				rstats[res_stats[i]] = pd.Series(v,index=rstatsind)
+				elif i == 1:
+					res_intercept = np.append(yearly_stats,[yearly_stats[364]]) #1952 WY
+					for y in range(12): # 1951  WYs
+						res_intercept = np.append(res_intercept,np.tile(yearly_stats, 4))
+						res_intercept = np.append(res_intercept,[yearly_stats[364]]) #leap year
+					res_intercept = np.append(res_intercept,np.tile(yearly_stats, 1))
+				
+				elif i == 2:
+					res_mean = np.append(yearly_stats,[yearly_stats[364]]) #1952 WY
+					for y in range(12): # 1951  WYs
+						res_mean = np.append(res_mean,np.tile(yearly_stats, 4))
+						res_mean = np.append(res_mean,[yearly_stats[364]]) #leap year
+					res_mean = np.append(res_mean,np.tile(yearly_stats, 1))
+
+				elif i == 3:
+					res_std = np.append(yearly_stats,[yearly_stats[364]]) #1952 WY
+					for y in range(12): # 1951  WYs
+						res_std = np.append(res_std,np.tile(yearly_stats, 4))
+						res_std = np.append(res_std,[yearly_stats[364]]) #leap year
+					res_std = np.append(res_std,np.tile(yearly_stats, 1))
+				
+				# rstats[res_stats[i]] = pd.Series(v,index=rstatsind)
 				
 			for y in range(50,148):
 				rnext = r.truncate(before = decade_thresh[2], after=decade_thresh[y])
-				rnext = rstart[(rstart.index < decade_thresh[y])]
+				rnext = rnext[(rnext.index < decade_thresh[y])]
 				rnow_ind = r.truncate(before=decade_thresh[y], after=decade_thresh[y+1])
 				rnow_ind = rnow_ind[(rnow_ind.index < decade_thresh[y+1])].index
 				slopes = np.zeros(365)
@@ -570,7 +666,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 				means = np.zeros(365)
 				stds = np.zeros(365)
 				snowpack = rnext.snowpack + 0.0001
-				remaining_flow = rnext.remaining_flow
+				remaining_flow = rnext.remaining_flow+0.0001
 				DOWY = rnext.DOWY
 				for d in range(1,365):
 					ix = (DOWY == d)
@@ -593,16 +689,38 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 					stats_file[res_stats] = stats
 				stats = stats.values.T
 				for i,s in enumerate(stats):
-					yearly_stats = stats[i]
-					# v = np.append(yearly_stats,np.tile(yearly_stats, 1)) #1951 
-					v = yearly_stats
-					if decade_thresh[y+1].is_leap_year:
-					# v = np.append(v,np.tile(yearly_stats, 2)) #2097-2099 WY
-						v = np.append(v,[yearly_stats[364]])
+					# yearly_stats = stats[i]
+					# # v = np.append(yearly_stats,np.tile(yearly_stats, 1)) #1951 
+					# v = yearly_stats
+					# if decade_thresh[y+1].is_leap_year:
+					# # v = np.append(v,np.tile(yearly_stats, 2)) #2097-2099 WY
+					# 	v = np.append(v,[yearly_stats[364]])
 
-					rs = pd.DataFrame(v,columns = [res_stats[i]], index = rnow_ind)
-					rstats[res_stats[i]] = pd.concat([rstats[res_stats[i]],rs[res_stats[i]]])
-			r[res_stats] = rstats
+					# rs = pd.DataFrame(v,columns = [res_stats[i]], index = rnow_ind)
+					# rstats[res_stats[i]] = pd.concat([rstats[res_stats[i]],rs[res_stats[i]]])
+					yearly_stats = stats[i]
+					if i == 0:
+						res_slope = np.append(res_slope,np.tile(yearly_stats, 1)) #1951 
+						if decade_thresh[y+1].is_leap_year:
+							res_slope = np.append(res_slope,[yearly_stats[364]])
+					elif i == 1:
+						res_intercept = np.append(res_intercept,np.tile(yearly_stats, 1)) #1951 
+						if decade_thresh[y+1].is_leap_year:
+							res_intercept = np.append(res_intercept,[yearly_stats[364]])
+					elif i == 2:
+						res_mean = np.append(res_mean,np.tile(yearly_stats, 1)) #1951 
+						if decade_thresh[y+1].is_leap_year:
+							res_mean = np.append(res_mean,[yearly_stats[364]])
+					elif i == 3:
+						res_std = np.append(res_std,np.tile(yearly_stats, 1)) #1951 
+						if decade_thresh[y+1].is_leap_year:
+							res_std = np.append(res_std,[yearly_stats[364]])
+
+			r[res_stats[0]] = pd.Series(res_slope,index=r.index)
+			r[res_stats[1]] = pd.Series(res_intercept,index=r.index)
+			r[res_stats[2]] = pd.Series(res_mean,index=r.index)
+			r[res_stats[3]] = pd.Series(res_std,index=r.index)
+			
 			r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
 			r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)
 			r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)
