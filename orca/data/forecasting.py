@@ -313,7 +313,7 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now deter
 
 	# Qm.WYI = Qm.WYI.shift(periods=-1)
 	# Qm.WYI = Qm.WYI.fillna(method = 'bfill')
-	return(Qm.WYI)
+	return Qm.WYI, Qm[['octmar_flow_to_date','octmar_mean','octmar_std','aprjul_flow_to_date','aprjul_mean','aprjul_std','aprjul_slope','aprjul_intercept']]
 
 def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,window_length,index_exceedance_sac):
 	# WYI_sim = get_projection_forecast_WYI(df,WYI_stats_file,index_exceedance_sac) #wyt
@@ -321,8 +321,9 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 	# '2079-10-01','2089-10-01','2099-12-31']
 	if window_type == 'historical':
 
-		WYI_sim = get_projection_forecast_WYI(df,WYI_stats_file,index_exceedance_sac)
-		
+		WYI_sim = get_projection_forecast_WYI(df,WYI_stats_file,index_exceedance_sac)[0]
+		WYI_stats = get_projection_forecast_WYI(df,WYI_stats_file,index_exceedance_sac)[1]
+
 		snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
 		res_ids = ['SHA','ORO','FOL']
 		SHA_inf = (df['SHA_in_tr'].to_frame(name='inf') * cfs_tafd)  
@@ -359,7 +360,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)
 			r.drop(['inf','WY','DOWY'], axis=1, inplace=True)
 			df = pd.concat([df, r], axis=1, join_axes=[df.index])
-
+		df = pd.concat([df,WYI_stats], axis=1, join_axes=[df.index])
 	elif window_type == 'rolling':
 
 		decade_thresh = pd.date_range('1951-10-01','2099-10-01',freq =' AS-OCT')
