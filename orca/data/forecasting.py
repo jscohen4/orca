@@ -13,12 +13,20 @@ def WYI_to_WYT(WYI, thresholds, values):
       return v
 
 def octmar_cumulative(x): #cumulative inflow from october through march
+
 	ix = (x.index.month >= 10) | (x.index.month <= 3)
-	octmar = (x[ix]. sum() - x[ix].cumsum())
+	octmar = (x[ix].sum() - x[ix].cumsum())
 	ix = (x.index.month >= 4) & (x.index.month <= 7)
 	x[ix] = octmar[5]
 	aprjul = x[ix]
 	return pd.concat([octmar,aprjul])
+
+	# ix = (x.index.month >= 10) | (x.index.month <= 3)
+	# octmar = (x[ix].sum() - x[ix].cumsum())
+	# ix = (x.index.month >= 4) & (x.index.month <= 7)
+	# x[ix] = octmar[5]
+	# aprjul = x[ix]
+	# return pd.concat([octmar,aprjul])
 
 def aprjul_cumulative(x): #cumulative inflow from april through july
 	ix = (x.index.month >= 4) & (x.index.month <= 7)
@@ -104,7 +112,8 @@ def get_forecast_WYI(df, index_exceedance_sac): #now determining forecasting reg
 		aprjul_stds[m-1] =  np.std(aprjul_cumulative_ind[ix])
 	octmar_flow_to_date_ind = Qm.octmar_flow_to_date	
 	octmar_cumulative_ind = Qm.octmar_cumulative
-	for m in list(range(10,13))+list(range(1,3)):  
+	for m in list(range(10,13))+list(range(1,3)):
+		ix = (month == m)
 		flow_coeffs = np.polyfit(octmar_flow_to_date_ind[oct_index], octmar_cumulative_ind[ix], 1)
 		octmar_slopes[m-1] = flow_coeffs[0]
 		octmar_intercepts[m-1] = flow_coeffs[1]
@@ -241,9 +250,6 @@ def forecast(df,index_exceedance_sac):
 		df = pd.concat([df, r], axis=1, join_axes=[df.index])
 	return df,stats_file,WYI_stats
 
-	# stats_file.to_csv('carryover_regression_statistics.csv')
-	# df.to_csv('orca-data-forecasted.csv')
-
 
 
 #############climate projection functions
@@ -263,7 +269,6 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now deter
 	                          .apply(octmar_cumulative)
 	                          .reset_index(level=0)
 	                          .drop('WY', axis=1)) 
-
 	Qm['aprjul_cumulative'] = (Qm.groupby('WY').flow
 	                           .apply(aprjul_cumulative))
 
@@ -275,20 +280,16 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now deter
 	                           .reset_index(level=0).drop('WY', axis=1)) 
 
 	month = Qm.index.month
-	snow_ind = Qm.snow
-	aprjul_cumulative_ind = Qm.aprjul_cumulative
-	octmar_flow_to_date_ind = Qm.octmar_flow_to_date	
-	octmar_cumulative_ind = Qm.octmar_cumulative
-
+	# snow_ind = Qm.snow
+	# aprjul_cumulative_ind = Qm.aprjul_cumulative
+	# octmar_flow_to_date_ind = Qm.octmar_flow_to_date	
+	# octmar_cumulative_ind = Qm.octmar_cumulative
 	# stats = pd.read_csv('WYI_forcasting_regression_stats.csv', index_col=0, parse_dates=True)
-
 	for s in stats_file: 
-		df[s] = pd.Series(index=df.index)
 		for m in range(1,13):
 			Qm.loc[month==m, s] = stats_file[s][m-1]
   #Qm.octmar_cumulative = Qm.octmar_cumulative.shift(periods=1)
   #Qm.aprjul_cumulative = Qm.aprjul_cumulative.shift(periods=1)
-
 	Qm = Qm.fillna(0)
 	Qm['WYI'] = pd.Series(index=Qm.index)
 	prev = 10
@@ -311,8 +312,6 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now deter
 			prev = min(WYI_rem,10)
 		Qm.loc[index, 'WYI'] = WYI
 
-	# Qm.WYI = Qm.WYI.shift(periods=-1)
-	# Qm.WYI = Qm.WYI.fillna(method = 'bfill')
 	return Qm.WYI, Qm[['octmar_flow_to_date','octmar_mean','octmar_std','aprjul_flow_to_date','aprjul_mean','aprjul_std','aprjul_slope','aprjul_intercept']]
 
 def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,window_length,index_exceedance_sac):
@@ -362,18 +361,60 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			df = pd.concat([df, r], axis=1, join_axes=[df.index])
 		df = pd.concat([df,WYI_stats], axis=1, join_axes=[df.index])
 
+	if window_type == 'stationary':
+		decade_thresh = pd.date_range('1951-10-01','2099-10-01',freq =' AS-OCT')
+		WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[50]),index_exceedance_sac)
+		WYI_sim = get_projection_forecast_WYI(df,WYI_mov_stats,index_exceedance_sac)
+
+		WYI_stats = WYI_sim[1]
+		WYI_sim = WYI_sim[0]
+		snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
+		res_ids = ['SHA','ORO','FOL']
+		SHA_inf = (df['SHA_in_tr'].to_frame(name='inf') * cfs_tafd)  
+		ORO_inf = (df['ORO_in_tr'].to_frame(name='inf') * cfs_tafd)
+		FOL_inf = (df['FOL_in_tr'].to_frame(name='inf') * cfs_tafd)
+		res_frames = [SHA_inf,ORO_inf,FOL_inf]
+
+		for r, swe, res_id in zip(res_frames, snow_sites, res_ids):
+			r['WY'] = df.WY
+			r['DOWY'] = df.DOWY
+			r['snowpack'] = df[swe]
+			r = r[r.WY != r.WY[-1]]
+			month = r.index.month
+			r['cum_flow_to_date'] = (r.groupby('WY').inf
+			                           .apply(flow_to_date))
+			r['remaining_flow'] = (r.groupby('WY').inf
+			                            .apply(rem_flow))
+			r.cum_flow_to_date.fillna(method='ffill', inplace=True)
+			res_stats =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
+
+			carryover_stats = carryover_stats_file[res_stats]
+			carryover_stats = carryover_stats.values.T
+			for i,s in enumerate(carryover_stats):
+				yearly_stats = carryover_stats[i]
+				v = np.append(yearly_stats,np.tile(yearly_stats, 1)) #2000 WY
+				v = np.append(v,[yearly_stats[364]]) #leap year
+				for y in range(36): # 2001-2096 WYs
+					v = np.append(v,np.tile(yearly_stats, 4))
+					v = np.append(v,[yearly_stats[364]]) #leap year
+				v = np.append(v,np.tile(yearly_stats, 2)) #2097-2099 WY
+				r[res_stats[i]] = pd.Series(v,index=r.index)
+			r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
+			r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)
+			r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)
+			r.drop(['inf','WY','DOWY'], axis=1, inplace=True)
+			df = pd.concat([df, r], axis=1, join_axes=[df.index])
+		df = pd.concat([df,WYI_stats], axis=1, join_axes=[df.index])
+
+
 	elif window_type == 'rolling':
 
 		decade_thresh = pd.date_range('1951-10-01','2099-10-01',freq =' AS-OCT')
-		# decade_thresh_done = pd.date_range('1951-09-30','2099-09-30',freq =' AS-OCT')
 
-		# start_moving = decade_thresh[48+window_length]#'2029-10-01'
 		WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[50]),index_exceedance_sac)
 		WYI_sim = get_projection_forecast_WYI(df.truncate(before=decade_thresh[0], after=decade_thresh[50]),WYI_mov_stats,index_exceedance_sac)
 		WYI_stats = WYI_sim[1]
 		WYI_sim = WYI_sim[0]
-		# WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[50]),index_exceedance_sac)[0]
-		# WYI_sim = get_projection_forecast_WYI(df.truncate(before=decade_thresh[0], after=decade_thresh[50]),WYI_mov_stats,index_exceedance_sac)
 
 		for i in range(50,148):
 			WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[i-window_length], after=decade_thresh[i]),index_exceedance_sac)
@@ -467,10 +508,6 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 						res_std = np.append(res_std,[yearly_stats[364]]) #leap year
 					res_std = np.append(res_std,np.tile(yearly_stats, 1))
 
-
-				# rstats[res_stats[i]] = pd.Series(v,index=rstatsind)
-			# rsc = pd.DataFrame()
-			# rsc[res_stats[i]] = rstats[res_stats[i]]
 			for y in range(50,148):
 				if window_length >= 49 & ((y == 50) | (y ==51)):
 					wl = 48
@@ -508,17 +545,6 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 					stats_file[res_stats] = stats
 				stats = stats.values.T
 				for i,s in enumerate(stats):
-					# yearly_stats = stats[i]
-					# # v = np.append(yearly_stats,np.tile(yearly_stats, 1)) #1951 
-					# v = yearly_stats
-					# if decade_thresh[y+1].is_leap_year:
-					# # v = np.append(v,np.tile(yearly_stats, 2)) #2097-2099 WY
-					# 	v = np.append(v,[yearly_stats[364]])
-					# rs = pd.DataFrame(v,columns = [res_stats[i]], index = rnow_ind)
-					# if i == 0:
-					# 	x = pd.concat([rstats[res_stats[i]],rs[res_stats[i]]])
-					# elif i > 0:
-					# 	x = pd.concat([x,rs[res_stats[i]]])
 
 					yearly_stats = stats[i]
 					if i == 0:
@@ -538,31 +564,23 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 						if decade_thresh[y+1].is_leap_year:
 							res_std = np.append(res_std,[yearly_stats[364]])
 
-
-			# rsl = pd.DataFrame(v,columns = [res_stat, index = rnow_ind])
-			# ri = pd.DataFrame(v,columns = [res_stat, index = rnow_ind])
-			# rm = pd.DataFrame(v,columns = [res_stat, index = rnow_ind])
-			# rst = pd.DataFrame(v,columns = [res_stat, index = rnow_ind])
-
 			r[res_stats[0]] = pd.Series(res_slope,index=r.index)
 			r[res_stats[1]] = pd.Series(res_intercept,index=r.index)
 			r[res_stats[2]] = pd.Series(res_mean,index=r.index)
 			r[res_stats[3]] = pd.Series(res_std,index=r.index)
 
-			# print(r[res_stats])
 			r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
 			r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)
 			r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)
 			r.drop(['inf','WY','DOWY'], axis=1, inplace=True)
-			# plt.plot((r[res_stats]))
-			# plt.show()
+
 			df = pd.concat([df, r], axis=1, join_axes=[df.index])
 		df = pd.concat([df,WYI_stats], axis=1, join_axes=[df.index])
 
 
 	elif window_type == 'expanding':
 		decade_thresh = pd.date_range('1951-10-01','2099-10-01',freq ='AS-OCT')
-		# start_expanding = decade_thresh[50]#'2029-10-01'
+
 		WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[50]),index_exceedance_sac)
 		WYI_sim = get_projection_forecast_WYI(df.truncate(before=decade_thresh[0], after=decade_thresh[50]),WYI_mov_stats,index_exceedance_sac)
 		WYI_stats = WYI_sim[1]
@@ -626,13 +644,6 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			stats = stats.values.T
 			rstatsind = r.truncate(before = decade_thresh[0], after=decade_thresh[50])
 			rstatsind = rstatsind[(rstatsind.index < decade_thresh[50])].index
-			# for i,s in enumerate(stats):
-			# 	yearly_stats = stats[i]
-			# 	v = np.append(yearly_stats,[yearly_stats[364]]) #1952 WY
-			# 	for y in range(12): # 1951-2096 WYs
-			# 		v = np.append(v,np.tile(yearly_stats, 4))
-			# 		v = np.append(v,[yearly_stats[364]]) #leap year
-			# 	v = np.append(v,np.tile(yearly_stats, 1))
 
 			for i,s in enumerate(stats):
 				yearly_stats = stats[i]
@@ -699,15 +710,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 					stats_file[res_stats] = stats
 				stats = stats.values.T
 				for i,s in enumerate(stats):
-					# yearly_stats = stats[i]
-					# # v = np.append(yearly_stats,np.tile(yearly_stats, 1)) #1951 
-					# v = yearly_stats
-					# if decade_thresh[y+1].is_leap_year:
-					# # v = np.append(v,np.tile(yearly_stats, 2)) #2097-2099 WY
-					# 	v = np.append(v,[yearly_stats[364]])
 
-					# rs = pd.DataFrame(v,columns = [res_stats[i]], index = rnow_ind)
-					# rstats[res_stats[i]] = pd.concat([rstats[res_stats[i]],rs[res_stats[i]]])
 					yearly_stats = stats[i]
 					if i == 0:
 						res_slope = np.append(res_slope,np.tile(yearly_stats, 1)) #1951 
@@ -803,10 +806,12 @@ def get_forecast_WYI_stats(df, index_exceedance_sac): #now determining forecasti
 	octmar_flow_to_date_ind = Qm.octmar_flow_to_date	
 	octmar_cumulative_ind = Qm.octmar_cumulative
 	for m in list(range(10,13))+list(range(1,3)):  
+		ix = (month == m)
 		flow_coeffs = np.polyfit(octmar_flow_to_date_ind[oct_index], octmar_cumulative_ind[ix], 1)
 		octmar_slopes[m-1] = flow_coeffs[0]
 		octmar_intercepts[m-1] = flow_coeffs[1]
 		octmar_means[m-1] = np.mean(octmar_cumulative_ind[ix])
+
 		octmar_stds[m-1] = np.std(octmar_cumulative_ind[ix])
 	stats =  {'aprjul_slope': aprjul_slopes,
                     'aprjul_intercept': aprjul_intercepts, 
