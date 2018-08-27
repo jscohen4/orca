@@ -482,7 +482,7 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
     df['ORO_swe'] = df[['KTL_swe', 'HMB_swe', 'FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
     df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'SLT_swe']].mean(axis = 1)
 
-  elif (window == 'rolling') | (window =='expanding'):
+  elif (window == 'rolling') | (window =='expanding') | (window == 'stationary'):
     for sn in snow_ids:
       df[sn] = df[sn]/25.4
     #snow bias correction (none for RBP and CAP)
