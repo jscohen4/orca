@@ -386,10 +386,33 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			r['remaining_flow'] = (r.groupby('WY').inf
 			                            .apply(rem_flow))
 			r.cum_flow_to_date.fillna(method='ffill', inplace=True)
+			rstart = r.truncate(before = decade_thresh[2], after=decade_thresh[50])
+			rstart = rstart[(rstart.index < decade_thresh[50])]
+			slopes = np.zeros(365)
+			intercepts = np.zeros(365)
+			means = np.zeros(365)
+			stds = np.zeros(365)
+			snowpack = rstart.snowpack + 0.0001
+			remaining_flow = rstart.remaining_flow + 0.0001
+			DOWY = rstart.DOWY
+			for d in range(1,365):
+				ix = (DOWY == d)
+				coeffs = np.polyfit(snowpack[ix],remaining_flow[ix],1)
+				slopes[d] = coeffs[0]
+				intercepts[d] = coeffs[1]
+				means[d] = np.mean(remaining_flow[ix]) 
+				stds[d] = np.std(remaining_flow[ix])
+
 			res_stats =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
 
-			carryover_stats = carryover_stats_file[res_stats]
-			carryover_stats = carryover_stats.values.T
+
+			stats =  {res_stats[0]: slopes,
+		                  res_stats[1]: intercepts, 
+		                  res_stats[2]: means,
+		                  res_stats[3]: stds}
+
+			carryover_stats = pd.DataFrame(stats)
+			carryover_stats = carryover_stats.values.T			
 			for i,s in enumerate(carryover_stats):
 				yearly_stats = carryover_stats[i]
 				v = np.append(yearly_stats,np.tile(yearly_stats, 1)) #2000 WY
