@@ -393,7 +393,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			means = np.zeros(365)
 			stds = np.zeros(365)
 			snowpack = rstart.snowpack + 0.0001
-			remaining_flow = rstart.remaining_flow + 0.0001
+			remaining_flow = rstart.remaining_flow 
 			DOWY = rstart.DOWY
 			for d in range(1,365):
 				ix = (DOWY == d)
@@ -472,7 +472,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			means = np.zeros(365)
 			stds = np.zeros(365)
 			snowpack = rstart.snowpack + 0.0001
-			remaining_flow = rstart.remaining_flow + 0.0001
+			remaining_flow = rstart.remaining_flow 
 			DOWY = rstart.DOWY
 			for d in range(1,365):
 				ix = (DOWY == d)
@@ -545,7 +545,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 				means = np.zeros(365)
 				stds = np.zeros(365)
 				snowpack = rnext.snowpack + 0.0001
-				remaining_flow = rnext.remaining_flow + 0.0001
+				remaining_flow = rnext.remaining_flow
 				DOWY = rnext.DOWY
 				for d in range(1,365):
 					ix = (DOWY == d)
@@ -710,7 +710,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 				means = np.zeros(365)
 				stds = np.zeros(365)
 				snowpack = rnext.snowpack + 0.0001
-				remaining_flow = rnext.remaining_flow+0.0001
+				remaining_flow = rnext.remaining_flow
 				DOWY = rnext.DOWY
 				for d in range(1,365):
 					ix = (DOWY == d)
