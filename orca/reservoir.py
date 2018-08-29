@@ -152,13 +152,14 @@ class Reservoir():
         m = self.month[x-1]
         self.cum_min_release[x] = max(self.cum_min_release[x-1] - self.env_min_flow[wyt][m-1] * cfs_tafd - self.nodds[d], self.temp_releases[wyt][m-1] * cfs_tafd) 
 
-  def find_available_storage(self, t, d,dowy):#, exceedence_level):
+  def find_available_storage(self, t, d, dowy):#, exceedence_level):
     ##this function uses the linear regression variables calculated in find_release_func (called before simulation loop) to figure out how
     ##much 'excess' storage is available to bešreleased to the delta with the explicit intention of running the pumps.  This function is calculated
     ##each timestep before the reservoirs' individual step function is called
     #also used to obtain inflow forecasts
     # self.exceedence_level = -1*min((self.WYI[t-1] - 10.0)*0.8,-2)##how conservative are they being about the flow forecasts (ie, 90% exceedance level, 75% exceedance level, etc)
     self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t] + self.std[t]*z_table_transform[self.exceedance[self.wyt[t]]])/2# * 1000 #based on forecast regression
+
     if dowy == 0:
       self.calc_expected_min_release(t)##what do they expect to need to release for env. requirements through the end of september
       self.forecast[t] = max(0,self.slope[t+1] * self.obs_snow[t+1] + self.intercept[t+1]+ self.std[t]*z_table_transform[self.exceedance[self.wyt[t]]])/2 #* 1000 #based on forecast regression

@@ -310,6 +310,7 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now deter
 		if (ix <= 9 & ix>=6):
 			WYI = WYI_rem
 			prev = min(WYI_rem,10)
+		WYI = max(WYI,0)
 		Qm.loc[index, 'WYI'] = WYI
 
 	return Qm.WYI, Qm[['octmar_flow_to_date','octmar_mean','octmar_std','aprjul_flow_to_date','aprjul_mean','aprjul_std','aprjul_slope','aprjul_intercept']]
@@ -778,7 +779,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 	df.loc[df['WYI_sim'].isnull(),'WYI_sim'] = df['SR_WYI']
 
 	df['WYT_sim'] = df.WYI_sim.apply(WYI_to_WYT,
-                               thresholds=[9.2, 7.8, 6.5, 5.4, 0.0], 
+                               thresholds=[9.2, 7.8, 6.5, 5.4, -5.0], 
                                values=['W', 'AN', 'BN', 'D', 'C'])
 	df = df[(df.index < '2099-10-01')]
 	return df
