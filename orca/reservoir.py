@@ -158,10 +158,10 @@ class Reservoir():
     ##each timestep before the reservoirs' individual step function is called
     #also used to obtain inflow forecasts
     # self.exceedence_level = -1*min((self.WYI[t-1] - 10.0)*0.8,-2)##how conservative are they being about the flow forecasts (ie, 90% exceedance level, 75% exceedance level, etc)
-    self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t] + self.std[t]*z_table_transform[self.exceedance[self.wyt[t]]])# * 1000 #based on forecast regression
+    self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t] + self.std[t]*z_table_transform[self.exceedance[self.wyt[t]]])/2# * 1000 #based on forecast regression
     if dowy == 0:
       self.calc_expected_min_release(t)##what do they expect to need to release for env. requirements through the end of september
-      self.forecast[t] = max(0,self.slope[t+1] * self.obs_snow[t+1] + self.intercept[t+1]+ self.std[t]*z_table_transform[self.exceedance[self.wyt[t]]]) #* 1000 #based on forecast regression
+      self.forecast[t] = max(0,self.slope[t+1] * self.obs_snow[t+1] + self.intercept[t+1]+ self.std[t]*z_table_transform[self.exceedance[self.wyt[t]]])/2 #* 1000 #based on forecast regression
     # if d == 0:
       # self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t]) * 1000 #based on forecast regression
     # self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]] + self.forecast[t] - self.cum_min_release[dowy])
