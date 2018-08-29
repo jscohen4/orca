@@ -361,7 +361,8 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			df = pd.concat([df, r], axis=1, join_axes=[df.index])
 		df = pd.concat([df,WYI_stats], axis=1, join_axes=[df.index])
 
-	if window_type == 'stationary':
+
+	elif window_type == 'stationary':
 		decade_thresh = pd.date_range('1951-10-01','2099-10-01',freq =' AS-OCT')
 		WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[50]),index_exceedance_sac)
 		WYI_sim = get_projection_forecast_WYI(df,WYI_mov_stats,index_exceedance_sac)
@@ -816,7 +817,7 @@ def get_forecast_WYI_stats(df, index_exceedance_sac): #now determining forecasti
 	octmar_slopes = np.zeros(12)
 	octmar_intercepts = np.zeros(12)
 	month = Qm.index.month
-	snow_ind = Qm.snow
+	snow_ind = Qm.snow + 0.0001
 	aprjul_cumulative_ind = Qm.aprjul_cumulative
 	for m in range(1,13):
 		oct_index = (month == 10)
