@@ -240,8 +240,8 @@ class Delta():
   def results_as_df(self, index):
     df = pd.DataFrame()
     self.x2 = self.x2[:-1]
-    names = ['in','out','TRP_pump','HRO_pump','X2']
-    things = [self.inflow, self.outflow, self.TRP_pump, self.HRO_pump, self.x2]
+    names = ['in','out','TRP_pump','HRO_pump','X2','SODD_CVP','SODD_SWP']
+    things = [self.inflow, self.outflow, self.TRP_pump, self.HRO_pump, self.x2,self.sodd_cvp,self.sodd_swp]
     for n,t in zip(names,things):
       df['%s_%s' % (self.key,n)] = pd.Series(t, index=index)
     return df
