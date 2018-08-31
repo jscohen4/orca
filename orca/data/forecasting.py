@@ -163,7 +163,7 @@ def get_forecast_WYI(df, index_exceedance_sac): #now determining forecasting reg
 			WYI = WYI_rem
 			if ix == 9:
 				prev = min(WYI_rem,10)
-		Qm.loc[index, 'WYI'] = WYI
+		Qm.loc[index, 'WYI'] = max(WYI,0)
 
 	# Qm.WYI = Qm.WYI.shift(periods=-1)
 	return(Qm.WYI,stats)
