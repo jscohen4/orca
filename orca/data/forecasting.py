@@ -161,7 +161,8 @@ def get_forecast_WYI(df, index_exceedance_sac): #now determining forecasting reg
 			WYI_rem = WYI
 		elif (ix <= 9 & ix >= 6):
 			WYI = WYI_rem
-			prev = min(WYI_rem,10)
+			if ix == 9:
+				prev = min(WYI_rem,10)
 		Qm.loc[index, 'WYI'] = WYI
 
 	# Qm.WYI = Qm.WYI.shift(periods=-1)
@@ -248,6 +249,9 @@ def forecast(df,index_exceedance_sac):
 		r.rename(columns = {'snowpack':'%s_snowpack'%res_id}, inplace=True)
 		r.drop(['inf','WY','DOWY'], axis=1, inplace=True)
 		df = pd.concat([df, r], axis=1, join_axes=[df.index])
+	for y,g in df.groupby('WY'):
+		df.loc[(df.WY==y) & (df.index.month == 9), 'WYI_sim'] = df.loc[(df.WY==y) & (df.index.month == 8) & (df.index.day == 30), 'WYI_sim']
+
 	return df,stats_file,WYI_stats
 
 
@@ -307,10 +311,10 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now deter
 			+ 0.4 * (Qm.loc[index, 'aprjul_flow_to_date'] + (Qm.loc[index, 'aprjul_slope'] * Qm.loc[index, 'snow'] + Qm.loc[index,'aprjul_intercept']) + Qm.loc[index, 'aprjul_std']*z_table_transform[index_exceedance_sac])
 			WYI_rem = WYI
 
-		if (ix <= 9 & ix>=6):
+		elif (ix <= 9 & ix >= 6):
 			WYI = WYI_rem
-			prev = min(WYI_rem,10)
-		WYI = max(WYI,0)
+			if ix == 9:
+				prev = min(WYI_rem,10)
 		Qm.loc[index, 'WYI'] = WYI
 
 	return Qm.WYI, Qm[['octmar_flow_to_date','octmar_mean','octmar_std','aprjul_flow_to_date','aprjul_mean','aprjul_std','aprjul_slope','aprjul_intercept']]
@@ -782,6 +786,9 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
                                thresholds=[9.2, 7.8, 6.5, 5.4, -5.0], 
                                values=['W', 'AN', 'BN', 'D', 'C'])
 	df = df[(df.index < '2099-10-01')]
+	for y,g in df.groupby('WY'):
+		df.loc[(df.WY==y) & (df.index.month == 9), 'WYI_sim'] = df.loc[(df.WY==y) & (df.index.month == 8) & (df.index.day == 30), 'WYI_sim']
+
 	return df
 
 def get_forecast_WYI_stats(df, index_exceedance_sac): #now determining forecasting regression coefficients based off perfect foresight
