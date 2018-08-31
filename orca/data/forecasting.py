@@ -315,7 +315,7 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now deter
 			WYI = WYI_rem
 			if ix == 9:
 				prev = min(WYI_rem,10)
-		Qm.loc[index, 'WYI'] = WYI
+		Qm.loc[index, 'WYI'] = max(WYI,0)
 
 	return Qm.WYI, Qm[['octmar_flow_to_date','octmar_mean','octmar_std','aprjul_flow_to_date','aprjul_mean','aprjul_std','aprjul_slope','aprjul_intercept']]
 
