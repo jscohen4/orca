@@ -163,7 +163,7 @@ class Reservoir():
       self.calc_expected_min_release(t)##what do they expect to need to release for env. requirements through the end of september
       # self.forecast[t] = max(0,self.slope[t+1] * self.obs_snow[t+1] + self.intercept[t+1]+ self.std[t]*z_table_transform[self.exceedance[self.wyt[t]]])/2 #* 1000 #based on forecast regression
       self.forecast[t] = self.rem_flow[t] #* 1000 #based on forecast regression
-    print(self.rem_flow[t])
+    # print(self.rem_flow[t])
     # if d == 0:
       # self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t]) * 1000 #based on forecast regression
     # self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]] + self.forecast[t] - self.cum_min_release[dowy])
