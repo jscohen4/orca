@@ -257,7 +257,7 @@ def forecast(df,index_exceedance_sac):
 
 
 #############climate projection functions
-def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now determining forecasting regression coefficients based off perfect foresight
+def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac,prev): #now determining forecasting regression coefficients based off perfect foresight
 	flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 	snow_sites = ['BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 
@@ -296,7 +296,7 @@ def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac): #now deter
   #Qm.aprjul_cumulative = Qm.aprjul_cumulative.shift(periods=1)
 	Qm = Qm.fillna(0)
 	Qm['WYI'] = pd.Series(index=Qm.index)
-	prev = 10
+	prev = min(prev,10)
 	for index, row in Qm.iterrows():
 		ix = index.month
 		if (ix == 10) | (ix == 11):
@@ -368,9 +368,9 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 
 
 	elif window_type == 'stationary':
-		decade_thresh = pd.date_range('1951-10-01','2099-10-01',freq =' AS-OCT')
+		decade_thresh = pd.date_range('1951-10-01','2099-10-01',freq ='AS-OCT')
 		WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[50]),index_exceedance_sac)
-		WYI_sim = get_projection_forecast_WYI(df,WYI_mov_stats,index_exceedance_sac)
+		WYI_sim = get_projection_forecast_WYI(df,WYI_mov_stats,index_exceedance_sac,10)
 
 		WYI_stats = WYI_sim[1]
 		WYI_sim = WYI_sim[0]
@@ -441,13 +441,14 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 		decade_thresh = pd.date_range('1951-10-01','2099-10-01',freq =' AS-OCT')
 
 		WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[50]),index_exceedance_sac)
-		WYI_sim = get_projection_forecast_WYI(df.truncate(before=decade_thresh[0], after=decade_thresh[50]),WYI_mov_stats,index_exceedance_sac)
+		WYI_sim = get_projection_forecast_WYI(df.truncate(before=decade_thresh[0], after=decade_thresh[50]),WYI_mov_stats,index_exceedance_sac,10)
 		WYI_stats = WYI_sim[1]
 		WYI_sim = WYI_sim[0]
+		WYI_dec = WYI_sim
 
 		for i in range(50,148):
 			WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[i-window_length], after=decade_thresh[i]),index_exceedance_sac)
-			WYI_dec = get_projection_forecast_WYI(df.truncate(before=decade_thresh[i], after=decade_thresh[i+1]),WYI_mov_stats,index_exceedance_sac)
+			WYI_dec = get_projection_forecast_WYI(df.truncate(before=decade_thresh[i], after=decade_thresh[i+1]),WYI_mov_stats,index_exceedance_sac,WYI_sim.iloc[-1])
 			WYI_sim = pd.concat([WYI_sim,WYI_dec[0]])
 			WYI_stats = pd.concat([WYI_stats, WYI_dec[1]])
 		snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']
@@ -611,13 +612,13 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 		decade_thresh = pd.date_range('1951-10-01','2099-10-01',freq ='AS-OCT')
 
 		WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[50]),index_exceedance_sac)
-		WYI_sim = get_projection_forecast_WYI(df.truncate(before=decade_thresh[0], after=decade_thresh[50]),WYI_mov_stats,index_exceedance_sac)
+		WYI_sim = get_projection_forecast_WYI(df.truncate(before=decade_thresh[0], after=decade_thresh[50]),WYI_mov_stats,index_exceedance_sac,10)
 		WYI_stats = WYI_sim[1]
 		WYI_sim = WYI_sim[0]
 
 		for i in range(50,148):
 			WYI_mov_stats = get_forecast_WYI_stats(df.truncate(before = decade_thresh[2], after=decade_thresh[i]),index_exceedance_sac)
-			WYI_dec = get_projection_forecast_WYI(df.truncate(before=decade_thresh[i], after=decade_thresh[i+1]),WYI_mov_stats,index_exceedance_sac)
+			WYI_dec = get_projection_forecast_WYI(df.truncate(before=decade_thresh[i], after=decade_thresh[i+1]),WYI_mov_stats,index_exceedance_sac,WYI_sim.iloc[-1])
 			WYI_sim = pd.concat([WYI_sim,WYI_dec[0]])
 			WYI_stats = pd.concat([WYI_stats, WYI_dec[1]])
 		snow_sites = ['BND_swe', 'ORO_swe','FOL_swe']

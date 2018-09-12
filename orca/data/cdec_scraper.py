@@ -103,6 +103,7 @@ def scrape_cdec():
   # data = cd.get_data(['THA'], [85], ['daily'], start=sd)
   # df['THA_out'] = data['THA']['DISCHARGE,CONTROL REGULATING daily']['value']
   return df
+
 # df.to_csv('cdec-data.csv')
 
 #If using WRF snowpack data
