@@ -2,6 +2,8 @@ import numpy as np
 import pandas as pd
 from sklearn import linear_model
 from .write_json import modify
+from scipy.stats import norm
+
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -11,6 +13,8 @@ def WYI_to_WYT(WYI, thresholds, values):
   for t,v in zip(thresholds,values):
     if WYI > t:
       return v
+def flinear(x,coeffs):
+	return coeffs[0]*x + coeffs[1]
 
 def octmar_cumulative(x): #cumulative inflow from october through march
 
@@ -108,8 +112,12 @@ def get_forecast_WYI(df, index_exceedance_sac): #now determining forecasting reg
 		coeffs = np.polyfit(snow_ind[ix],aprjul_cumulative_ind[ix],1)
 		aprjul_slopes[m-1] = coeffs[0]
 		aprjul_intercepts[m-1] = coeffs[1]
+		residuals = []
+		for i,j in zip(snow_ind[ix],aprjul_cumulative_ind[ix]):
+			residuals.append(flinear(i,coeffs)-j)
+		mu, std = norm.fit(residuals)
+		aprjul_stds[m-1] = std
 		aprjul_means[m-1] = np.mean(aprjul_cumulative_ind[ix]) 
-		aprjul_stds[m-1] =  np.std(aprjul_cumulative_ind[ix])
 	octmar_flow_to_date_ind = Qm.octmar_flow_to_date	
 	octmar_cumulative_ind = Qm.octmar_cumulative
 	for m in list(range(10,13))+list(range(1,3)):
@@ -117,8 +125,14 @@ def get_forecast_WYI(df, index_exceedance_sac): #now determining forecasting reg
 		flow_coeffs = np.polyfit(octmar_flow_to_date_ind[oct_index], octmar_cumulative_ind[ix], 1)
 		octmar_slopes[m-1] = flow_coeffs[0]
 		octmar_intercepts[m-1] = flow_coeffs[1]
-		octmar_means[m-1] = np.mean(octmar_cumulative_ind[ix])
-		octmar_stds[m-1] = np.std(octmar_cumulative_ind[ix])
+		for i,j in zip(octmar_flow_to_date_ind[oct_index],octmar_cumulative_ind[ix]):
+			residuals.append(flinear(i,coeffs)-j)
+		mu, std = norm.fit(residuals)
+		octmar_stds[m-1] = std
+		octmar_means[m-1] = np.mean(aprjul_cumulative_ind[ix]) 
+
+		# octmar_means[m-1] = np.mean(octmar_cumulative_ind[ix])
+		# octmar_stds[m-1] = np.std(octmar_cumulative_ind[ix])
 	stats =  {'aprjul_slope': aprjul_slopes,
                     'aprjul_intercept': aprjul_intercepts, 
                     'aprjul_mean': aprjul_means,
@@ -215,8 +229,13 @@ def forecast(df,index_exceedance_sac):
 			coeffs = np.polyfit(snowpack[ix],remaining_flow[ix],1)
 			slopes[d] = coeffs[0]
 			intercepts[d] = coeffs[1]
+			residuals = []
+			for i,j in zip(snowpack[ix],remaining_flow[ix]):
+				residuals.append(flinear(i,coeffs)-j)
+
+			mu, std = norm.fit(residuals)
+			stds[d] = std
 			means[d] = np.mean(remaining_flow[ix]) 
-			stds[d] = np.std(remaining_flow[ix])
 		
 
 		res_stats =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
@@ -406,8 +425,14 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 				coeffs = np.polyfit(snowpack[ix],remaining_flow[ix],1)
 				slopes[d] = coeffs[0]
 				intercepts[d] = coeffs[1]
+				residuals = []
+				for i,j in zip(snowpack[ix],remaining_flow[ix]):
+					residuals.append(flinear(i,coeffs)-j)
+
+				mu, std = norm.fit(residuals)
+				stds[d] = std
+
 				means[d] = np.mean(remaining_flow[ix]) 
-				stds[d] = np.std(remaining_flow[ix])
 
 			res_stats =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
 
@@ -486,9 +511,13 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 				coeffs = np.polyfit(snowpack[ix],remaining_flow[ix],1)
 				slopes[d] = coeffs[0]
 				intercepts[d] = coeffs[1]
-				means[d] = np.mean(remaining_flow[ix]) 
-				stds[d] = np.std(remaining_flow[ix])
-			
+				residuals = []
+				for i,j in zip(snowpack[ix],remaining_flow[ix]):
+					residuals.append(flinear(i,coeffs)-j)
+
+				mu, std = norm.fit(residuals)
+				stds[d] = std
+				means[d] = np.mean(remaining_flow[ix]) 			
 
 			res_stats =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
 			stats =  {res_stats[0]: slopes,
@@ -559,8 +588,13 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 					coeffs = np.polyfit(snowpack[ix],remaining_flow[ix],1)
 					slopes[d] = coeffs[0]
 					intercepts[d] = coeffs[1]
-					means[d] = np.mean(remaining_flow[ix]) 
-					stds[d] = np.std(remaining_flow[ix])
+					residuals = []
+					for i,j in zip(snowpack[ix],remaining_flow[ix]):
+						residuals.append(flinear(i,coeffs)-j)
+
+					mu, std = norm.fit(residuals)
+					stds[d] = std
+					means[d] = np.mean(remaining_flow[ix]) 			
 				
 				res_stats =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
 
@@ -657,8 +691,13 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 				coeffs = np.polyfit(snowpack[ix],remaining_flow[ix],1)
 				slopes[d] = coeffs[0]
 				intercepts[d] = coeffs[1]
-				means[d] = np.mean(remaining_flow[ix]) 
-				stds[d] = np.std(remaining_flow[ix])
+				residuals = []
+				for i,j in zip(snowpack[ix],remaining_flow[ix]):
+					residuals.append(flinear(i,coeffs)-j)
+
+				mu, std = norm.fit(residuals)
+				stds[d] = std
+				means[d] = np.mean(remaining_flow[ix]) 			
 			
 
 			res_stats =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
@@ -724,8 +763,13 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 					coeffs = np.polyfit(snowpack[ix],remaining_flow[ix],1)
 					slopes[d] = coeffs[0]
 					intercepts[d] = coeffs[1]
-					means[d] = np.mean(remaining_flow[ix]) 
-					stds[d] = np.std(remaining_flow[ix])
+					residuals = []
+					for i,j in zip(snowpack[ix],remaining_flow[ix]):
+						residuals.append(flinear(i,coeffs)-j)
+
+					mu, std = norm.fit(residuals)
+					stds[d] = std
+					means[d] = np.mean(remaining_flow[ix]) 			
 				
 				res_stats =['%s_slope'%res_id,'%s_intercept'%res_id,'%s_mean'%res_id,'%s_std'%res_id]
 
@@ -834,8 +878,12 @@ def get_forecast_WYI_stats(df, index_exceedance_sac): #now determining forecasti
 		coeffs = np.polyfit(snow_ind[ix],aprjul_cumulative_ind[ix],1)
 		aprjul_slopes[m-1] = coeffs[0]
 		aprjul_intercepts[m-1] = coeffs[1]
+		residuals = []
+		for i,j in zip(snow_ind[ix],aprjul_cumulative_ind[ix]):
+			residuals.append(flinear(i,coeffs)-j)
+		mu, std = norm.fit(residuals)
+		aprjul_stds[m-1] = std
 		aprjul_means[m-1] = np.mean(aprjul_cumulative_ind[ix]) 
-		aprjul_stds[m-1] =  np.std(aprjul_cumulative_ind[ix])
 	octmar_flow_to_date_ind = Qm.octmar_flow_to_date	
 	octmar_cumulative_ind = Qm.octmar_cumulative
 	for m in list(range(10,13))+list(range(1,3)):  
@@ -843,9 +891,12 @@ def get_forecast_WYI_stats(df, index_exceedance_sac): #now determining forecasti
 		flow_coeffs = np.polyfit(octmar_flow_to_date_ind[oct_index], octmar_cumulative_ind[ix], 1)
 		octmar_slopes[m-1] = flow_coeffs[0]
 		octmar_intercepts[m-1] = flow_coeffs[1]
-		octmar_means[m-1] = np.mean(octmar_cumulative_ind[ix])
-
-		octmar_stds[m-1] = np.std(octmar_cumulative_ind[ix])
+		residuals = []
+		for i,j in zip(octmar_flow_to_date_ind[oct_index],octmar_cumulative_ind[ix]):
+			residuals.append(flinear(i,coeffs)-j)
+		mu, std = norm.fit(residuals)
+		octmar_stds[m-1] = std
+		octmar_means[m-1] = np.mean(aprjul_cumulative_ind[ix]) 
 	stats =  {'aprjul_slope': aprjul_slopes,
                     'aprjul_intercept': aprjul_intercepts, 
                     'aprjul_mean': aprjul_means,
