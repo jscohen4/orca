@@ -3,7 +3,7 @@
 A simulation mode incorporating CVP and SWP Delta exports, reservoir releases, and snow-pack to streamflow forecasts. Simulates both historical and projected scenarios.
 
 ## Requirements:
-[NumPy](http://www.numpy.org/), [pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), and [scikit-learn](http://scikit-learn.org/).
+[NumPy](http://www.numpy.org/), [pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), [Scipy](http://www.scipy.org/), and [scikit-learn](http://scikit-learn.org/).
 
 ## Running ORCA
 
