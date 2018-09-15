@@ -250,12 +250,13 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
     X=[]
     b = coeffs[m-1]
     e = intercepts[m-1]
+    X.append(df.loc[index,'SR_WYI'])
+
     for station in stations:
       X.append(df.loc[index,'%s_fnf' %station])
       # X.append(df.loc[index,'%s_rol' %station])
       # X.append(df.loc[index,'%s_prev' %station]) 
       # X.append(df.loc[index,'%s_prev2' %station])
-    X.append(df.loc[index,'SR_WYI'])
     X = np.array(X)
     gains = (np.sum(X * b) + e) * cfs_tafd
     df.loc[index, 'gains_sim'] = gains
@@ -570,9 +571,9 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
     X=[]
     b = gains_reg['month_%s' %m]
     e = gains_reg['intercepts'][m-1]
+    X.append(df.loc[index,'SR_WYI'])
     for station in stations:
       X.append(dfg.loc[index,'%s_fnf' %station])
-    X.append(df.loc[index,'SR_WYI'])
     X = np.array(X)
     gains = (np.sum(X * b) + e) * cfs_tafd
     df.loc[index, 'gains_sim'] = gains
