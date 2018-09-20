@@ -2,7 +2,7 @@ import numpy as np
 import scipy.stats as sp
 import pandas as pd
 from .util import *
-from sklearn.neural_network import MLPClassifier
+from sklearn.neural_network import MLPRegressor
 from sklearn import linear_model
 from sklearn import tree
 from sklearn import preprocessing
@@ -236,13 +236,13 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
   WYI = dfm.SR_WYI.values
   m = dfm.index.month.values
   X = np.vstack([WYI])
-  print(X)
-  print(m)
+  # print(X)
+  # print(m)
   X = np.vstack([X,[m]])
 
   for station in stations:
     V = np.vstack([dfm['%s_fnf' %station]])
-    print(V)
+    # print(V)
     X = np.vstack([X,V])
   X = X.T
     # reg = linear_model.LinearRegression()
@@ -251,9 +251,11 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
     # intercepts.append(reg.intercept_)
   lab_enc = preprocessing.LabelEncoder()
   gains = lab_enc.fit_transform(gains)
-  clf = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(15,), random_state=1)
+  clf = MLPRegressor(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(15,), random_state=1)
   clf = clf.fit(X, gains.T)
   print(clf)
+  s = clf.predict(X)
+  print(s)
   #   gains = lab_enc.fit_transform(gains)
   #   print(utils.multiclass.type_of_target(gains))
 
@@ -377,7 +379,7 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
       elif d[5:] == '02-29':
         df.loc[df.index == d,'OMR_sim'] = means[days[i-1][5:]]
   df['OMR_sim']=df.OMR_sim.fillna(method='ffill')
-  return df, df_g, df_OM
+  return df, df_OM
 
 def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to process climate projection data
   SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
