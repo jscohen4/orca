@@ -10,6 +10,9 @@ from sklearn import utils
 from sklearn.datasets import load_iris
 from .write_json import modify
 import json
+import matplotlib.pyplot as plt
+import pickle
+
 # import matplotlib.pyplot as plt
 # calc WYT and 8RI. add columns to datafile from cdec_scraper.
 # confirm against http://cdec.water.ca.gov/cgi-progs/iodir/WSIHIST
@@ -73,7 +76,7 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
                     df.ORO_out.shift(3) - 
                     df.FOL_out.shift(1))
   df.netgains.fillna(method='bfill', inplace=True)
-
+  print(df.netgains.values)
 
   df['SR_WYI'] = pd.Series(index=df.index)
 
@@ -216,33 +219,51 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
   #gains regression with perfect foresight WYI
   # ### delta gains calculations
   dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','SR_WYI']] #gains datafile
-  stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
-  stations_WYI = ['MIL','NML','YRS','TLG','MRC','MKM','NHG','WYI']
+  stations = ['SHA','ORO','YRS','FOL','MIL','NML','YRS','TLG','MRC','MKM','NHG']
+  stations_WYI = ['SHA','ORO','YRS','FOL','MIL','NML','YRS','TLG','MRC','MKM','NHG','WYI']
 
   for station in stations:
     dfg['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
-    # dfg['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
+    dfg['%s_rol10' %station] = df['%s_fnf' %station].rolling(10).sum()
+    dfg['%s_rol20' %station] = df['%s_fnf' %station].rolling(20).sum()
+    dfg['%s_rol30' %station] = df['%s_fnf' %station].rolling(30).sum()
+
     # dfg['%s_prev' %station] = df['%s_fnf' %station].shift(3)
     # dfg['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
   dfg = dfg.drop(pd.Timestamp('2012-07-01'), axis = 0)
-  dfg = dfg.dropna()
+  dfg = dfg.dropna()#.rolling(5, center = True, min_periods=1).mean()
   month_arr = np.arange(1,13)
   R2_arr = np.zeros(12)
   coeffs = []
   intercepts = []
   # for m in month_arr:
-  dfm = dfg #for each month
-  gains = dfm.netgains.values
-  WYI = dfm.SR_WYI.values
+  # dfm = dfg
+  dfm = dfg[dfg.index.month == 11] #for each month
+  gains = dfm.netgains.values#.rolling(3, center = True, min_periods=1).mean().values
+  # print(gains)
+  # for i,g in enumerate(gains):
+    # gains[i] = max(g,0)
+  # dfm = dfm.rolling(3, center = True, min_periods=1).mean()
+  WYI = dfm.SR_WYI.values#rolling(3, center = True, min_periods=1).mean().values
+  # WYI[:-2] = [WYI[2]]
+  # WYI[628:630] = [WYI[628]]
+
+  # print(WYI)
   m = dfm.index.month.values
+  d = dfm.index.day.values
+
   X = np.vstack([WYI])
   # print(X)
   # print(m)
+  # print(len(m))
   X = np.vstack([X,[m]])
+  # X = np.vstack([X,[d]])
 
   for station in stations:
     V = np.vstack([dfm['%s_fnf' %station]])
-    # print(V)
+    V = np.vstack([dfm['%s_rol10' %station]])
+    # V = np.vstack([dfm['%s_rol20' %station]])
+    # V = np.vstack([dfm['%s_rol30' %station]])
     X = np.vstack([X,V])
   X = X.T
     # reg = linear_model.LinearRegression()
@@ -250,12 +271,51 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
     # coeffs.append(reg.coef_)
     # intercepts.append(reg.intercept_)
   lab_enc = preprocessing.LabelEncoder()
-  gains = lab_enc.fit_transform(gains)
-  clf = MLPRegressor(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(15,), random_state=1)
-  clf = clf.fit(X, gains.T)
+  # gains = lab_enc.fit_transform(gains)
+  clf = MLPRegressor(solver='adam', alpha=1e-5,max_iter = 10000, hidden_layer_sizes=(400,), random_state=3)
+  pickle.dump(clf, open( "ann.pkl", "wb" ))
+  ann = pickle.load( open( "ann.pkl", "rb" ))
+
+  ann = clf.fit(X, gains.T)
   print(clf)
+  # dfm = dfg#for each month
+  # gains = dfm.netgains.values
+  # WYI = dfm.SR_WYI.values
+  # m = dfm.index.month.values
+  # d = dfm.index.day.values
+
+  # X = np.vstack([WYI])
+  # # print(X)
+  # # print(m)
+  # X = np.vstack([X,[m]])
+  # # X = np.vstack([X,[d]])
+
+  # for station in stations:
+  #   V = np.vstack([dfm['%s_fnf' %station]])
+  #   # print(V)
+  #   X = np.vstack([X,V])
+  # X = X.T
+  # gains = df.netgains.values
+  # WYI = df.SR_WYI.values
+  # m = df.index.month.values
+  # X = np.vstack([WYI])
+  # # print(X)
+  # # print(m)
+  # X = np.vstack([X,[m]])
+
+  # for station in stations:
+  #   V = np.vstack([df['%s_fnf' %station]])
+  #   # print(V)
+  #   X = np.vstack([X,V])
+  # X = X.T
+
   s = clf.predict(X)
-  print(s)
+  # print(s)
+  # gains = df.netgains.values
+  plt.plot(gains)
+
+  plt.plot(s)
+  plt.show()
   #   gains = lab_enc.fit_transform(gains)
   #   print(utils.multiclass.type_of_target(gains))
 

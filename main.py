@@ -2,6 +2,7 @@ import numpy as np
 np.warnings.filterwarnings('ignore') #to not display numpy warnings... be careful
 import pandas as pd
 import matplotlib.pyplot as plt
+import pickle
 from orca import *
 from orca.data import *
 from subprocess import call
@@ -44,10 +45,10 @@ hist_indices = True #True if running calc_indices scriptwater_day
 hist_forcast = False #True if running updated forecast
 
 sc = 'access1-0_rcp45_r1i1p1' #cmip5 climate scenario to use, if projection = True
-process_climate_data = True #only mark True if running climate projection and/or processing projection input data
+process_climate_data = False #only mark True if running climate projection and/or processing projection input data
 ####### only relevant if processing projection data
-climate_indices = False
-climate_forecasts = True
+climate_indices = True
+climate_forecasts = False
 #Nothing below here should be changed!
 ###############################################
 ###############################################
@@ -62,7 +63,7 @@ if process_climate_data or projection:
   text_file = open("orca/data/individual_projection_runs/%s/datetime.txt"%sc, "w")
   text_file.write("%s" %now)
   text_file.close()
-####################### below this line data processing and model runs are executed
+####################### below this line data cocessing and model runs are executed
 
 if process_hist_data: 
   from orca.data import *
