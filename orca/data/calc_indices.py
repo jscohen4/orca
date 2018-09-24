@@ -65,7 +65,6 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
   SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf'] # flows to calculate Sacramento Valley WYI
   SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf'] #flows to calculate San-Joaquin Valley WYI
 
-  # df = pd.read_csv('cdec-data.csv', index_col=0, parse_dates=True)
   df['WY'] = pd.Series([water_year(d) for d in df.index], index=df.index)
   df['DOWY'] = pd.Series([water_year_day(d) for d in df.index], index=df.index) #day of water year
 
@@ -76,7 +75,6 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
                     df.ORO_out.shift(3) - 
                     df.FOL_out.shift(1))
   df.netgains.fillna(method='bfill', inplace=True)
-  print(df.netgains.values)
 
   df['SR_WYI'] = pd.Series(index=df.index)
 
@@ -126,17 +124,14 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
   df['8RI'].fillna(method='bfill', inplace=True)
  
   
-  ###transfolrmed inflows
+  ###transformed inflows
   res_ids = ['SHA','ORO','FOL']
   for r in res_ids:
     coeffs = []
     intercepts = []
     df['%s_in_tr'%r] = pd.Series()
     for m in range(1,13):
-      # for WYT in ['C','D','BN','AN','W']:
         dfm = df[(df.index.month == m)]
-        # dfm = dfm[(dfm.SR_WYT == WYT)]
-
         fnf = dfm['%s_fnf'%r].values
         inf = dfm['%s_in'%r].values
         fit = np.polyfit(fnf,inf,1)
@@ -183,8 +178,6 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
     # print('R2: %f' %(R2))
     coeffs = reg.coef_
     intercept = reg.intercept_
-    # modify('evap_regression.json',"%s_evap_coeffs" %r, coeffs.tolist())
-    # modify('evap_regression.json',"%s_evap_int"%r, intercept)
     modify(evap_regr,"%s_evap_coeffs" %r, coeffs.tolist())
     modify(evap_regr,"%s_evap_int"%r, intercept)
 
@@ -221,197 +214,97 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
   dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','SR_WYI']] #gains datafile
   stations = ['SHA','ORO','YRS','FOL','MIL','NML','YRS','TLG','MRC','MKM','NHG']
   stations_WYI = ['SHA','ORO','YRS','FOL','MIL','NML','YRS','TLG','MRC','MKM','NHG','WYI']
+  
+  dfg = dfg[dfg.index != '1998-10-09']
+  dfg = dfg[dfg.index != '1997-01-03']
+  dfg = dfg[dfg.index != '1997-01-04']
+  dfg = dfg[dfg.index != '1997-01-05']
+  dfg = dfg[dfg.index != '2012-07-01']
 
+  gain_errors = ['1998-10-09','1997-01-03','1997-01-04','1997-01-05','2012-07-01']
+  for g in gain_errors:
+    df.loc[g, 'netgains'] = np.NaN 
   for station in stations:
     dfg['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
-    dfg['%s_rol10' %station] = df['%s_fnf' %station].rolling(10).sum()
+    dfg['%s_rol10' %station] = df['%s_fnf' %station].rolling(10).mean()
     dfg['%s_rol20' %station] = df['%s_fnf' %station].rolling(20).sum()
     dfg['%s_rol30' %station] = df['%s_fnf' %station].rolling(30).sum()
 
-    # dfg['%s_prev' %station] = df['%s_fnf' %station].shift(3)
-    # dfg['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
-  dfg = dfg.drop(pd.Timestamp('2012-07-01'), axis = 0)
-  dfg = dfg.dropna()#.rolling(5, center = True, min_periods=1).mean()
+  dfg = dfg.dropna()
+
   month_arr = np.arange(1,13)
-  R2_arr = np.zeros(12)
-  coeffs = []
-  intercepts = []
-  # for m in month_arr:
-  # dfm = dfg
-  dfm = dfg[dfg.index.month == 11] #for each month
-  gains = dfm.netgains.values#.rolling(3, center = True, min_periods=1).mean().values
-  # print(gains)
-  # for i,g in enumerate(gains):
-    # gains[i] = max(g,0)
-  # dfm = dfm.rolling(3, center = True, min_periods=1).mean()
-  WYI = dfm.SR_WYI.values#rolling(3, center = True, min_periods=1).mean().values
-  # WYI[:-2] = [WYI[2]]
-  # WYI[628:630] = [WYI[628]]
+  dfgs = pd.DataFrame(index = df.index) #gains_sim df
+  dfgs['gains_sim'] = pd.Series()
+  for mth in month_arr:
+    dfm = dfg[dfg.index.month == mth] #for each month #hist
+    gains = dfm.netgains.values#.rolling(3, center = True, min_periods=1).mean().values
+    WYI = dfm.SR_WYI.values#rolling(3, center = True, min_periods=1).mean().values
+    m = dfm.index.month.values
+    d = dfm.index.day.values
 
-  # print(WYI)
-  m = dfm.index.month.values
-  d = dfm.index.day.values
+    X = np.vstack([WYI])
 
-  X = np.vstack([WYI])
-  # print(X)
-  # print(m)
-  # print(len(m))
-  X = np.vstack([X,[m]])
-  # X = np.vstack([X,[d]])
-
-  for station in stations:
-    V = np.vstack([dfm['%s_fnf' %station]])
-    V = np.vstack([dfm['%s_rol10' %station]])
-    # V = np.vstack([dfm['%s_rol20' %station]])
-    # V = np.vstack([dfm['%s_rol30' %station]])
-    X = np.vstack([X,V])
-  X = X.T
-    # reg = linear_model.LinearRegression()
-    # reg.fit(X, gains.T)
-    # coeffs.append(reg.coef_)
-    # intercepts.append(reg.intercept_)
-  lab_enc = preprocessing.LabelEncoder()
-  # gains = lab_enc.fit_transform(gains)
-  clf = MLPRegressor(solver='adam', alpha=1e-5,max_iter = 10000, hidden_layer_sizes=(400,), random_state=3)
-  pickle.dump(clf, open( "ann.pkl", "wb" ))
-  ann = pickle.load( open( "ann.pkl", "rb" ))
-
-  ann = clf.fit(X, gains.T)
-  print(clf)
-  # dfm = dfg#for each month
-  # gains = dfm.netgains.values
-  # WYI = dfm.SR_WYI.values
-  # m = dfm.index.month.values
-  # d = dfm.index.day.values
-
-  # X = np.vstack([WYI])
-  # # print(X)
-  # # print(m)
-  # X = np.vstack([X,[m]])
-  # # X = np.vstack([X,[d]])
-
-  # for station in stations:
-  #   V = np.vstack([dfm['%s_fnf' %station]])
-  #   # print(V)
-  #   X = np.vstack([X,V])
-  # X = X.T
-  # gains = df.netgains.values
-  # WYI = df.SR_WYI.values
-  # m = df.index.month.values
-  # X = np.vstack([WYI])
-  # # print(X)
-  # # print(m)
-  # X = np.vstack([X,[m]])
-
-  # for station in stations:
-  #   V = np.vstack([df['%s_fnf' %station]])
-  #   # print(V)
-  #   X = np.vstack([X,V])
-  # X = X.T
-
-  s = clf.predict(X)
-  # print(s)
-  # gains = df.netgains.values
-  plt.plot(gains)
-
-  plt.plot(s)
-  plt.show()
-  #   gains = lab_enc.fit_transform(gains)
-  #   print(utils.multiclass.type_of_target(gains))
-
-  #   clf = clf.fit(X, gains.T)
-  #   print(clf)
-  #   import graphviz 
-  #   # dot_data = tree.export_graphviz(clf, out_file=None) 
-  #   # graph = graphviz.Source(dot_data) 
-  #   # iris = load_iris()
-
-  #   # graph.render("X") 
-  #   # dot_data = tree.export_graphviz(clf, out_file=None, 
-  #   #                      feature_names=stations_WYI,  
-  #   #                      class_names=stations,  
-  #   #                      filled=True, rounded=True,  
-  #   #                      special_characters=True)  
-  #   # graph = graphviz.Source(dot_data)  
-  #   # graph 
-
-  # # i = 0
-  # # for c in coeffs:
-  # #   i += 1
-  # #   modify(gains_regr,"month_%s" %i, c.tolist())
-  # # modify(gains_regr,"intercepts", intercepts)
-
-  df['gains_sim'] = pd.Series(index=df.index) #regression for gains
-
-  for index, row in df.iterrows():
-    m = index.month
-    X=[]
-    # b = coeffs[m-1]
-    # e = intercepts[m-1]
-    X.append(df.loc[index,'SR_WYI'])
-    X.append(m)
+    X = np.vstack([X,[m]])
 
     for station in stations:
-      X.append(df.loc[index,'%s_fnf' %station])
-      # X.append(df.loc[index,'%s_rol' %station])
-      # X.append(df.loc[index,'%s_prev' %station]) 
-      # X.append(df.loc[index,'%s_prev2' %station])
-    X = np.array(X)
-    X = X.reshape(1, -1)
-    # gains = (np.sum(X * b) + e) * cfs_tafd
-    gains = clf.predict(X)
-    # print(gains)
-    df.loc[index, 'gains_sim'] = gains
-  df['gains_sim'] = df.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
+      V = np.vstack([dfm['%s_fnf' %station]])
+      V = np.vstack([dfm['%s_rol10' %station]])
+      V = np.vstack([dfm['%s_rol20' %station]])
+      V = np.vstack([dfm['%s_rol30' %station]])
+      X = np.vstack([X,V])
+    X = X.T
+    if mth in [10,11,12,1]:
+      clf = MLPRegressor(solver='adam', alpha=1e-5,max_iter = 1000, hidden_layer_sizes=(50,), random_state=3)
+    elif mth == 2: 
+      clf = MLPRegressor(solver='adam', alpha=1e-5,max_iter = 100000, hidden_layer_sizes=(1000,), random_state=3)
+    elif mth == 3:
+      clf = MLPRegressor(solver='adam', alpha=1e-5,max_iter = 100000, hidden_layer_sizes=(1000,), random_state=3)
+    elif mth == 4:
+      clf = MLPRegressor(solver='adam', alpha=1e-5,max_iter = 10000, hidden_layer_sizes=(75,), random_state=3)
+    elif mth == 5:
+      clf = MLPRegressor(solver='adam', alpha=1e-5,max_iter = 10000, hidden_layer_sizes=(600,), random_state=3)
+    elif mth == 6:
+      clf = MLPRegressor(solver='adam', alpha=1e-5,max_iter = 10000, hidden_layer_sizes=(100,), random_state=3)
+    elif mth == 7:
+      clf = MLPRegressor(solver='adam', alpha=1e-5,max_iter = 10000, hidden_layer_sizes=(400,), random_state=3)
+    elif mth == 8:
+      clf = MLPRegressor(solver='adam', alpha=1e-5,max_iter = 10000, hidden_layer_sizes=(200,), random_state=3)
+    elif mth == 9:
+       clf = MLPRegressor(solver='adam', alpha=1e-5,max_iter = 10000, hidden_layer_sizes=(85,), random_state=3)
+    ann = clf.fit(X, gains.T)
+    pickle.dump(ann, open("orca/data/gains-neural-nets/ann_%s.pkl"%mth, "wb" ))
+    month_gains = clf.predict(X)
+    dfm['gains_sim'] = month_gains
+    dfgs['gains_sim_%s'%mth] = dfm['gains_sim']
+    dfgs = dfgs.fillna(0)
+    dfgs['gains_sim'] = dfgs['gains_sim'] + dfgs['gains_sim_%s'%mth]
+    #to test:
+    # if mth == 7:
+    #   plt.plot(gains)
+    #   plt.plot(month_gains)
+    #   plt.show()
+  df['gains_sim'] = dfgs.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
   df['netgains'] = df.netgains.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
-
-  #clean up data by month 
-  # for index, row in df.iterrows():
-  #   ix = index.month
-  #   d = index.day
-  #   if ix == 10:
-  #     df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 35
-  #   if ix == 11:
-  #     df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 4.5
-  #   if ix == 12:
-  #       df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] *3.5
-  #   if ix == 1:
-  #     df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.4 
-  #   if (ix == 2):
-  #     df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.7
-  #   if ix == 3:
-  #       df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.2
-  #   if ix == 4:
-  #       df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] *0.4
-  #   if ix == 5: 
-  #     df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 12- d*0.4)*0.5 -20
-  #   if ix ==6:
-  #     df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 12)*0.5
-  #   if ix ==7:
-  #     df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim']) * 3 -10
-  #   if (ix == 8):
-  #       df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.2 + d*0.55 -10
-  #   if ix == 9:
-  #     df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * -10 
-  #   df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim']*0.9
-  # df.netgains.plot()
-  # df.gains_sim.plot()
+  # plt.plot(df.netgains)
+  # plt.plot(df.gains_sim)  
   # plt.show()
-  # df['newgains'] = pd.Series()
-  # df_g = pd.DataFrame() #gains datafile
-  # for WYT in ['C','D','BN','AN','W']:
-  #   dfw = df[(df.SR_WYT == WYT)]
-  #   means = dfw.netgains.groupby([dfw.index.strftime('%m-%d')]).mean()
-  #   df_g[WYT] = means 
-  #   days = [dfw.index.strftime('%Y-%m-%d')]
-  #   days = days[0]
 
-  #   for d in days:
-  #     df.loc[df.index == d,'newgains'] = means[d[5:]]
+  #if looping gains with historical. probably no longer needed with neural net
+  df_g = pd.DataFrame() #gains datafile
+  for WYT in ['C','D','BN','AN','W']:
+    dfw = df[(df.SR_WYT == WYT)]
+    means = dfw.netgains.groupby([dfw.index.strftime('%m-%d')]).mean()
+    df_g[WYT] = means 
+    days = [dfw.index.strftime('%Y-%m-%d')]
+    days = days[0]
 
-  # df['newgains'] = df.newgains.rolling(5).mean()
-  # df['newgains']=df.newgains.fillna(method='bfill')
+    for d in days:
+      df.loc[df.index == d,'newgains'] = means[d[5:]]
+
+  df['newgains'] = df.newgains.rolling(5).mean()
+  df['newgains']=df.newgains.fillna(method='bfill')
   # df['gains_sim'] = (df['newgains']*0.75+df['gains_sim']*0.25)
+
   df['OMR'] = df.OMR + df.HRO_pump + df.TRP_pump
 
   df2 = df[(df.index > '2008-12-01')]#start at 1997 water year
@@ -439,7 +332,7 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
       elif d[5:] == '02-29':
         df.loc[df.index == d,'OMR_sim'] = means[days[i-1][5:]]
   df['OMR_sim']=df.OMR_sim.fillna(method='ffill')
-  return df, df_OM
+  return df, df_g, df_OM
 
 def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to process climate projection data
   SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
@@ -588,40 +481,6 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
   elif (window == 'rolling') | (window =='expanding') | (window == 'stationary'):
     for sn in snow_ids:
       df[sn] = df[sn]/25.4
-    #snow bias correction (none for RBP and CAP)
-    # df['MED_swe'] = df['MED_swe'] * 8.0
-    # df['SDF_swe'] = df['SDF_swe'] * 0.6
-    # df['SNM_swe'] = df['SDF_swe'] * 0.9
-    # df['SLT_swe'] = df['SLT_swe'] * 2.7
-    # df['KTL_swe'] = df['BKL_swe'] * 0.6*0.65
-    # df['HMB_swe'] = df['HMB_swe'] * 3.2
-    # df['FOR_swe'] = df['FOR_swe'] * 4.8
-    # df['RTL_swe'] = df['RTL_swe'] * 2.3
-    # df['GRZ_swe'] = df['GRZ_swe'] * 1.8
-    # df['GOL_swe'] = df['GOL_swe'] * 2.0
-    # df['CSL_swe'] = df['CSL_swe'] * 1.2
-    # df['HYS_swe'] = df['HYS_swe'] * 0.85
-    # df['SCN_swe'] = df['SCN_swe'] * 1.7
-    # df['RBB_swe'] = df['RBB_swe'] * 1.7
-
-    # ##clean up snowpack data and resample monthly 
-    # dfs = df[snow_ids] #working with only snow for these calculations
-    # num = dfs._get_numeric_data()
-    # num[num < 0 ] = np.NaN
-    # #num[num > 150 ] = np.NaN#oroville,folsom,shast,new bullards
-    # num[num > 150 ] = np.NaN
-    # dfs = dfs.interpolate(method = 'linear')
-    # dfs = dfs.resample('M').mean()
-    # df = df.drop(df[snow_ids],axis = 1)
-    # df = df.join(dfs).fillna(method = 'ffill') #snow stations now cleaned up and back in main datafile 
-
-    # df = df[(df.index > '1951-09-30')]#start at 2000 water year
-
-    # #sum of stations for each basins
-    # df['YRS_swe'] = df[['GOL_swe','CSL_swe']].mean(axis=1)
-    # df['FOL_swe'] = df[['HYS_swe', 'SCN_swe', 'RBB_swe', 'CAP_swe']].mean(axis = 1) #taking out RBP (for this time), also test taking out RBB later
-    # df['ORO_swe'] = df[['KTL_swe', 'HMB_swe', 'FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
-    # df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'SLT_swe']].mean(axis = 1)
 ############below here for basin averaged. 
     snow_basins = ['BND_swe','FOL_swe','ORO_swe','YRS_swe']
     for sn in snow_basins:
@@ -648,94 +507,92 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
 
   ## delta gains calculations
   dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','SR_WYI']] #gains dataframe
-  stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
+  stations = ['SHA','ORO','YRS','FOL','MIL','NML','YRS','TLG','MRC','MKM','NHG']
+  stations_WYI = ['SHA','ORO','YRS','FOL','MIL','NML','YRS','TLG','MRC','MKM','NHG','WYI']
   # dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','WYI_sim']] #gains datafile
   # stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
 
   for station in stations:
     dfg['%s_fnf' %station] = df['%s_fnf' %station].shift(2)
-    dfg['%s_rol' %station] = df['%s_fnf' %station].rolling(10).sum()
-    dfg['%s_prev' %station] = df['%s_fnf' %station].shift(3)
-    dfg['%s_prev2' %station] = df['%s_fnf' %station].shift(4)
+    dfg['%s_rol10' %station] = df['%s_fnf' %station].rolling(10).sum()
+    dfg['%s_rol20' %station] = df['%s_fnf' %station].rolling(20).sum()
+    dfg['%s_rol30' %station] = df['%s_fnf' %station].rolling(30).sum()
+  dfg = dfg.replace([np.inf, -np.inf], np.nan)
+  dfg = dfg.dropna()
 
   # dfg = dfg.dropna()
-  dfg = dfg.fillna(method = 'bfill')
+  dfgs = pd.DataFrame(index = df.index) #gains_sim df
+  dfgs['gains_sim'] = pd.Series()
   month_arr = np.arange(1,13)
-  R2_arr = np.zeros(12)
-  coeffs = []
-  intercepts = []
+
+  for mth in month_arr:
+    dfm = dfg[dfg.index.month == mth] #for each month #hist
+    WYI = dfm.SR_WYI.values#rolling(3, center = True, min_periods=1).mean().values
+    m = dfm.index.month.values
+    d = dfm.index.day.values
+
+    X = np.vstack([WYI])
+
+    X = np.vstack([X,[m]])
+
+    for station in stations:
+      V = np.vstack([dfm['%s_fnf' %station]])
+      V = np.vstack([dfm['%s_rol10' %station]])
+      V = np.vstack([dfm['%s_rol20' %station]])
+      V = np.vstack([dfm['%s_rol30' %station]])
+      X = np.vstack([X,V])
+    X = X.T
+    ann = pickle.load( open( "orca/data/gains-neural-nets/ann_%s.pkl"%mth, "rb" ))
+    month_gains = ann.predict(X)
+    if mth == 10:
+      month_gains = month_gains - 500
+    elif mth == 11:
+      month_gains = month_gains - 200
+    elif mth == 12:
+      month_gains = month_gains *1.5
+    elif mth == 1:
+      month_gains = month_gains *1.4
+    elif mth == 2:
+      month_gains = month_gains *0.75
+    elif mth == 4:
+      month_gains = month_gains *1.5
+    elif mth == 5:
+      month_gains = month_gains 
+    elif mth == 8:
+      month_gains = (month_gains - 9000)*0.6
+    elif mth == 9:
+      month_gains = month_gains - 300
+    #to test  
+    # if mth == 7: 
+    #   plt.plot(month_gains)
+
+    dfm['gains_sim'] = month_gains
+    dfgs['gains_sim_%s'%mth] = dfm['gains_sim']
+    dfgs = dfgs.fillna(0)
+    dfgs['gains_sim'] = dfgs['gains_sim'] + dfgs['gains_sim_%s'%mth]
+  df['gains_sim'] = dfgs.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
+  # plt.plot(df.gains_sim)  
+  # plt.show()
+
 
   #get daily gains from regression
   #using coefficients obtained from process()
-  df['gains_sim'] = pd.Series(index=df.index)
-  for index, row in df.iterrows():
-    m = index.month
-    X=[]
-    b = gains_reg['month_%s' %m]
-    e = gains_reg['intercepts'][m-1]
-    for station in stations:
-      X.append(dfg.loc[index,'%s_fnf' %station])
-    X.append(df.loc[index,'SR_WYI'])
-    X = np.array(X)
-    gains = (np.sum(X * b) + e) * cfs_tafd
-    df.loc[index, 'gains_sim'] = gains
-  df['gains_sim'] = df.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
-
-  #clean up gains data by month 
-  for index, row in df.iterrows():
-    ix = index.month
-    d = index.day
-    if ix == 10:
-      df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 35
-    if ix == 11:
-      df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 4.5
-    if ix == 12:
-        df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] *3.5
-    if ix == 1:
-      df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.4 
-    if (ix == 2):
-      df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.7
-    if ix == 3:
-        df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 1.2
-    if ix == 4:
-        df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] *0.4
-    if ix == 5: 
-      df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 12- d*0.4)*0.5 -20
-    if ix ==6:
-      df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim'] - 12)*0.5
-    if ix ==7:
-      df.loc[index, 'gains_sim'] = (df.loc[index, 'gains_sim']) * 3 -10
-    if (ix == 8):
-        df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * 0.2 + d*0.55 -10
-    if ix == 9:
-      df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim'] * -10 
-    df.loc[index, 'gains_sim'] = df.loc[index, 'gains_sim']*0.9
   
-  df['newgains'] = pd.Series()
-  for WYT in ['C','D','BN','AN','W']:
-    dfw = df[(df.SR_WYT == WYT)]
-    means = df_g[WYT] 
-    days = [dfw.index.strftime('%Y-%m-%d')]
-    days = days[0]
+  # df['newgains'] = pd.Series()
+  # for WYT in ['C','D','BN','AN','W']:
+  #   dfw = df[(df.SR_WYT == WYT)]
+  #   means = df_g[WYT] 
+  #   days = [dfw.index.strftime('%Y-%m-%d')]
+  #   days = days[0]
 
-    for d in days:
-      df.loc[df.index == d,'newgains'] = means[d[5:]]
-  df['newgains'] = df.newgains.rolling(5).mean()
-  df['newgains']=df.newgains.fillna(method='bfill')
-  df['gains_sim'] = (df['newgains']*0.75+df['gains_sim']*0.25)
+  #   for d in days:
+  #     df.loc[df.index == d,'newgains'] = means[d[5:]]
+  # df['newgains'] = df.newgains.rolling(5).mean()
+  # df['newgains']=df.newgains.fillna(method='bfill')
+  # df['gains_sim'] = (df['newgains']*0.75+df['gains_sim']*0.25)
   
   df['OMR_sim'] = pd.Series()
   for WYT in ['C','D','BN','AN','W']:
-    # if WYT =='AN':
-      # dfWEY = df2[(df2.SR_WYT == 'W')]
-      # means_wet = dfWEY.OMR.groupby([dfWEY.index.strftime('%m-%d')]).mean()
-
-      # dfBN = df2[(df2.SR_WYT == 'BN')]
-      # means_BN = dfBN.OMR.groupby([dfBN.index.strftime('%m-%d')]).mean()
-      # means = means_wet.add(means_BN)/2
-    # else:
-      # dfw = df2[(df2.SR_WYT == WYT)]
-      # means = dfw.OMR.groupby([dfw.index.strftime('%m-%d')]).mean()
     dfh = df[(df.SR_WYT == WYT)]
     days = [dfh.index.strftime('%Y-%m-%d')]
     days = days[0]
@@ -747,5 +604,3 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
   df['OMR_sim'] = df.OMR_sim.rolling(5).mean()
   df['OMR_sim']=df.OMR_sim.fillna(method='bfill')
   return df
-
-# df.to_csv('orca-data-processed.csv')
