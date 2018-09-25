@@ -334,7 +334,7 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
   df['OMR_sim']=df.OMR_sim.fillna(method='ffill')
   return df, df_g, df_OM
 
-def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to process climate projection data
+def process_maurer(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to process maurer projection data
   SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
   SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf']
   df = df[(df.index > '1951-09-30')]
@@ -344,22 +344,29 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
   df['WY'] = pd.Series([water_year(d) for d in df.index], index=df.index)
   df['DOWY'] = pd.Series([water_year_day(d) for d in df.index], index=df.index)
   #bias corrections for fnfs
-  df['SHA_fnf'] = df['SHA_fnf'] * 0.95 #0.95
-  df['ORO_fnf'] = df['ORO_fnf'] * 1.1
-  df['FOL_fnf'] = df['FOL_fnf'] * 0.8 #0.8
-  df['MRC_fnf'] = df['MRC_fnf'] * 0.9
-  df['MKM_fnf'] = df['MKM_fnf'] * 0.9
-  df['NHG_fnf'] = df['NHG_fnf'] * 0.25
-  df['YRS_fnf'] = df['YRS_fnf'] * 0.85
-
-  snow_ids = ['MED_swe','SDF_swe','SLT_swe','BKL_swe','HMB_swe','FOR_swe','RTL_swe',
-                  'GRZ_swe','GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','RBP_swe','CAP_swe']
+  df['SHA_fnf'] = df.SHA_fnf+2800 
+  df['BND_fnf'] = df.BND_fnf+2800 
+  df['ORO_fnf'] = df.ORO_fnf + 1000
+  df['FOL_fnf'] = df.FOL_fnf + 300
+  df['YRS_fnf'] = df.YRS_fnf + 400
+  df['MIL_fnf'] = df.MIL_fnf + 200
+  df['MKM_fnf'] = df.MKM_fnf + 130
+  df['TLG_fnf'] = df.TLG_fnf + 400
+  df['NML_fnf'] = df.NML_fnf + 500
+  
+  snow_basins = ['BND_swe','FOL_swe','ORO_swe','YRS_swe']
+  for sn in snow_basins:
+    df[sn] = df[sn]/25.4
   # convert snow to inches
 
   #temp conversion and bias correction
-  df['SHA_tas'] = (df['SHA_tas'] * 9/5 + 32) * 1.06
-  df['ORO_tas'] = (df['ORO_tas'] * 9/5 + 32) * 1.01
-  df['FOL_tas'] = (df['FOL_tas'] * 9/5 + 32) * 0.98
+  df['SHA_tas'] = (df['SHA_tas'] * 9/5 + 32)
+  df['ORO_tas'] = (df['ORO_tas'] * 9/5 + 32)
+  df['FOL_tas'] = (df['FOL_tas'] * 9/5 + 32)
+
+  df['SHA_pr'] = (df['SHA_pr'] * 0.0393701)
+  df['ORO_pr'] = (df['ORO_pr'] * 0.0393701)
+  df['FOL_pr'] = (df['FOL_pr'] * 0.0393701)
 
   df['SR_WYI'] = pd.Series(index=df.index)
 
@@ -440,63 +447,18 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
   snow_ids = ['GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','CAP_swe','RBP_swe',
             'HMB_swe','FOR_swe','RTL_swe','GRZ_swe','SDF_swe','SLT_swe','MED_swe']
 
-  if window == 'historical':
-    for sn in snow_ids:
-      df[sn] = df[sn]/25.4
-    #snow bias correction (none for RBP and CAP)
-    df['MED_swe'] = df['MED_swe'] * 8.0
-    df['SDF_swe'] = df['SDF_swe'] * 0.6
-    df['SNM_swe'] = df['SDF_swe'] * 0.9
-    df['SLT_swe'] = df['SLT_swe'] * 2.7
-    df['KTL_swe'] = df['BKL_swe'] * 0.6*0.65
-    df['HMB_swe'] = df['HMB_swe'] * 3.2
-    df['FOR_swe'] = df['FOR_swe'] * 4.8
-    df['RTL_swe'] = df['RTL_swe'] * 2.3
-    df['GRZ_swe'] = df['GRZ_swe'] * 1.8
-    df['GOL_swe'] = df['GOL_swe'] * 2.0
-    df['CSL_swe'] = df['CSL_swe'] * 1.2
-    df['HYS_swe'] = df['HYS_swe'] * 0.85
-    df['SCN_swe'] = df['SCN_swe'] * 1.7
-    df['RBB_swe'] = df['RBB_swe'] * 1.7
 
-    ##clean up snowpack data and resample monthly 
-    dfs = df[snow_ids] #working with only snow for these calculations
-    num = dfs._get_numeric_data()
-    num[num < 0 ] = np.NaN
-    #num[num > 150 ] = np.NaN#oroville,folsom,shast,new bullards
-    num[num > 150 ] = np.NaN
-    dfs = dfs.interpolate(method = 'linear')
-    dfs = dfs.resample('M').mean()
-    df = df.drop(df[snow_ids],axis = 1)
-    df = df.join(dfs).fillna(method = 'ffill') #snow stations now cleaned up and back in main datafile 
+  dfs = df[snow_basins] #working with only snow for these calculations
+  num = dfs._get_numeric_data()
+  num[num < 0 ] = np.NaN
+  #num[num > 150 ] = np.NaN#oroville,folsom,shast,new bullards
+  num[num > 150 ] = np.NaN
+  dfs = dfs.interpolate(method = 'linear')
+  dfs = dfs.resample('M').mean()
+  df = df.drop(df[snow_basins],axis = 1)
+  df = df.join(dfs).fillna(method = 'ffill') #snow stations now cleaned up and back in main datafile 
 
-    df = df[(df.index > '1951-09-30')]#start at 2000 water year
-
-    #sum of stations for each basins
-    df['YRS_swe'] = df[['GOL_swe','CSL_swe']].mean(axis=1)
-    df['FOL_swe'] = df[['HYS_swe', 'SCN_swe', 'RBB_swe', 'CAP_swe']].mean(axis = 1) #taking out RBP (for this time), also test taking out RBB later
-    df['ORO_swe'] = df[['KTL_swe', 'HMB_swe', 'FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
-    df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'SLT_swe']].mean(axis = 1)
-
-  elif (window == 'rolling') | (window =='expanding') | (window == 'stationary'):
-    for sn in snow_ids:
-      df[sn] = df[sn]/25.4
-############below here for basin averaged. 
-    snow_basins = ['BND_swe','FOL_swe','ORO_swe','YRS_swe']
-    for sn in snow_basins:
-      df[sn] = df[sn]/25.4
-
-    dfs = df[snow_basins] #working with only snow for these calculations
-    num = dfs._get_numeric_data()
-    num[num < 0 ] = np.NaN
-    #num[num > 150 ] = np.NaN#oroville,folsom,shast,new bullards
-    num[num > 150 ] = np.NaN
-    dfs = dfs.interpolate(method = 'linear')
-    dfs = dfs.resample('M').mean()
-    df = df.drop(df[snow_basins],axis = 1)
-    df = df.join(dfs).fillna(method = 'ffill') #snow stations now cleaned up and back in main datafile 
-  
-    df = df[(df.index > '1951-09-30')]#start at 2000 water year
+  df = df[(df.index > '1951-09-30')]#start at 2000 water year
 
   df = df.drop(df[snow_ids],axis = 1)
 
@@ -571,26 +533,25 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
     dfgs = dfgs.fillna(0)
     dfgs['gains_sim'] = dfgs['gains_sim'] + dfgs['gains_sim_%s'%mth]
   df['gains_sim'] = dfgs.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
-  # plt.plot(df.gains_sim)  
-  # plt.show()
+    # plt.plot(df.gains_sim)  
+    # plt.show()
 
 
-  #get daily gains from regression
-  #using coefficients obtained from process()
-  
-  # df['newgains'] = pd.Series()
-  # for WYT in ['C','D','BN','AN','W']:
-  #   dfw = df[(df.SR_WYT == WYT)]
-  #   means = df_g[WYT] 
-  #   days = [dfw.index.strftime('%Y-%m-%d')]
-  #   days = days[0]
+    #get daily gains from regression
+    #using coefficients obtained from process()
+    
+    # df['newgains'] = pd.Series()
+    # for WYT in ['C','D','BN','AN','W']:
+    #   dfw = df[(df.SR_WYT == WYT)]
+    #   means = df_g[WYT] 
+    #   days = [dfw.index.strftime('%Y-%m-%d')]
+    #   days = days[0]
 
-  #   for d in days:
-  #     df.loc[df.index == d,'newgains'] = means[d[5:]]
-  # df['newgains'] = df.newgains.rolling(5).mean()
-  # df['newgains']=df.newgains.fillna(method='bfill')
-  # df['gains_sim'] = (df['newgains']*0.75+df['gains_sim']*0.25)
-  
+    #   for d in days:
+    #     df.loc[df.index == d,'newgains'] = means[d[5:]]
+    # df['newgains'] = df.newgains.rolling(5).mean()
+    # df['newgains']=df.newgains.fillna(method='bfill')
+    # df['gains_sim'] = (df['newgains']*0.75+df['gains_sim']*0.25)
   df['OMR_sim'] = pd.Series()
   for WYT in ['C','D','BN','AN','W']:
     dfh = df[(df.SR_WYT == WYT)]
