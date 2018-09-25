@@ -518,8 +518,8 @@ def process_maurer(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to process 
       month_gains = month_gains *0.75
     elif mth == 4:
       month_gains = month_gains *1.5
-    elif mth == 5:
-      month_gains = month_gains 
+    elif mth == 7:
+      month_gains = month_gains - 20
     elif mth == 8:
       month_gains = (month_gains - 9000)*0.6
     elif mth == 9:
@@ -533,6 +533,7 @@ def process_maurer(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to process 
     dfgs = dfgs.fillna(0)
     dfgs['gains_sim'] = dfgs['gains_sim'] + dfgs['gains_sim_%s'%mth]
   df['gains_sim'] = dfgs.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
+  df['gains_sim'] = df.gains_sim.rolling(5, center = True, min_periods=3).mean()
     # plt.plot(df.gains_sim)  
     # plt.show()
 
