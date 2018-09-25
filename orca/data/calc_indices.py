@@ -573,8 +573,10 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
     dfgs = dfgs.fillna(0)
     dfgs['gains_sim'] = dfgs['gains_sim'] + dfgs['gains_sim_%s'%mth]
   df['gains_sim'] = dfgs.gains_sim.fillna(method = 'bfill') * cfs_tafd #fill in missing beggining values (because of rolling)
-  df['gains_sim'] = df.gains_sim.rolling(5, center = True, min_periods=3).mean()
+  df['gains_sim'] = df.gains_sim.rolling(7, center = True, min_periods=4).mean()
 
+  # plt.plot(df.gains_sim)
+  # plt.show()
 
   #get daily gains from regression
   #using coefficients obtained from process()
