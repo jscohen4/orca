@@ -1,3 +1,4 @@
+
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -18,19 +19,72 @@ def compare(res,obs,freq='D'):
   res.plot(ax=ax0, color='indianred')
   obs.plot(ax=ax0, color='k')
   ax0.set_title('%s, %s' % (res.name, obs.name), loc='left') # family='sans-serif'
-  ax0.legend(['Simulated', 'Observed'], ncol=3)
+  ax0.legend(['simulated with WRF', 'simulated with CDEC'], ncol=3)
 
   ax1 = plt.subplot(gs[1])
   r = np.corrcoef(obs.values,res.values)[0,1]
   ax1.scatter(obs.values, res.values, s=3, c='steelblue', edgecolor='none', alpha=0.7)
-  ax1.set_ylabel('Simulated')
-  ax1.set_xlabel('Observed')
+  ax1.set_ylabel('simulated with WRF')
+  ax1.set_xlabel('simulated with CDEC')
   ax1.annotate('$R^2 = %f$' % r**2, xy=(0,0), color='0.3')
   ax1.set_xlim([0.0, ax1.get_xlim()[1]])
   ax1.set_ylim([0.0, ax1.get_ylim()[1]])
 
   plt.tight_layout()
   # plt.show()
+def compare_WRF_obs(res,obs,freq='D'):
+  # input two pandas series and a frequency
+  sns.set_style('whitegrid')
+  plt.rcParams['figure.figsize'] = (12, 8)
+  res = res.resample(freq).sum()
+  obs = obs.resample(freq).sum()
+
+  fig = plt.figure(figsize=(12, 3)) 
+  gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1]) 
+
+  ax0 = plt.subplot(gs[0])
+  res.plot(ax=ax0, color='indianred')
+  obs.plot(ax=ax0, color='k')
+  ax0.set_title('%s, %s' % (res.name, obs.name), loc='left') # family='sans-serif'
+  ax0.legend(['simulated with WRF', 'observed'], ncol=3)
+
+  ax1 = plt.subplot(gs[1])
+  r = np.corrcoef(obs.values,res.values)[0,1]
+  ax1.scatter(obs.values, res.values, s=3, c='steelblue', edgecolor='none', alpha=0.7)
+  ax1.set_ylabel('simulated with WRF')
+  ax1.set_xlabel('observed')
+  ax1.annotate('$R^2 = %f$' % r**2, xy=(0,0), color='0.3')
+  ax1.set_xlim([0.0, ax1.get_xlim()[1]])
+  ax1.set_ylim([0.0, ax1.get_ylim()[1]])
+
+  plt.tight_layout()
+
+def compare_cdec_obs(res,obs,freq='D'):
+  # input two pandas series and a frequency
+  sns.set_style('whitegrid')
+  plt.rcParams['figure.figsize'] = (12, 8)
+  res = res.resample(freq).sum()
+  obs = obs.resample(freq).sum()
+
+  fig = plt.figure(figsize=(12, 3)) 
+  gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1]) 
+
+  ax0 = plt.subplot(gs[0])
+  res.plot(ax=ax0, color='indianred')
+  obs.plot(ax=ax0, color='k')
+  ax0.set_title('%s, %s' % (res.name, obs.name), loc='left') # family='sans-serif'
+  ax0.legend(['simulated with CDEC', 'observed'], ncol=3)
+
+  ax1 = plt.subplot(gs[1])
+  r = np.corrcoef(obs.values,res.values)[0,1]
+  ax1.scatter(obs.values, res.values, s=3, c='steelblue', edgecolor='none', alpha=0.7)
+  ax1.set_ylabel('simulated with CDEC')
+  ax1.set_xlabel('observed')
+  ax1.annotate('$R^2 = %f$' % r**2, xy=(0,0), color='0.3')
+  ax1.set_xlim([0.0, ax1.get_xlim()[1]])
+  ax1.set_ylim([0.0, ax1.get_ylim()[1]])
+
+  plt.tight_layout()
 
 def plotting(res,freq='D'):
   # input two pandas series and a frequency
@@ -46,6 +100,7 @@ def plotting(res,freq='D'):
   ax0.set_title('%s' % (res.name), loc='left') # family='sans-serif'
   ax0.legend(['Simulated'], ncol=3)
   plt.tight_layout()
+
 
 def Rsquares(sim,obs,R2sfile):
   text_file = open(R2sfile, 'w')
@@ -66,3 +121,41 @@ def Rsquares(sim,obs,R2sfile):
     text_file.write(' \n')
       #text_file.write('\n')
   text_file.close()
+
+
+def compare_both(WRF,CDEC,OBS,freq='D'):
+  # input two pandas series and a frequency
+  sns.set_style('whitegrid')
+  plt.rcParams['figure.figsize'] = (12, 8)
+  WRF = WRF.resample(freq).sum()
+  CDEC = CDEC.resample(freq).sum()
+  OBS = OBS.resample(freq).sum()
+  fig = plt.figure(figsize=(15, 3)) 
+  gs = gridspec.GridSpec(1, 3, width_ratios=[3, 1, 1]) 
+
+  ax0 = plt.subplot(gs[0])
+  WRF.plot(ax=ax0, color='indianred')
+  CDEC.plot(ax=ax0, color='k')
+  OBS.plot(ax=ax0, color='b')
+  ax0.set_title('%s, %s' % (WRF.name, CDEC.name), loc='left') # family='sans-serif'
+  ax0.legend(['simulated with WRF', 'simulated with CDEC','observed'], ncol=3)
+
+  ax1 = plt.subplot(gs[1])
+  r = np.corrcoef(OBS.values,WRF.values)[0,1]
+  ax1.scatter(OBS.values, WRF.values, s=3, c='steelblue', edgecolor='none', alpha=0.7)
+  ax1.set_ylabel('Simulated with WRF')
+  ax1.set_xlabel('Observed')
+  ax1.annotate('$R^2 = %f$' % r**2, xy=(0,0), color='0.3')
+  ax1.set_xlim([0.0, ax1.get_xlim()[1]])
+  ax1.set_ylim([0.0, ax1.get_ylim()[1]])
+
+  ax2 = plt.subplot(gs[2])
+  r = np.corrcoef(OBS.values,CDEC.values)[0,1]
+  ax2.scatter(OBS.values, CDEC.values, s=3, c='steelblue', edgecolor='none', alpha=0.7)
+  ax2.set_ylabel('Simulated with CDEC')
+  ax2.set_xlabel('Observed')
+  ax2.annotate('$R^2 = %f$' % r**2, xy=(0,0), color='0.3')
+  ax2.set_xlim([0.0, ax2.get_xlim()[1]])
+  ax2.set_ylim([0.0, ax2.get_ylim()[1]])
+
+  plt.tight_layout()
