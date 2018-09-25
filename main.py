@@ -124,7 +124,7 @@ if not WRF:
 if process_WRF_data:
   from orca.data import *
   if WRF_indices:
-    input_df = pd.read_csv('orca/data/WRF_runs/WRF_inputs.csv', index_col = 0, parse_dates = True)
+    input_df = pd.read_csv('orca/data/WRF_runs/WRF_inputs_final.csv', index_col = 0, parse_dates = True)
     gains_loop_df = pd.read_csv('orca/data/historical_runs_data/gains_loops.csv', index_col = 0, parse_dates = True)
     OMR_loop_df = pd.read_csv('orca/data/historical_runs_data/OMR_loops.csv', index_col = 0, parse_dates = True)
     proj_ind_df = process_WRF(input_df,gains_loop_df,OMR_loop_df,'orca/data/json_files/gains_regression.json','orca/data/json_files/inf_regression.json',window = 'historical')  
