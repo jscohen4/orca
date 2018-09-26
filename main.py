@@ -9,7 +9,7 @@ from datetime import datetime
 now = datetime.now().strftime('Last modified %Y-%m-%d %H:%M:%S')
 #Each of these booleans determines the actions that will be run by the model 
 
-WRF = True #True if running a single climate projection
+WRF = True #True if running WRF data
 calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
 plot = True #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
 change_inflow_exeedance = False
@@ -44,7 +44,7 @@ hist_indices = True #True if running calc_indices scriptwater_day
 hist_forcast = True #True if running updated forecast
 
 # sc = 'access1-0_rcp45_r1i1p1' #cmip5 climate scenario to use, if projection = True
-process_WRF_data = True #only mark True if running climate projection and/or processing projection input data
+process_WRF_data = False #only mark True if running climate projection and/or processing projection input data
 ####### only relevant if processing projection data
 WRF_indices = True
 WRF_forecasts = True
@@ -142,7 +142,8 @@ if WRF:
   model = Model('orca/data/WRF_runs/orca-data-WRF-forecasted.csv', 'orca/data/historical_runs_data/results.csv',SHA_shift, ORO_shift, FOL_shift,sd='10-01-1999',projection = True, sim_gains = False) 
   results = model.simulate() # takes a while... save results
   results.to_csv('orca/data/WRF_runs/WRF-results.csv')
-  cdec_res_df = pd.read_csv('orca/data/WRF_runs/results_cdec.csv', parse_dates = True, index_col = 0)
+  cdec_res_df = pd.read_csv('orca/data/historical_runs_data/results.csv', parse_dates = True, index_col = 0)
+  # cdec_res_df = pd.read_csv('orca/data/WRF_runs/results.csv', parse_dates = True, index_col = 0)
   cdec_res_df = cdec_res_df[cdec_res_df.index >= '2006-10-01']
   cdec_res_df = cdec_res_df[cdec_res_df.index <= '2017-09-30']
   obs_df = pd.read_csv('orca/data/WRF_runs/orca-data-forecasted.csv', parse_dates = True, index_col = 0)
