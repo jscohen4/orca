@@ -61,14 +61,31 @@ class Reservoir():
             self.tocs_index[i][day] = np.interp(day, self.tocs_rule['dowy'][i], self.tocs_rule['storage'][i])
 
     if key == 'ORO':
-        self.tocs_index = np.roll(self.tocs_index, -16 + self.FCR_shift, axis = 1)
-    else: 
-        self.tocs_index = np.roll(self.tocs_index,self.FCR_shift, axis = 1)
+        if self.FCR_shift != 0:
+            end = self.tocs_index[i][-1]
+            for i,fc in enumerate(self.tocs_index):
+                self.tocs_index[i] = np.delete(self.tocs_index[i], np.s_[31:31+self.FCR_shift])
+                self.tocs_index[i] = np.append(self.tocs_index[i],np.tile(end, FCR_shift))
+        self.tocs_index = np.roll(self.tocs_index, -16, axis = 1)
+
+
+    elif key == 'FOL':
+        if self.FCR_shift != 0:
+            end = self.tocs_index[i][-1]
+            for i,fc in enumerate(self.tocs_index):
+                self.tocs_index[i] = np.delete(self.tocs_index[i], np.s_[61:61+self.FCR_shift])
+                self.tocs_index[i] = np.append(self.tocs_index[i],np.tile(end, FCR_shift))
+    
+    elif key == 'SHA':
+        if self.FCR_shift != 0:
+            end = self.tocs_index[i][-1]
+            for i,fc in enumerate(self.tocs_index):
+                self.tocs_index[i] = np.delete(self.tocs_index[i], np.s_[61:61+self.FCR_shift])
+                self.tocs_index[i] = np.append(self.tocs_index[i],np.tile(end, FCR_shift))
 
     self.nodds = np.zeros(367)
     for i in range(0,366):
         self.nodds[i] = np.interp(i, first_of_month, self.nodd)
-
 
   def current_tocs(self, d, ix):
     for i,v in enumerate(self.tocs_rule['index']):
