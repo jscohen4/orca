@@ -16,9 +16,9 @@ plot = False #True if plotting outputs, need calc_R2s to also be true if plottin
 change_inflow_exeedance = False
 
 #######Define a few parameters
-SHA_shift = 30
-ORO_shift = 30
-FOL_shift = 30
+SHA_shift = 0
+ORO_shift = 0
+FOL_shift = 0
 index_exceedance_sac = 8
 window_type = 'rolling'
 window_length = 20

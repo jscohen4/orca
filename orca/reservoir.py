@@ -7,7 +7,7 @@ from .util import *
 
 class Reservoir():
 
-  def __init__(self, df, dfh, key, FCR_shift, projection = False):
+  def __init__(self, df, dfh, key, FCR_shift, exceedance,carryover_moea,projection = False):
     T = len(df)
     self.projection = projection
     self.dayofyear = df.index.dayofyear
@@ -26,6 +26,8 @@ class Reservoir():
     if not self.projection:
         self.Q = df['%s_in_tr'%key].values * cfs_tafd
         self.E = df['%s_evap'% key].values * cfs_tafd
+    self.exceedance_moea = exceedance
+    self.carryover_curtail_moea = carryover_moea
     self.fci = df['%s_fci' % key].values
     self.slope =  df['%s_slope' % key].values
     self.intercept = df['%s_intercept' % key].values
@@ -121,7 +123,9 @@ class Reservoir():
             if self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy) < self.carryover_target[wyt]: #forecasting rest-of-wateryear inflow
                 #how much to curtail releases in attempt to meet carryover targets
                 self.carryover_curtail_pct = (self.forecast[t] + self.S[t-1] - self.Rtarget[t] * (365-dowy))/self.carryover_target[wyt]
-                self.Rtarget[t] = self.Rtarget[t] * max(self.carryover_curtail_pct,self.carryover_curtail[wyt]) #update target release
+                self.Rtarget[t] = self.Rtarget[t] * max(self.carryover_curtail_pct,self.carryover_curtail_moea[wyt]) #update target release
+                # self.Rtarget[t] = self.Rtarget[t] * max(self.carryover_curtail_pct) #update target release
+
                 self.curt = True
     # then clip based on constraints
     self.R[t] = min(self.Rtarget[t], W - self.dead_pool) # dead-pool constraint
@@ -142,7 +146,7 @@ class Reservoir():
     self.S[t] = W - self.R[t] - self.E[t] # mass balance update
     self.R_to_delta[t] = max(self.R[t] - nodd, 0) # delta calcs need this
     if self.curt:
-        self.R_to_delta[t] = max(self.R[t] - nodd*max(self.carryover_curtail_pct,self.carryover_curtail[wyt]), 0) # delta calcs need this
+        self.R_to_delta[t] = max(self.R[t] - nodd*max(self.carryover_curtail_pct,self.carryover_curtail_moea[wyt]), 0) # delta calcs need this
 
   def calc_expected_min_release(self,t):
     ##this function calculates the total expected releases needed to meet environmental minimums used in the find_available_storage function
@@ -174,17 +178,17 @@ class Reservoir():
     ##each timestep before the reservoirs' individual step function is called
     #also used to obtain inflow forecasts
     # self.exceedence_level = -1*min((self.WYI[t-1] - 10.0)*0.8,-2)##how conservative are they being about the flow forecasts (ie, 90% exceedance level, 75% exceedance level, etc)
-    self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t] + self.std[t]*z_table_transform[self.exceedance[self.wyt[t]]])/2# * 1000 #based on forecast regression
+    self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t] + self.std[t]*self.exceedance_moea[self.wyt[t]])# * 1000 #based on forecast regression
     # self.forecast[t] = self.rem_flow[t]
     if dowy == 0:
       self.calc_expected_min_release(t)##what do they expect to need to release for env. requirements through the end of september
-      self.forecast[t] = max(0,self.slope[t+1] * self.obs_snow[t+1] + self.intercept[t+1]+ self.std[t]*z_table_transform[self.exceedance[self.wyt[t]]])/2 #* 1000 #based on forecast regression
+      self.forecast[t] = max(0,self.slope[t+1] * self.obs_snow[t+1] + self.intercept[t+1]+ self.std[t]*self.exceedance_moea[self.wyt[t]]) #* 1000 #based on forecast regression
       # self.forecast[t] = self.rem_flow[t+1] #* 1000 #based on forecast regression
     # if d == 0:
       # self.forecast[t] = max(0,self.slope[t] * self.obs_snow[t] + self.intercept[t]) * 1000 #based on forecast regression
     # self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]] + self.forecast[t] - self.cum_min_release[dowy])
     # self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]]/self.exceedence_level + self.forecast[t] - self.cum_min_release[dowy])
-    self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]]*z_table_transform[self.exceedance[self.wyt[t]]] + self.forecast[t] - self.cum_min_release[dowy])
+    self.available_storage[t] = max(0,self.S[t-1] - self.carryover_target[self.wyt[t]]*self.exceedance_moea[self.wyt[t]] + self.forecast[t] - self.cum_min_release[dowy])
 
   def results_as_df(self, index):
     df = pd.DataFrame()
