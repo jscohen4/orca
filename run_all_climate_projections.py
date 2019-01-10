@@ -22,6 +22,9 @@ SHA_exceedance = {"W": 2, "AN": 2, "BN": 2, "D": 2, "C": 2}
 ORO_exceedance = {"W": 2, "AN": 2, "BN": 2, "D": 2, "C": 2}
 FOL_exceedance = {"W": 10, "AN": 10, "BN": 5, "D": 2, "C": 1}
 call(['mkdir', 'orca/data/scenario_runs'])
+call(['mkdir', 'orca/data/climate_results'])
+call(['mkdir', 'orca/data/climate_input_forecasts'])
+
 with open('orca/data/scenario_names.txt') as f:
 	scenarios = f.read().splitlines()
 i = 0
