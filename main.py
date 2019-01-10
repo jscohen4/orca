@@ -20,8 +20,8 @@ SHA_shift = 0
 ORO_shift = 0
 FOL_shift = 0
 index_exceedance_sac = 8
-window_type = 'rolling'
-window_length = 50
+window_type = 'expanding'
+window_length = 40
 SHA_exceedance = {"W": 2, "AN": 2, "BN": 2, "D": 2, "C": 2}
 ORO_exceedance = {"W": 2, "AN": 2, "BN": 2, "D": 2, "C": 2}
 FOL_exceedance = {"W": 10, "AN": 10, "BN": 5, "D": 2, "C": 1}
@@ -47,7 +47,7 @@ hist_forcast = True #True if running updated forecast
 sc = 'access1-0_rcp85_r1i1p1' #cmip5 climate scenario to use, if projection = True
 process_climate_data = True #only mark True if running climate projection and/or processing projection input data
 ####### only relevant if processing projection data
-climate_indices = True
+climate_indices = False
 climate_forecasts = True
 #Nothing below here should be changed!
 ###############################################
