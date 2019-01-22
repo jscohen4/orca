@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import warnings
 # warnings.simplefilter(action='ignore', category=FutureWarning)
-from ulmo.cdec import historical as cd
+# from ulmo.cdec import historical as cd
 from datetime import datetime
 now = datetime.now().strftime('%Y-%m-%d')
 # print(now)
