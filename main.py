@@ -11,8 +11,8 @@ now = datetime.now().strftime('Last modified %Y-%m-%d %H:%M:%S')
 #Each of these booleans determines the actions that will be run by the model 
 
 projection = False #True if running a single climate projection
-calc_R2s = True #True if calculating R2s (only relevant for historical scenario)
-plot = True #True if plotting outputs, need calc_R2s to also be true if plotting historical results!!!!
+calc_NSEs = True #True if calculating NSEs (only relevant for historical scenario)
+plot = True #True if plotting outputs, need calc_NSEs to also be true if plotting historical results!!!!
 change_inflow_exeedance = False
 
 #######Define a few parameters
@@ -94,7 +94,7 @@ if not projection:
   model = Model('orca/data/historical_runs_data/orca-data-forecasted.csv', 'orca/data/historical_runs_data/orca-data-forecasted.csv',SHA_shift, ORO_shift, FOL_shift,sd='10-01-1999',projection = False, sim_gains = False) #beacuse of rolling calc in gains, we start on 10th day of
   results = model.simulate() # takes a while... save results
   results.to_csv('orca/data/historical_runs_data/results.csv')
-  if calc_R2s:
+  if calc_NSEs:
     results['Combined_pump'] = results['DEL_HRO_pump'] + results['DEL_TRP_pump']
     sim = [results['DEL_HRO_pump'] / cfs_tafd,
          results['DEL_TRP_pump'] / cfs_tafd, 
@@ -121,7 +121,7 @@ if not projection:
            model.df['DeltaIn'],
            model.df['DeltaOut'], 
            model.df['X2']]
-    plotter.Rsquares(sim,obs,'orca/data/historical_runs_data/Rsquares.txt')
+    plotter.NSE(sim,obs,'orca/data/historical_runs_data/NSEs.txt')
     if plot:
       calibr_pts = ['HRO_pump','TRP_pump','Combined_pump','SHA_storage','SHA_out','FOL_storage','FOL_out','ORO_storage','ORO_out','DeltaIn','DeltaOut','X2']
       text_file = open("orca/figs/historical/datetime.txt", "w")
