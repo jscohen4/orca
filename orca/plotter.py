@@ -66,3 +66,31 @@ def Rsquares(sim,obs,R2sfile):
     text_file.write(' \n')
       #text_file.write('\n')
   text_file.close()
+
+def filter_nan(s,o):
+    """
+    this functions removed the data  from simulated and observed data
+    whereever the observed data contains nan
+    
+    this is used by all other functions, otherwise they will produce nan as 
+    output
+    """
+    if np.sum(~np.isnan(s*o))>=1:
+        data = np.array([s.flatten(),o.flatten()])
+        data = np.transpose(data)
+        data = data[~np.isnan(data).any(1)]
+        s = data[:,0]
+        o = data[:,1]
+    return s, o
+
+def NS(s,o):
+    """
+    Nash Sutcliffe efficiency coefficient
+    input:
+        s: simulated
+        o: observed
+    output:
+        ns: Nash Sutcliffe efficient coefficient
+    """
+    s,o = filter_nan(s,o)
+    return 1 - sum((s-o)**2)/sum((o-np.mean(o))**2)
