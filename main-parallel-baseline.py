@@ -13,7 +13,7 @@ import warnings
 warnings.filterwarnings('ignore')
 
 # this whole script will run on all processors requested by the job script
-with open('orca/data/scenario_names_all.txt') as f:
+with open('orca/data/scenario_list-NSGAIII-50000.txt') as f:
 	scenarios = f.read().splitlines()
 result_ids = ['SHA_storage','SHA_out','SHA_target','SHA_out_to_delta','SHA_tocs','FOL_storage','FOL_out',
 				      'FOL_target','FOL_out_to_delta','FOL_tocs','ORO_storage','ORO_out','ORO_target','ORO_out_to_delta',
@@ -45,7 +45,7 @@ ORO_exceedance = {"W": 2, "AN": 2, "BN": 2, "D": 2, "C": 2}
 remove_processed = True
 remove_forecasted = True
 remove_model_results = False
-consolidate_outputs = True
+
 
 call(['mkdir', 'orca/data/scenario_runs/%s'%s])
 input_df = pd.read_csv('input_climate_files/%s_input_data.csv'%s, index_col = 0, parse_dates = True)
