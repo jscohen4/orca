@@ -8,20 +8,21 @@ import matplotlib.pyplot as plt
 
 class Model(): 
 
-  def __init__(self, datafile, hist_datafile, SHA_shift, ORO_shift, FOL_shift, sd='10-01-1999',projection = False, sim_gains = False):
-    self.df = pd.read_csv(datafile, index_col=0, parse_dates=True)
-    self.dfh = pd.read_csv(hist_datafile, index_col=0, parse_dates=True)
+  def __init__(self, df, hist_datafile, SHA_baseline, ORO_baseline, FOL_baseline, SHA_shift, ORO_shift, FOL_shift,SHA_exceedance,ORO_exceedance,FOL_exceedance,SHA_carryover_moea,ORO_carryover_moea,FOL_carryover_moea,wyt_exc,sd='10-01-1999',projection = False, sim_gains = False):
+    sd = '10-01-2050'
+    self.df = df
+    self.dfh = hist_datafile
     self.sim_gains = sim_gains
     self.projection = projection
     self.T = len(self.df)
-    self.shasta = Reservoir(self.df, self.dfh, 'SHA', SHA_shift, self.projection)
-    self.folsom = Reservoir(self.df, self.dfh, 'FOL', FOL_shift, self.projection)
-    self.oroville = Reservoir(self.df, self.dfh, 'ORO', ORO_shift, self.projection)
+    self.shasta = Reservoir(self.df, self.dfh, SHA_baseline, 'SHA', SHA_shift, SHA_exceedance, SHA_carryover_moea, wyt_exc, self.projection)
+    self.folsom = Reservoir(self.df, self.dfh, ORO_baseline, 'FOL', FOL_shift, ORO_exceedance, ORO_carryover_moea, wyt_exc, self.projection)
+    self.oroville = Reservoir(self.df, self.dfh, FOL_baseline,'ORO', ORO_shift, FOL_exceedance, FOL_carryover_moea, wyt_exc, self.projection)
     self.reservoirs = [self.shasta, self.folsom, self.oroville]
-    self.delta = Delta(self.df, 'DEL', self.sim_gains)
+    self.delta = Delta(self.df, 'DEL', self.sim_gains,wyt_exc)
     self.dayofyear = self.df.index.dayofyear
     self.month = self.df.index.month    
-    self.wyt = self.df.WYT_sim
+    self.wyt = df['WYT_sim-exc%s'%wyt_exc]# simulated (forecasted)
 
   def simulate(self):
     self.sumnodds = np.zeros(367)
