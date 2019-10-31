@@ -39,7 +39,7 @@ ORO_exceedance_hist = {"W": 2, "AN": 2, "BN": 2, "D": 2, "C": 2}
 FOL_exceedance_hist = {"W": 10, "AN": 10, "BN": 5, "D": 2, "C": 1}
 
 
-process_hist_data = False#True if changing any historical data inputs, or downloading updated data from cdec
+process_hist_data = True#True if changing any historical data inputs, or downloading updated data from cdec
 ###Only relevant if processing historical data
 cdec = False # True if downloading up-to-date cdec data
 hist_indices = True #True if running calc_indices scriptwater_day
@@ -70,7 +70,6 @@ if process_hist_data:
   from orca.data import *
   if cdec:
     cdec_df = cdec_scraper.scrape_cdec()
-    cdec_df.to_csv('orca/data/historical_runs_data/cdec-data.csv')
   if hist_indices:
     if not cdec: 
       cdec_df = pd.read_csv('orca/data/historical_runs_data/cdec-data.csv', index_col=0, parse_dates=True)

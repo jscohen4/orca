@@ -23,11 +23,12 @@ class Reservoir():
     self.evap_int = self.evap_reg['%s_evap_int' % key]
     # self.sodd_pct_var = self.sodd_pct
     if self.projection:
-        self.Q = df['%s_in_tr'% key].values * cfs_tafd
+        self.Q = df['%s_fnf'% key].values
         self.E = np.zeros(T)
     if not self.projection:
-        self.Q = df['%s_in_tr'%key].values * cfs_tafd
+        self.Q = df['%s_fnf'%key].values * cfs_tafd
         self.E = df['%s_evap'% key].values * cfs_tafd
+
     self.fci = df['%s_fci' % key].values
     self.slope =  df['%s_slope' % key].values
     self.intercept = df['%s_intercept' % key].values

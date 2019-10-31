@@ -69,9 +69,9 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
 
   df['WY'] = pd.Series([water_year(d) for d in df.index], index=df.index)
   df['DOWY'] = pd.Series([water_year_day(d) for d in df.index], index=df.index) #day of water year
-  df['ORO_pr'] = df['ORO_pr']/25.4
-  df['FOL_pr'] = df['FOL_pr']/25.4
-  df['SHA_pr'] = df['SHA_pr']/25.4
+  # df['ORO_pr'] = df['ORO_pr']/25.4
+  # df['FOL_pr'] = df['FOL_pr']/25.4
+  # df['SHA_pr'] = df['SHA_pr']/25.4
 
   df['SHA_tas'] = (df['SHA_tas']-273.15)*9/5 + 32
   df['ORO_tas'] = (df['ORO_tas']-273.15)*9/5 + 32
@@ -194,7 +194,7 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
 
   ##clean up snowpack data and resample monthly 
   snow_ids = ['MED_swe','SDF_swe','HMB_swe','FOR_swe','RTL_swe',
-                  'GRZ_swe','GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','RBP_swe','CAP_swe','STL_swe']
+                  'GRZ_swe','GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','RBP_swe','CAP_swe','SLT_swe']
   dfs = df[snow_ids] #working with only snow for these calculations
   num = dfs._get_numeric_data()
   num[num < 0 ] = np.NaN
@@ -211,12 +211,11 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
   df['YRS_swe'] = df[['GOL_swe','CSL_swe']].mean(axis=1)
   df['FOL_swe'] = df[['HYS_swe', 'SCN_swe', 'RBB_swe', 'CAP_swe']].mean(axis = 1) #taking out RBP (for this time), also test taking out RBB later
   df['ORO_swe'] = df[['FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
-  df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'STL_swe']].mean(axis = 1)
+  df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'SLT_swe']].mean(axis = 1)
   BND = (df['BND_fnf'].to_frame(name='inf'))
   ORO = (df['ORO_fnf'].to_frame(name='inf'))
   YRS = (df['YRS_fnf'].to_frame(name='inf'))
   FOL = (df['FOL_fnf'].to_frame(name='inf'))
-
   #gains regression with perfect foresight WYI
   # ### delta gains calculations
   dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','netgains','SR_WYI']] #gains datafile
@@ -447,7 +446,7 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
         df['%s_in_tr'%r] = df['%s_in_tr'%r].fillna(dfm['%s_in_tr'%r])
 
 ########flood incides
-  df['SHA_fci'] = rolling_fci(df['SHA_in_tr'], k=0.95, start=100000)
+  df['SHA_fci'] = rolling_fci(df['SHA_fnf'], k=0.95, start=100000)
   df.SHA_fci.fillna(method='bfill', inplace=True)
 
   df['ORO_fci'] = rolling_fci(df['ORO_pr'], k=0.97, start=0)
@@ -463,20 +462,20 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
     for sn in snow_ids:
       df[sn] = df[sn]/25.4
     #snow bias correction (none for RBP and CAP)
-    df['MED_swe'] = df['MED_swe'] * 8.0
-    df['SDF_swe'] = df['SDF_swe'] * 0.6
-    df['SNM_swe'] = df['SDF_swe'] * 0.9
-    df['STL_swe'] = df['STL_swe'] * 2.7
-    df['KTL_swe'] = df['BKL_swe'] * 0.6*0.65
-    df['HMB_swe'] = df['HMB_swe'] * 3.2
-    df['FOR_swe'] = df['FOR_swe'] * 4.8
-    df['RTL_swe'] = df['RTL_swe'] * 2.3
-    df['GRZ_swe'] = df['GRZ_swe'] * 1.8
-    df['GOL_swe'] = df['GOL_swe'] * 2.0
-    df['CSL_swe'] = df['CSL_swe'] * 1.2
-    df['HYS_swe'] = df['HYS_swe'] * 0.85
-    df['SCN_swe'] = df['SCN_swe'] * 1.7
-    df['RBB_swe'] = df['RBB_swe'] * 1.7
+    # df['MED_swe'] = df['MED_swe'] * 8.0
+    # df['SDF_swe'] = df['SDF_swe'] * 0.6
+    # df['SNM_swe'] = df['SDF_swe'] * 0.9
+    # df['STL_swe'] = df['STL_swe'] * 2.7
+    # df['KTL_swe'] = df['BKL_swe'] * 0.6*0.65
+    # df['HMB_swe'] = df['HMB_swe'] * 3.2
+    # df['FOR_swe'] = df['FOR_swe'] * 4.8
+    # df['RTL_swe'] = df['RTL_swe'] * 2.3
+    # df['GRZ_swe'] = df['GRZ_swe'] * 1.8
+    # df['GOL_swe'] = df['GOL_swe'] * 2.0
+    # df['CSL_swe'] = df['CSL_swe'] * 1.2
+    # df['HYS_swe'] = df['HYS_swe'] * 0.85
+    # df['SCN_swe'] = df['SCN_swe'] * 1.7
+    # df['RBB_swe'] = df['RBB_swe'] * 1.7
 
     ##clean up snowpack data and resample monthly 
     dfs = df[snow_ids] #working with only snow for these calculations
