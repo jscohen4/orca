@@ -13,7 +13,9 @@ class Reservoir():
     self.dayofyear = df.index.dayofyear
     self.month = df.index.month
     self.key = key
-    self.wyt = df.WYT_sim# simulated (forecasted)wyi
+    # self.wyt = df.WYT_sim# simulated (forecasted)wyi
+    self.wyt = df.SR_WYT# simulated (forecasted)wyi
+
     for k,v in json.load(open('orca/data/json_files/%s_properties.json' % key)).items():
       setattr(self,k,v)
     self.evap_reg = json.load(open('orca/data/json_files/evap_regression.json'))
@@ -114,7 +116,9 @@ class Reservoir():
     # decide next release
     W = self.S[t-1] + self.Q[t]
     fcr = 0.2*(W-self.tocs[t]) #flood control release
-    self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin)) #target release
+    # self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin)) #target release
+    self.Rtarget[t] = np.max((nodd+sodd+dout, envmin)) #target release
+
     self.curt = False
     if self.carryover_rule:
         if m >= 5 and m <= 9: #from may to september, accout for carryover storage targets
@@ -139,7 +143,7 @@ class Reservoir():
         X.append(temp**2)
         X.append(storage**2)
         self.E[t] = max((np.sum(X * self.evap_coeffs) + self.evap_int) * cfs_tafd,0) #evaporation variable
-    self.S[t] = W - self.R[t] - self.E[t] # mass balance update
+    self.S[t] = W - self.R[t] #- self.E[t] # mass balance update
     self.R_to_delta[t] = max(self.R[t] - nodd, 0) # delta calcs need this
     if self.curt:
         self.R_to_delta[t] = max(self.R[t] - nodd*max(self.carryover_curtail_pct,self.carryover_curtail[wyt]), 0) # delta calcs need this

@@ -277,7 +277,7 @@ def forecast(df,index_exceedance_sac):
 
 #############climate projection functions
 def get_projection_forecast_WYI(df, stats_file,index_exceedance_sac,prev): #now determining forecasting regression coefficients based off perfect foresight
-	flow_sites = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
+	flow_sites = ['SHA_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
 	snow_sites = ['BND_swe', 'ORO_swe', 'YRS_swe', 'FOL_swe']
 
 	Qm = (df[flow_sites].sum(axis=1).resample('M').sum().to_frame(name='flow') * cfsd_mafd)
@@ -343,7 +343,7 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 	# decade_thresh = ['1999-10-01','2009-10-01','2019-10-01','2029-10-01','2039-10-01','2049-10-01','2059-10-01','2069-10-01',
 	# '2079-10-01','2089-10-01','2099-12-31']
 	if window_type == 'historical':
-		WYI_stats = get_projection_forecast_WYI(df,WYI_stats_file,index_exceedance_sac)
+		WYI_stats = get_projection_forecast_WYI(df,WYI_stats_file,index_exceedance_sac,7.8)
 		WYI_sim = WYI_stats[0]
 		WYI_stats = WYI_stats[1]
 
@@ -371,12 +371,13 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 			carryover_stats = carryover_stats.values.T
 			for i,s in enumerate(carryover_stats):
 				yearly_stats = carryover_stats[i]
-				v = np.append(yearly_stats,np.tile(yearly_stats, 1)) #2000 WY
-				v = np.append(v,[yearly_stats[364]]) #leap year
-				for y in range(36): # 2001-2096 WYs
-					v = np.append(v,np.tile(yearly_stats, 4))
-					v = np.append(v,[yearly_stats[364]]) #leap year
-				v = np.append(v,np.tile(yearly_stats, 2)) #2097-2099 WY
+				v = np.append(yearly_stats,np.tile(yearly_stats, 9)) #2000 WY
+				# v = np.append(v,[yearly_stats[364]]) #leap year
+				# for y in range(10): # 2001-2096 WYs
+					# v = np.append(v,np.tile(yearly_stats, 4))
+					# v = np.append(v,[yearly_stats[364]]) #leap year
+				# v = np.append(v,np.tile(yearly_stats, 2)) #2097-2099 WY
+				# v = v[:-1] 
 				r[res_stats[i]] = pd.Series(v,index=r.index)
 			r.rename(columns = {'cum_flow_to_date':'%s_cum_flow_to_date'%res_id}, inplace=True)
 			r.rename(columns = {'remaining_flow':'%s_remaining_flow'%res_id}, inplace=True)

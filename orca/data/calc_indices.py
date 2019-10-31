@@ -18,6 +18,8 @@ import pickle
 # confirm against http://cdec.water.ca.gov/cgi-progs/iodir/WSIHIST
 cfsd_mafd = 2.29568411*10**-5 * 86400 / 10 ** 6
 cfs_tafd = 2.29568411*10**-5 * 86400 / 1000
+cms_cfs = 1/35.3147
+
 pd.options.mode.chained_assignment = None  # default='warn'
 
 water_year = lambda d: d.year+1 if d.dayofyear >= 274 else d.year
@@ -67,6 +69,13 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
 
   df['WY'] = pd.Series([water_year(d) for d in df.index], index=df.index)
   df['DOWY'] = pd.Series([water_year_day(d) for d in df.index], index=df.index) #day of water year
+  df['ORO_pr'] = df['ORO_pr']/25.4
+  df['FOL_pr'] = df['FOL_pr']/25.4
+  df['SHA_pr'] = df['SHA_pr']/25.4
+
+  df['SHA_tas'] = (df['SHA_tas']-273.15)*9/5 + 32
+  df['ORO_tas'] = (df['ORO_tas']-273.15)*9/5 + 32
+  df['FOL_tas'] = (df['FOL_tas']-273.15)*9/5 + 32
 
   #historical net Deltagains, with perfect hindsight in pumping 
   df['DeltaIn'] = df['DeltaOut'] + df['HRO_pump'] + df['TRP_pump']
@@ -184,8 +193,8 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
 
 
   ##clean up snowpack data and resample monthly 
-  snow_ids = ['GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','CAP_swe','RBP_swe','KTL_swe',
-  				'HMB_swe','FOR_swe','RTL_swe','GRZ_swe','SDF_swe','SNM_swe','SLT_swe','MED_swe']
+  snow_ids = ['MED_swe','SDF_swe','HMB_swe','FOR_swe','RTL_swe',
+                  'GRZ_swe','GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','RBP_swe','CAP_swe','STL_swe']
   dfs = df[snow_ids] #working with only snow for these calculations
   num = dfs._get_numeric_data()
   num[num < 0 ] = np.NaN
@@ -201,9 +210,8 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
   #sum of stations for each basin
   df['YRS_swe'] = df[['GOL_swe','CSL_swe']].mean(axis=1)
   df['FOL_swe'] = df[['HYS_swe', 'SCN_swe', 'RBB_swe', 'CAP_swe']].mean(axis = 1) #taking out RBP (for this time), also test taking out RBB later
-  df['ORO_swe'] = df[['KTL_swe', 'HMB_swe', 'FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
-  df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'SLT_swe']].mean(axis = 1)
-
+  df['ORO_swe'] = df[['FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
+  df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'STL_swe']].mean(axis = 1)
   BND = (df['BND_fnf'].to_frame(name='inf'))
   ORO = (df['ORO_fnf'].to_frame(name='inf'))
   YRS = (df['YRS_fnf'].to_frame(name='inf'))
@@ -211,9 +219,9 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
 
   #gains regression with perfect foresight WYI
   # ### delta gains calculations
-  dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','SR_WYI']] #gains datafile
-  stations = ['SHA','ORO','YRS','FOL','MIL','NML','YRS','TLG','MRC','MKM','NHG']
-  stations_WYI = ['SHA','ORO','YRS','FOL','MIL','NML','YRS','TLG','MRC','MKM','NHG','WYI']
+  dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','netgains','SR_WYI']] #gains datafile
+  stations = ['SHA','ORO','YRS','FOL','MIL','NML','YRS','TLG','MRC']
+  stations_WYI = ['SHA','ORO','YRS','FOL','MIL','NML','YRS','TLG','MRC','NHG','WYI']
   
   dfg = dfg[dfg.index != '1998-10-09']
   dfg = dfg[dfg.index != '1997-01-03']
@@ -335,8 +343,8 @@ def process(df,evap_regr,gains_regr,inf_regr): #used for historical data process
   return df, df_g, df_OM
 
 def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to process climate projection data
-  SR_pts = ['BND_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
-  SJR_pts = ['NML_fnf', 'TLG_fnf', 'MRC_fnf', 'MIL_fnf']
+  SR_pts = ['SHA_fnf', 'ORO_fnf', 'YRS_fnf', 'FOL_fnf']
+  SJR_pts = ['NML_fnf', 'TUL_fnf', 'MRC_fnf', 'MIL_fnf']
   df = df[(df.index > '1951-09-30')]
   gains_reg = json.load(open(gains_regr))
   inf_reg = json.load(open(inf_regr))
@@ -344,16 +352,27 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
   df['WY'] = pd.Series([water_year(d) for d in df.index], index=df.index)
   df['DOWY'] = pd.Series([water_year_day(d) for d in df.index], index=df.index)
   #bias corrections for fnfs
-  df['SHA_fnf'] = df['SHA_fnf'] * 0.95 #0.95
-  df['ORO_fnf'] = df['ORO_fnf'] * 1.1
-  df['FOL_fnf'] = df['FOL_fnf'] * 0.8 #0.8
-  df['MRC_fnf'] = df['MRC_fnf'] * 0.9
-  df['MKM_fnf'] = df['MKM_fnf'] * 0.9
-  df['NHG_fnf'] = df['NHG_fnf'] * 0.25
-  df['YRS_fnf'] = df['YRS_fnf'] * 0.85
-
-  snow_ids = ['MED_swe','SDF_swe','SLT_swe','BKL_swe','HMB_swe','FOR_swe','RTL_swe',
-                  'GRZ_swe','GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','RBP_swe','CAP_swe']
+  # df['SHA_fnf'] = df['SHA_fnf'] * 0.95 #0.95
+  # df['ORO_fnf'] = df['ORO_fnf'] * 1.1
+  # df['FOL_fnf'] = df['FOL_fnf'] * 0.8 #0.8
+  # df['MRC_fnf'] = df['MRC_fnf'] * 0.9
+  # df['MKM_fnf'] = df['MKM_fnf'] * 0.9
+  # df['NHG_fnf'] = df['NHG_fnf'] * 0.25
+  # df['YRS_fnf'] = df['YRS_fnf'] * 0.85
+  df['FOL_fnf'] = df['FOL_fnf'] * cms_cfs
+  df['ORO_fnf'] = df['ORO_fnf'] * cms_cfs
+  df['TRR_fnf'] = df['TRR_fnf'] * cms_cfs
+  df['ISB_fnf'] = df['ISB_fnf'] * cms_cfs
+  df['PNF_fnf'] = df['PNF_fnf'] * cms_cfs
+  df['MRC_fnf'] = df['MRC_fnf'] * cms_cfs
+  df['MIL_fnf'] = df['MIL_fnf'] * cms_cfs
+  df['NML_fnf'] = df['NML_fnf'] * cms_cfs
+  df['TUL_fnf'] = df['TUL_fnf'] * cms_cfs
+  df['DPN_fnf'] = df['DPN_fnf'] * cms_cfs
+  df['SHA_fnf'] = df['SHA_fnf'] * cms_cfs
+  df['YRS_fnf'] = df['YRS_fnf'] * cms_cfs
+  snow_ids = ['MED_swe','SDF_swe','BKL_swe','HMB_swe','FOR_swe','RTL_swe',
+                  'GRZ_swe','GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','RBP_swe','CAP_swe','STL_swe']
   # convert snow to inches
 
   #temp conversion and bias correction
@@ -438,7 +457,7 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
   df.ORO_fci.fillna(method='bfill', inplace=True)
 
   snow_ids = ['GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','CAP_swe','RBP_swe',
-            'HMB_swe','FOR_swe','RTL_swe','GRZ_swe','SDF_swe','SLT_swe','MED_swe']
+            'HMB_swe','FOR_swe','RTL_swe','GRZ_swe','SDF_swe','STL_swe','MED_swe','SNM_swe']
 
   if window == 'historical':
     for sn in snow_ids:
@@ -447,7 +466,7 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
     df['MED_swe'] = df['MED_swe'] * 8.0
     df['SDF_swe'] = df['SDF_swe'] * 0.6
     df['SNM_swe'] = df['SDF_swe'] * 0.9
-    df['SLT_swe'] = df['SLT_swe'] * 2.7
+    df['STL_swe'] = df['STL_swe'] * 2.7
     df['KTL_swe'] = df['BKL_swe'] * 0.6*0.65
     df['HMB_swe'] = df['HMB_swe'] * 3.2
     df['FOR_swe'] = df['FOR_swe'] * 4.8
@@ -475,8 +494,8 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
     #sum of stations for each basins
     df['YRS_swe'] = df[['GOL_swe','CSL_swe']].mean(axis=1)
     df['FOL_swe'] = df[['HYS_swe', 'SCN_swe', 'RBB_swe', 'CAP_swe']].mean(axis = 1) #taking out RBP (for this time), also test taking out RBB later
-    df['ORO_swe'] = df[['KTL_swe', 'HMB_swe', 'FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
-    df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'SLT_swe']].mean(axis = 1)
+    df['ORO_swe'] = df[['FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
+    df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'STL_swe']].mean(axis = 1)
 
   elif (window == 'rolling') | (window =='expanding') | (window == 'stationary'):
     for sn in snow_ids:
@@ -497,18 +516,17 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
     df = df.join(dfs).fillna(method = 'ffill') #snow stations now cleaned up and back in main datafile 
   
     df = df[(df.index > '1951-09-30')]#start at 2000 water year
-
   df = df.drop(df[snow_ids],axis = 1)
 
-  BND = (df['BND_fnf'].to_frame(name='inf'))
+  BND = (df['SHA_fnf'].to_frame(name='inf'))
   ORO = (df['ORO_fnf'].to_frame(name='inf'))
   YRS = (df['YRS_fnf'].to_frame(name='inf'))
   FOL = (df['FOL_fnf'].to_frame(name='inf'))
 
   ## delta gains calculations
-  dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','SR_WYI']] #gains dataframe
-  stations = ['SHA','ORO','YRS','FOL','MIL','NML','YRS','TLG','MRC','MKM','NHG']
-  stations_WYI = ['SHA','ORO','YRS','FOL','MIL','NML','YRS','TLG','MRC','MKM','NHG','WYI']
+  dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TUL_fnf','MRC_fnf','SR_WYI']] #gains dataframe
+  stations = ['SHA','ORO','YRS','FOL','MIL','NML','YRS','TUL','MRC']
+  stations_WYI = ['SHA','ORO','YRS','FOL','MIL','NML','YRS','TLG','MRC','WYI']
   # dfg = df[['MIL_fnf','NML_fnf','YRS_fnf','TLG_fnf','MRC_fnf','MKM_fnf','NHG_fnf','netgains','WYI_sim']] #gains datafile
   # stations = ['MIL','NML','YRS','TLG','MRC','MKM','NHG']
 

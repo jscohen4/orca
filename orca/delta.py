@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pd
 import json
 from .util import *
+import matplotlib.pyplot as plt
 
 class Delta():
 
@@ -11,13 +12,17 @@ class Delta():
     self.dayofyear = df.index.dayofyear
     self.month = df.index.month
     self.key = key
-    self.wyt = df.WYT_sim 
+    # self.wyt = df.WYT_sim 
+    self.wyt = df.SR_WYT# simulated (forecasted)wyi
+
     self.sim_gains = sim_gains
     self.OMR_sim = df.OMR_sim
     if self.sim_gains:
-      self.netgains = df.gains_sim
-      self.sanjoaquin = df.gains_sim - df.YRS_fnf - df.NML_fnf
+      self.netgains = df.gains_sim *600
+      self.netgains[self.netgains < 2] = 2
 
+      self.sanjoaquin = df.gains_sim - df.YRS_fnf - df.NML_fnf
+      # print(self.netgains)
     elif not self.sim_gains:
       self.netgains = df.netgains 
       self.sanjoaquin = df.netgains - df.YRS_fnf #- 100*df.NML_fnf

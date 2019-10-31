@@ -15,6 +15,8 @@ def compare(res,obs,freq='D'):
   gs = gridspec.GridSpec(1, 2, width_ratios=[3, 1]) 
 
   ax0 = plt.subplot(gs[0])
+  res = res
+  obs = obs
   res.plot(ax=ax0, color='indianred')
   obs.plot(ax=ax0, color='k')
   ax0.set_title('%s, %s' % (res.name, obs.name), loc='left') # family='sans-serif'
@@ -31,6 +33,11 @@ def compare(res,obs,freq='D'):
 
   ax1.set_xlim([0.0, ax1.get_xlim()[1]])
   ax1.set_ylim([0.0, ax1.get_ylim()[1]])
+
+  # ax0.set_ylabel('TAF/day')
+  ax0.set_xlabel('Date')
+  # ax1.set_ylabel('TAF/day')
+  # ax1.set_xlabel('TAF/day')
 
   plt.tight_layout()
   # plt.show()
