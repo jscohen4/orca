@@ -13,8 +13,8 @@ class Reservoir():
     self.dayofyear = df.index.dayofyear
     self.month = df.index.month
     self.key = key
-    # self.wyt = df.WYT_sim# simulated (forecasted)wyi
-    self.wyt = df.SR_WYT# simulated (forecasted)wyi
+    self.wyt = df.WYT_sim# simulated (forecasted)wyi
+    # self.wyt = df.SR_WYT# simulated (forecasted)wyi
 
     for k,v in json.load(open('orca/data/json_files/%s_properties.json' % key)).items():
       setattr(self,k,v)

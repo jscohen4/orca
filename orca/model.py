@@ -21,8 +21,8 @@ class Model():
     self.delta = Delta(self.df, 'DEL', self.sim_gains)
     self.dayofyear = self.df.index.dayofyear
     self.month = self.df.index.month    
-    # self.wyt = self.df.WYT_sim
-    self.wyt = self.df.SR_WYT# simulated (forecasted)wyi
+    self.wyt = self.df.WYT_sim
+    # self.wyt = self.df.SR_WYT# simulated (forecasted)wyi
 
   def simulate(self):
     self.sumnodds = np.zeros(367)
