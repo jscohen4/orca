@@ -117,8 +117,7 @@ class Reservoir():
     # decide next release
     W = self.S[t-1] + self.Q[t]
     fcr = 0.2*(W-self.tocs[t]) #flood control release
-    # self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin)) #target release
-    self.Rtarget[t] = np.max((nodd+sodd+dout, envmin)) #target release
+    self.Rtarget[t] = np.max((fcr, nodd+sodd+dout, envmin)) #target release
 
     self.curt = False
     if self.carryover_rule:

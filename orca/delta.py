@@ -18,7 +18,8 @@ class Delta():
     self.sim_gains = sim_gains
     self.OMR_sim = df.OMR_sim
     if self.sim_gains:
-      self.netgains = df.gains_sim *600
+      np.random.seed(1)
+      self.netgains = df.gains_sim * 10000 *np.random.rand()
       self.netgains[self.netgains < -7] = -7*np.random.rand()
 
       self.sanjoaquin = df.gains_sim - df.YRS_fnf - df.NML_fnf

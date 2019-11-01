@@ -368,7 +368,7 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
   df['NML_fnf'] = df['NML_fnf'] * cms_cfs
   df['TUL_fnf'] = df['TUL_fnf'] * cms_cfs
   df['DPN_fnf'] = df['DPN_fnf'] * cms_cfs
-  df['SHA_fnf'] = df['SHA_fnf'] * cms_cfs
+  df['SHA_fnf'] = df['SHA_fnf'] * cms_cfs *1.1
   df['YRS_fnf'] = df['YRS_fnf'] * cms_cfs
   snow_ids = ['MED_swe','SDF_swe','BKL_swe','HMB_swe','FOR_swe','RTL_swe',
                   'GRZ_swe','GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','RBP_swe','CAP_swe','STL_swe']
