@@ -29,8 +29,8 @@ def init_plotting():
   # plt.style.use('ggplot')
 init_plotting()
 fig, (ax0,ax1,ax2) = plt.subplots(3,1,sharey = True)
-model = 'noresm'
-output = 'FOL_storage'
+model = 'ccsm'
+output = 'DEL_out'
 output_name = 'Folsom storage'
 dfhist = pd.read_csv('%s19952005/%s19952005-results.csv'%(model,model),index_col = 0,parse_dates = True)
 dfmid = pd.read_csv('%s20402050/%s20402050-results.csv'%(model,model),index_col = 0,parse_dates = True)
@@ -47,5 +47,5 @@ ax1.set_ylabel('TAF')
 ax0.set_title('%s %s'%(model,output_name))
 
 plt.tight_layout()
-plt.savefig('figs/%s_%s.png'%(model,output))
+# plt.savefig('figs/%s_%s.png'%(model,output))
 plt.show()

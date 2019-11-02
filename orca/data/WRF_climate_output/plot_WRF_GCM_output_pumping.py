@@ -29,7 +29,7 @@ def init_plotting():
   # plt.style.use('ggplot')
 init_plotting()
 fig, (ax0,ax1,ax2) = plt.subplots(3,1,sharey = True)
-model = 'noresm'
+model = 'ccsm'
 output1 = 'DEL_TRP_pump'
 output2 = 'DEL_HRO_pump'
 output_name = 'Total pumping'
@@ -37,9 +37,9 @@ dfhist = pd.read_csv('%s19952005/%s19952005-results.csv'%(model,model),index_col
 dfmid = pd.read_csv('%s20402050/%s20402050-results.csv'%(model,model),index_col = 0,parse_dates = True)
 dfend = pd.read_csv('%s20902100/%s20902100-results.csv'%(model,model),index_col = 0,parse_dates = True)
 
-ax0.plot(dfhist[output])
-ax1.plot(dfmid[output])
-ax2.plot(dfend[output])
+ax0.plot((dfhist[output1]+dfhist[output2]).resample('M').sum())
+ax1.plot((dfmid[output1]+dfmid[output2]).resample('M').sum())
+ax2.plot((dfend[output1]+dfend[output2]).resample('M').sum())
 ax0.xaxis.set_major_locator(mdates.YearLocator())
 ax1.xaxis.set_major_locator(mdates.YearLocator())
 ax2.xaxis.set_major_locator(mdates.YearLocator())
