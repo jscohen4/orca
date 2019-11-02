@@ -45,7 +45,7 @@ cdec = False # True if downloading up-to-date cdec data
 hist_indices = True #True if running calc_indices scriptwater_day
 hist_forcast = True #True if running updated forecast
 
-sc = 'ccsm20902100' #cmip5 climate scenario to use, if projection = True
+sc = 'noresm20902100' #cmip5 climate scenario to use, if projection = True
 process_climate_data = True #only mark True if running climate projection and/or processing projection input data
 ####### only relevant if processing projection data
 climate_indices = True

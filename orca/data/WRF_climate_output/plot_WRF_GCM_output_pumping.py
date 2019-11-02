@@ -30,8 +30,9 @@ def init_plotting():
 init_plotting()
 fig, (ax0,ax1,ax2) = plt.subplots(3,1,sharey = True)
 model = 'noresm'
-output = 'FOL_storage'
-output_name = 'Folsom storage'
+output1 = 'DEL_TRP_pump'
+output2 = 'DEL_HRO_pump'
+output_name = 'Total pumping'
 dfhist = pd.read_csv('%s19952005/%s19952005-results.csv'%(model,model),index_col = 0,parse_dates = True)
 dfmid = pd.read_csv('%s20402050/%s20402050-results.csv'%(model,model),index_col = 0,parse_dates = True)
 dfend = pd.read_csv('%s20902100/%s20902100-results.csv'%(model,model),index_col = 0,parse_dates = True)
@@ -42,10 +43,10 @@ ax2.plot(dfend[output])
 ax0.xaxis.set_major_locator(mdates.YearLocator())
 ax1.xaxis.set_major_locator(mdates.YearLocator())
 ax2.xaxis.set_major_locator(mdates.YearLocator())
-ax1.set_ylabel('TAF')
+ax1.set_ylabel('TAF/month')
 # fig.suptitle('%s %s'%(model,output_name), y= 0.99)
 ax0.set_title('%s %s'%(model,output_name))
 
 plt.tight_layout()
-plt.savefig('figs/%s_%s.png'%(model,output))
+plt.savefig('figs/%s_%s.png'%(model,output_name))
 plt.show()

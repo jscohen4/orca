@@ -13,13 +13,14 @@ class Delta():
     self.month = df.index.month
     self.key = key
     self.wyt = df.WYT_sim 
+    self.wyi = df.SR_WYI
     # self.wyt = df.SR_WYT# simulated (forecasted)wyi
 
     self.sim_gains = sim_gains
     self.OMR_sim = df.OMR_sim
     if self.sim_gains:
-      np.random.seed(1)
-      self.netgains = df.gains_sim * 10000 *np.random.rand()
+      # np.random.seed(1)
+      self.netgains = df.gains_sim * 10000 *np.random.rand()*self.wyi
       self.netgains[self.netgains < -7] = -7*np.random.rand()
 
       self.sanjoaquin = df.gains_sim - df.YRS_fnf - df.NML_fnf
