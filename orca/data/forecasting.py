@@ -831,10 +831,9 @@ def projection_forecast(df,WYI_stats_file,carryover_stats_file,window_type,windo
 	df['WYT_sim'] = df.WYI_sim.apply(WYI_to_WYT,
                                thresholds=[9.2, 7.8, 6.5, 5.4, -5.0], 
                                values=['W', 'AN', 'BN', 'D', 'C'])
-	df = df[(df.index < '2099-10-01')]
+	df = df[(df.index < '2100-10-01')]
 	for y,g in df.groupby('WY'):
 		df.loc[(df.WY==y) & (df.index.month == 9), 'WYI_sim'] = df.loc[(df.WY==y) & (df.index.month == 8) & (df.index.day == 30), 'WYI_sim']
-
 	return df
 
 def get_forecast_WYI_stats(df, index_exceedance_sac): #now determining forecasting regression coefficients based off perfect foresight
