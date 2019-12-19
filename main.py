@@ -11,8 +11,8 @@ now = datetime.now().strftime('Last modified %Y-%m-%d %H:%M:%S')
 #Each of these booleans determines the actions that will be run by the model 
 
 projection = False #True if running a single climate projection
-calc_NSEs = True #True if calculating Nash Sutcliffe Equivalents (only relevant for historical scenario)
-plot = True #True if plotting outputs, need calc_NSEs to also be true if plotting historical results!!!!
+calc_NSEs = False #True if calculating Nash Sutcliffe Equivalents (only relevant for historical scenario)
+plot = False #True if plotting outputs, need calc_NSEs to also be true if plotting historical results!!!!
 change_inflow_exeedance = False
 
 #######Define a few parameters

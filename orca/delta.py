@@ -34,7 +34,9 @@ class Delta():
     self.HRO_pump = np.zeros(T)
     self.inflow = np.zeros(T)
     self.outflow = np.zeros(T)
-    
+    self.CVP_shortage = np.zeros(T)
+    self.SWP_shortage = np.zeros(T)
+    self.Delta_shortage = np.zeros(T)
     self.cvp_target = np.zeros(367)
     self.swp_target = np.zeros(367)
     self.cvp_pmax = np.zeros(367)
@@ -237,11 +239,15 @@ class Delta():
     else:
       self.x2[t+1] = 10.16 + 0.945*self.x2[t] - 1.487*np.log10(50.0)
 
+    self.CVP_shortage[t] = max(cvp_max - self.TRP_pump[t],0)
+    self.SWP_shortage[t] = max(swp_max - self.HRO_pump[t],0)
+    self.Delta_shortage[t] = max(outflow_rule -self.outflow[t] ,0)
+
   def results_as_df(self, index):
     df = pd.DataFrame()
     self.x2 = self.x2[:-1]
-    names = ['in','out','TRP_pump','HRO_pump','X2','SODD_CVP','SODD_SWP']
-    things = [self.inflow, self.outflow, self.TRP_pump, self.HRO_pump, self.x2,self.sodd_cvp,self.sodd_swp]
+    names = ['in','out','TRP_pump','HRO_pump','total_pump','X2','SODD_CVP','SODD_SWP', 'SWP_shortage', 'CVP_shortage','total_pump_shortage', 'Delta_shortage']
+    things = [self.inflow, self.outflow, self.TRP_pump, self.HRO_pump, self.TRP_pump + self.HRO_pump, self.x2,self.sodd_cvp,self.sodd_swp, self.SWP_shortage, self.CVP_shortage,self.SWP_shortage + self.CVP_shortage, self.Delta_shortage]
     for n,t in zip(names,things):
       df['%s_%s' % (self.key,n)] = pd.Series(t, index=index)
     return df
