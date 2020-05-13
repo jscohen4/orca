@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3825917.svg)](https://doi.org/10.5281/zenodo.3825917)
+
 # Operation of Reservoirs in California (ORCA)
 
 This repository contains all code corresponding to methods used to generate data for figures in the following paper:
