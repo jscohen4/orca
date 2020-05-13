@@ -27,6 +27,8 @@ def init_plotting():
 init_plotting()
 fig,(ax0,ax1,ax2) = plt.subplots(3,1,sharex = True)
 def hypervolume(pareto_set, reference_point=None):
+    #Adapted from inspyred: Bio-inspired Algorithms in Python
+    #https://pythonhosted.org/inspyred/
     """Calculates the hypervolume by slicing objectives (HSO).
     
     This function calculates the hypervolume (or S-measure) of a nondominated
@@ -107,27 +109,26 @@ def hypervolume(pareto_set, reference_point=None):
 baseline = pd.read_csv('baseline-objectives.csv',index_col = 0)
 with open('scenario_names_all.txt') as f:
   scenarios = f.read().splitlines()
-with open('scenario-groupings/HV-FNF-SWE/high_potential.txt') as f:
+with open('data/scenario-groupings/high_potential.txt') as f:
     scenarios_HP = f.read().splitlines()
-with open('scenario-groupings/HV-FNF-SWE/upper.txt') as f:
+with open('data/scenario-groupings/upper.txt') as f:
     scenarios_upper = f.read().splitlines()
-with open('scenario-groupings/HV-FNF-SWE/lower.txt') as f:
+with open('data/scenario-groupings/lower.txt') as f:
     scenarios_lower = f.read().splitlines()
 
 hv_perf = pd.read_csv('hypervolumes-perf-3.csv')
 yearstart = 2069
-yearend = 2098
-spill = pd.read_csv('baseline-results/baseline_spill.csv', parse_dates = True,index_col = 0)
-carryover = pd.read_csv('baseline-results/baseline_carryover.csv', parse_dates = True,index_col = 0)
-delta = pd.read_csv('baseline-results/baseline_delta.csv', parse_dates = True,index_col = 0)
-pumping = pd.read_csv('baseline-results/baseline_pumping.csv', parse_dates = True,index_col = 0)
-hydro = pd.read_csv('baseline-results/baseline_energy.csv', parse_dates = True,index_col = 0)
+yearend = 2099
+spill = pd.read_csv('data/baseline-results/baseline_spill.csv', parse_dates = True,index_col = 0)
+carryover = pd.read_csv('data/baseline-results/baseline_carryover.csv', parse_dates = True,index_col = 0)
+delta = pd.read_csv('data/baseline-results/baseline_delta.csv', parse_dates = True,index_col = 0)
+pumping = pd.read_csv('data/baseline-results/baseline_pumping.csv', parse_dates = True,index_col = 0)
+hydro = pd.read_csv('data/baseline-results/baseline_energy.csv', parse_dates = True,index_col = 0)
 spillbase = spill[spill.index.year >= yearstart].cumsum()
 carryoverbase = carryover[carryover.index.year >= yearstart].cumsum()
 deltabase = delta[delta.index.year >= yearstart].cumsum()
 pumpingbase = pumping[pumping.index.year >= yearstart].cumsum()
 hydrobase = hydro[hydro.index.year >= yearstart].cumsum()
-# hyperarray = np.zeros(len(scenarios_train))
 dfHPset = pd.DataFrame(index = range(len(scenarios_HP)))
 dfUset = pd.DataFrame(index = range(len(scenarios_upper)))
 dfLset = pd.DataFrame(index = range(len(scenarios_lower)))
@@ -176,9 +177,9 @@ for train_set in training_sets:
           objs = (obj - obj3.min(axis=0)) / (obj3.max(axis=0) - obj3.min(axis=0))
           objnorm[i][3] = objs
 
-    # for i,obj in enumerate(obj4):
-    #   objs = (obj - obj4.min(axis=0)) / (obj4.max(axis=0) - obj4.min(axis=0))
-    #   objnorm[i][4] = objs
+        for i,obj in enumerate(obj4):
+          objs = (obj - obj4.min(axis=0)) / (obj4.max(axis=0) - obj4.min(axis=0))
+          objnorm[i][4] = objs
 
         baseline0 = spillbase[spillbase.index == '%s-10-01'%yearend][sc].values[0]*2.5
         baseline0 = (baseline0 - obj0.max(axis=0)) / (obj0.min(axis=0) - obj0.max(axis=0))
@@ -190,11 +191,13 @@ for train_set in training_sets:
         baseline2 = (baseline2 - obj2.min(axis=0)) / (obj2.max(axis=0) - obj2.min(axis=0))
 
         baseline3 = pumpingbase[pumpingbase.index == '%s-10-01'%yearend][sc].values[0]*0.9
-        # print(baseline3)
         baseline3 = (baseline3 - obj3.min(axis=0)) / (obj3.max(axis=0) - obj3.min(axis=0))
 
+        baseline4 = hydrobase[hydrobase.index == '%s-10-01'%yearend][sc].values[0]*0.9
+        baseline4 = (baseline4 - obj3.min(axis=0)) / (obj4.max(axis=0) - obj4.min(axis=0))
+
         objnorm = -objnorm
-        ref_pt = [-abs(baseline0),-abs(baseline1),-abs(baseline2),-abs(baseline3)]
+        ref_pt = [-abs(baseline0),-abs(baseline1),-abs(baseline2),-abs(baseline3),-abs(baseline4)]
         oblnormfilter = []
         ref_ptfilter = np.array(ref_pt)
         count = 0
@@ -219,49 +222,6 @@ for train_set in training_sets:
     dfHPset[train_set] = np.array(hyperarray_HP)/np.array(hyperarray_perf_HP)
     dfUset[train_set] =np.array(hyperarray_upper)/np.array(hyperarray_perf_upper)
     dfLset[train_set] =np.array(hyperarray_lower)/np.array(hyperarray_perf_lower)
-    print(dfHPset)
 dfHPset.to_csv('dfHPset.csv')
 dfUset.to_csv('dfUset.csv')
 dfLset.to_csv('dfLset.csv')
-
-dfHPset['high-potential'] = dfHPset['high-potential']
-sns.distplot(dfHPset['high-potential'].values*1.4,hist = False,kde_kws={'clip': (0.05, 0.9)},ax = ax0,label = 'HP')
-sns.distplot(dfHPset['upper'].values*1,hist = False,kde_kws={'clip': (0.05, 0.8)},ax = ax0,label = 'U')
-sns.distplot(dfHPset['lower'].values*0.8,hist = False,kde_kws={'clip': (0.0, 0.8)},ax = ax0,label = 'L')
-ax0.legend()
-
-sns.distplot(dfUset['lower'].values,hist = False,kde_kws={'clip': (0.05, 0.9)},ax = ax1,label = 'HP')
-sns.distplot(dfUset['upper'].values*2,hist = False,kde_kws={'clip': (0.05, 0.9)},ax = ax1,label = 'U')
-sns.distplot(dfUset['high-potential'].values*0.8,hist = False,kde_kws={'clip': (0.0, 0.7)},ax = ax1,label = 'L')
-ax1.legend()
-
-sns.distplot(dfHPset['high-potential'].values*1.3,hist = False,kde_kws={'clip': (0.05, 0.9)},ax = ax2,label = 'HP')
-sns.distplot(dfHPset['upper'].values,hist = False,kde_kws={'clip': (0.05, 0.8)},ax = ax2,label = 'U')
-sns.distplot(dfHPset['lower'].values*2.5,hist = False,kde_kws={'clip': (0.05, 0.9)},ax = ax2,label = 'L')
-
-plt.xlim([0,1])
-# for train_set in training_sets:
-#     sns.distplot(dfHPset[train_set].values,hist = False,kde_kws={'clip': (0.05, 0.9)},ax = ax0)
-#     sns.distplot(dfUset[train_set].values,hist = False,kde_kws={'clip': (0.05, 0.9)},ax = ax1)
-#     sns.distplot(dfLset[train_set].values,hist = False,kde_kws={'clip': (0.05, 0.9)},ax = ax2)
-
-    # sns.kdeplot(dfUset[train_set].values,clip= (0.3, 0.5))
-
-# dfLset.plot.kde(kde_kws={'clip': (0.0, 1.0)})
-# print(np.mean(np.array(hyperarray)))
-# sns.distplot(np.array(hyperarray_HP)/np.array(hyperarray_perf_HP))
-# sns.kdeplot(np.array(hyperarray_upper)/np.array(hyperarray_perf_upper))
-# sns.kdeplot(np.array(hyperarray_lower)/np.array(hyperarray_perf_lower))
-
-# plt.plot(np.array(hyperarray_perf))
-
-# plt.plot((np.array(hyperarray)/hv_perf.HV.values))
-    # hyperarray[k] = hypev
-    # print(hyperarray)
-    # dfhv[sc] = hyperarray
-    # print(dfhv)
-# plt.plot(dfhv)
-plt.show()
-# dfhv[sc] = hyperarray
-# print(dfhv)
-# dfhv.to_csv('hypervolume-series/hypervolumes-2070-group-30.csv')
