@@ -1,5 +1,5 @@
 # Operation of Reservoirs in California (ORCA)
-This repository contains all code for the methods of the following paper:
+This repository contains all code corresponding to methods used to generate data for figures in the following paper:
 
 Cohen, J.S., Zeff, H.B., Herman, J.D.,  (2020). How do the hydrologic properties of training scenarios influence the robustness of reservoir policy adaptations to climate uncertainty? (submitted manuscript).
 
