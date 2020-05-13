@@ -5,7 +5,7 @@ This repository contains all code corresponding to methods used to generate data
 Cohen, J.S., Zeff, H.B., & Herman, J.D.,  (2020). Adaptation of Multi-Objective Reservoir Operations to Snowpack Decline in the Western United States (submitted manuscript).
 
 ## Requirements:
-[NumPy](http://www.numpy.org/), [pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), [Scipy](http://www.scipy.org/), and [scikit-learn](http://scikit-learn.org/).
+[NumPy](http://www.numpy.org/), [pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), [Scipy](http://www.scipy.org/), [scikit-learn](http://scikit-learn.org/), and [MPI for Python](https://mpi4py.readthedocs.io/en/stable/).
 
 ## Running ORCA
 
