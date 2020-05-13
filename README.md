@@ -30,7 +30,7 @@ Run `adaptation-potential.py` to calculate the adaptation potential for each sce
 In `orca-testing.py`, specify an individual testing set in lines 59 and 139. Change output file names in line 135 accordingly. The script must be run in parallel with the number of processors equal to the number of scenarios in the test set. These numbers are displayed in Table 1 in the manuscript. Specify training set policy file in line 134. Run with a shell script containing the command `mpirun -n num_processors python orca-testing.py`, with the number of processors specified. 
 
 ### Section 3.5.1 Hypervolume Robustness Metric:
- `hypervolume-robustness.py` calculates the hypervolume robustness metric for each scenario in each training-test set combination. It is run in serial. 
+ `hypervolume-robustness.py` calculates the hypervolume robustness metric for each scenario in each training-test set combination. It is run in serial and output files will apear in the folder `data/robustness`. 
  
 ### Section 3.5.2 Rank-sum Tests:
 
