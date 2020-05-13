@@ -1,11 +1,13 @@
 # Operation of Reservoirs in California (ORCA)
+This repository contains all code for the methods of the following paper:
 
-A simulation mode incorporating CVP and SWP Delta exports, reservoir releases, and snow-pack to streamflow forecasts. This branch simulates both historical and projected cmip5 scenarios.
+Cohen, J.S., Zeff, H.B., Herman, J.D.,  (2020). How do the hydrologic properties of training scenarios influence the robustness of reservoir policy adaptations to climate uncertainty? (submitted manuscript).
 
 ## Requirements:
 [NumPy](http://www.numpy.org/), [Pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), [Scipy](http://www.scipy.org/), [Scikit-learn](http://scikit-learn.org/), [Seaborn](https://seaborn.pydata.org/), [MPI for Python](https://mpi4py.readthedocs.io/en/stable/), and [Platypus](https://platypus.readthedocs.io/en/latest/).
 
 ## Running ORCA
+ORCA (Operations of Reservoirs in California): A simulation mode incorporating CVP and SWP Delta exports, reservoir releases, and snow-pack to streamflow forecasts. This branch simulates both historical and projected cmip5 scenarios.
 
 ### Running ORCA in historial mode:
 1. In main.py, set projection to False.
@@ -24,4 +26,4 @@ A simulation mode incorporating CVP and SWP Delta exports, reservoir releases, a
 4. After executing run_all_climate_projections.py, results will be in the scenario_runs and climate_results folders.
 
 ## License
-Copyright (C) 2018 CALFEWS Team. Released under the [MIT license](LICENSE.md).
+Copyright (C) 2020 CALFEWS Team. Released under the [MIT license](LICENSE.md).
