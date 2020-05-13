@@ -16,14 +16,21 @@ import sys
 import logging
 logging.basicConfig(level=logging.INFO)
 
-with open('orca/data/scenario_names_all.txt') as f:
-  scenarios_all = f.read().splitlines()
-with open('data/scenario-groupings/high-potential-random.txt') as f:
-    scenarios_HP_train = f.read().splitlines()
-with open('data/scenario-groupings/upper-random.txt') as f:
-    scenarios_upper_train = f.read().splitlines()
-with open('data/scenario-groupings/lower-random.txt') as f:
-    scenarios_lower_train = f.read().splitlines()
+with open('data/scenario-clusters/high-potential-random.txt') as f: #training set S1
+  scenariosS1 = f.read().splitlines()
+
+with open('data/scenario-clusters/upper-random.txt') as f: #training set S2
+  scenariosS2 = f.read().splitlines()
+
+with open('data/scenario-clusters/lower-random.txt') as f: #training set S3
+  scenariosS3 = f.read().splitlines()
+
+scenariosS4 = scenariosS1 + scenariosS2 #training set S4
+
+scenariosS5 = scenariosS1 + scenariosS3 #training set S5
+
+scenariosS6 = scenariosS1 + scenariosS2 + scenariosS3 #training set S6
+
 with open('data/scenario-groupings/high_potential.txt') as f:
     scenarios_HP_all = f.read().splitlines()
 with open('data/scenario-groupings/upper.txt') as f:
@@ -32,47 +39,51 @@ with open('data/scenario-groupings/lower.txt') as f:
     scenarios_lower_all = f.read().splitlines()
 
 
-scenarios_HP_test = []
-scenarios_upper_test = []
-scenarios_lower_test = []
+scenariosSt1 = []
+scenariosSt2 = []
+scenariosSt3 = []
 
 
 for sc in scenarios_HP_all:
-    if sc not in scenarios_HP_train:
-        scenarios_HP_test.append(sc)
+    if sc not in scenariosS1:
+        scenariosSt1.append(sc)
 
 for sc in scenarios_upper_all:
-    if sc not in scenarios_upper_train:
-        scenarios_upper_test.append(sc)
+    if sc not in scenariosS2:
+        scenariosSt2.append(sc)
 
 for sc in scenarios_lower_all:
-    if sc not in scenarios_lower_train:
-        scenarios_lower_test.append(sc)
+    if sc not in scenariosS3:
+        scenariosSt3.append(sc)
 
-scenarios_HP_test_num = []
+scenariosSt4 = scenariosSt1 + scenariosSt2 + scenariosSt3
+
+scenariosSt1_num = []
+scenariosSt2_num = []
+scenariosSt3_num =[]
+
 for i,sc in enumerate(scenarios_all):
-  if sc in scenarios_HP_test:
-    scenarios_HP_test_num.append(i)
+  if sc in scenariosSt1:
+    scenariosSt1_num.append(i)
 
 scenarios_upper_test_num = []
 for i,sc in enumerate(scenarios_all):
-  if sc in scenarios_upper_test:
-    scenarios_upper_test_num.append(i)
+  if sc in scenariosSt2:
+    scenariosSt2_num.append(i)
 
 scenarios_lower_test_num = []
 for i,sc in enumerate(scenarios_all):
-  if sc in scenarios_lower_test:
-    scenarios_lower_test_num.append(i)
+  if sc in scenariosSt3:
+    scenariosSt3_num.append(i)
 
-with open('orca/data/scenario_names_all.txt') as f:
-  scenarios_all = f.read().splitlines()
+scenariosSt4_num = scenariosSt1_num + scenariosSt2_num + scenariosSt3_num
 
-
-scenarios_tested = scenarios_HP_train
+scenarios_tested = scenariosSt1_num
 
 for sc in scenarios_all: 
   if sc not in scenarios_tested:
     scenarios_cross.append(sc)
+
 for sc in scenarios_cross:
   call(['mkdir','cross_validation_time_series-curtail/%s'%sc])
   
@@ -121,10 +132,9 @@ def evaluate(var,scenarios_cross,scenario_num,rank):
     dfresults['DEL_TRP_pump'] = results['DEL_TRP_pump']
     dfresults['DEL_out'] = results['DEL_out']
     dfresults.to_csv('data/tested-policy-timeseries/high_potential/scenario%s/policy%s.csv'%(sc_num,rank))
-
 variables = pickle.load(open("data/training-outputs/high-potential-variables.pkl", "rb"))
 comm = MPI.COMM_WORLD # communication object
 rank = comm.rank# what number processor am I?
 var = variables[test_policies[rank]] #+84
-objs = evaluate(var,scenarios_upper_test,scenarios_upper_test_num,rank)
+objs = evaluate(var,scenariosSt1,scenariosSt1_num,rank)
 

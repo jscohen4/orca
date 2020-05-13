@@ -26,7 +26,7 @@ with open('data/scenario-clusters/upper-random.txt') as f: #training set S2
   scenariosS2 = f.read().splitlines()
 
 with open('data/scenario-clusters/lower-random.txt') as f: #training set S3
-  scenariosS2 = f.read().splitlines()
+  scenariosS3 = f.read().splitlines()
 
 scenariosS4 = scenariosS1 + scenariosS2 #training set S4
 

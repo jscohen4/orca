@@ -115,7 +115,7 @@ with open('data/scenario-groupings/upper.txt') as f:
 with open('data/scenario-groupings/lower.txt') as f:
     scenarios_lower = f.read().splitlines()
 
-hv_perf = pd.read_csv('hypervolumes-perf-3.csv')
+hv_perf = pd.read_csv('data/hypervolumes-perf.csv')
 yearstart = 2069
 yearend = 2099
 spill = pd.read_csv('data/baseline-results/baseline_spill.csv', parse_dates = True,index_col = 0)
@@ -148,7 +148,7 @@ for train_set in training_sets:
         print(j)
         if train_set in ['high-potential','upper','lower']:
             dfsc = pd.read_csv('training-outputs/individual-groups/%s/scenario%s.csv'%(train_set,j),index_col = 0)
-        elif train_set in ['high-potential-lower','high-potential-upper','upper-lower']:
+        elif train_set in ['high-potential-lower','high-potential-upper','upper-lower','all']:
             dfsc = pd.read_csv('training-outputs/mixed-groups/%s/scenario%s.csv'%(train_set,j),index_col = 0)
        
         obj_raw = dfsc.values
@@ -218,9 +218,13 @@ for train_set in training_sets:
         elif sc in scenarios_lower:
             hyperarray_lower.append(hypev)
             hyperarray_perf_lower.append(HV_perf[j])
+        hyperarray_all = hyperarray_HP + hyperarray_upper + hyperarray_lower
+        hyperarray_all = hyperarray_perf_HP + hyperarray_perf_upper + hyperarray_perf_lower
+
     dfHPset[train_set] = np.array(hyperarray_HP)/np.array(hyperarray_perf_HP)
     dfUset[train_set] =np.array(hyperarray_upper)/np.array(hyperarray_perf_upper)
     dfLset[train_set] =np.array(hyperarray_lower)/np.array(hyperarray_perf_lower)
+
 dfHPset.to_csv('data/robustness/dfHPset.csv')
 dfUset.to_csv('data/robustness/dfUset.csv')
 dfLset.to_csv('data/robustness/dfLset.csv')

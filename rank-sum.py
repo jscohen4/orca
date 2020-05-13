@@ -23,15 +23,18 @@ with open('data/scenario-groupings/lower.txt') as f:
 dfHPset = pd.read_csv('hypervolume-percents/dfHPrandomset-leaveout.csv', index_col = 0)
 dfUset = pd.read_csv('hypervolume-percents/dfUrandomset-leaveout.csv', index_col = 0)
 dfLset = pd.read_csv('hypervolume-percents/dfLrandomset-leaveout.csv', index_col = 0)
-highpot = dfUset['high-potential-random'].values
-upper =dfHPset['upper-random'].values
-lower =dfHPset['lower-random'].values
-highpot_upper = dfHPset['high-potential-upper-random'].values
-highpot_lower = dfHPset['high-potential-lower-random'].values
-upper_lower = dfHPset['upper-lower-random'].values
-allvar = dfHPset['all-random'].values
+dfallset = dfHPset + dfUset + dfLset
 
-U,p = stats.mannwhitneyu(highpot,lower,alternative='greater')
+testset = dfHPset
+highpot = testset['high-potential-random'].values
+upper =testset['upper-random'].values
+lower =testset['lower-random'].values
+highpot_upper = testset['high-potential-upper-random'].values
+highpot_lower = testset['high-potential-lower-random'].values
+upper_lower = testset['upper-lower-random'].values
+allvar = testset['all-random'].values
+
+U,p = stats.mannwhitneyu(trainset,testset,alternative='greater')
 if p < 0.05:
     print('Reject the null hypothesis')# 
 else:
