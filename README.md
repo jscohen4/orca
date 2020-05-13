@@ -20,5 +20,7 @@ The following instrutctions correspond to the methods section of the paper.
 ### Section 3.2.2 Hypervolume Metric:
 Run `adaptation-potential.py` to calculate the adaptation potential for each scenario. Results will appear in the file `data/adaptation-potential.csv`.
 
+### Section 3.3 Clustering:
+`clustering.py` generates the scenario groupings for the high-potential, low-potential wet, and low-potential dry clusters. TEt file outputs appear in folder `data/scenario-clusters`
 ## License
 Copyright (C) 2020 CALFEWS Team. Released under the [MIT license](LICENSE.md).
