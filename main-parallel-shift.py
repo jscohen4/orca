@@ -51,7 +51,7 @@ carryover_stats_file = pd.read_csv('orca/data/forecast_regressions/carryover_reg
 forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file,window_type,window_length, index_exceedence_sac)
 forc_df.to_csv('orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s-excdn_%s.csv'%(s,s,index_exceedence_sac))
 # forc_df = pd.read_csv('orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s-excdn_%s.csv'%(s,s), index_col = 0, parse_dates = True)
-for shift in np.arange(0,70,10):
+for shift in np.arange(-60,70,10):
 	SHA_shift = shift
 	ORO_shift = shift
 	FOL_shift = shift
@@ -60,14 +60,24 @@ for shift in np.arange(0,70,10):
 	projection_results = model.simulate() # takes a while... save results
 	projection_results.to_csv('orca/data/scenario_runs/%s/%s-results-FCR_%s-excd_%s.csv'%(s,s,shift,index_exceedence_sac))
 	comm.barrier()
+
+	if comm.rank <= 30: 
 		obj = result_ids[comm.rank]
 		dfobj = pd.DataFrame()
 		for sc in scenarios: 	
-			projection_results = pd.read_csv('orca/data/scenario_runs/%s/%s-results-FCR_%s.csv'%(sc,sc,shift), index_col = 0, parse_dates = True)
+			projection_results = pd.read_csv('orca/data/scenario_runs/%s/%s-results-FCR_%s-excd_%s.csv'%(sc,sc,shift,index_exceedence_sac), index_col = 0, parse_dates = True)
 			dfobj[sc] = projection_results[obj]
 		dfobj.to_csv('orca/data/climate_results/%s-shift%s.csv'%(obj,shift))
+
+	if comm.rank >= 31 and comm.rank <=58: 
+		obj = input_ids[comm.rank-31]
+		dfobj = pd.DataFrame()
+		for sc in scenarios: 	
+			projection_results = pd.read_csv('orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s-excdn_%s.csv'%(sc,sc,index_exceedence_sac), index_col = 0, parse_dates = True)
+			dfobj[sc] = projection_results[obj]
+		dfobj.to_csv('orca/data/climate_input_forecasts/%s-shift%s.csv'%(obj,shift))
+	comm.barrier()	
 	call(['rm', 'orca/data/scenario_runs/%s/%s-results-FCR_%s-excd_%s.csv'%(s,s,shift,index_exceedence_sac)])
-comm.barrier()
 call(['rm', 'orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s-excdn_%s.csv'%(s,s,index_exceedence_sac)])
 call(['rm', 'orca/data/scenario_runs/%s/orca-data-processed-%s.csv'%(s,s)])
 

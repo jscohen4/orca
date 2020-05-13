@@ -62,21 +62,28 @@ for inf_exc in [2,3,4,5,6,7,8]:
 		projection_results = model.simulate() # takes a while... save results
 		projection_results.to_csv('orca/data/scenario_runs/%s/%s-results-FCR_%s-excd_%s.csv'%(s,s,shift,inf_exc))
 		comm.barrier()
-		obj = result_ids[comm.rank]
-		dfobj = pd.DataFrame()
-		for sc in scenarios: 	
-			projection_results = pd.read_csv('orca/data/scenario_runs/%s/%s-results-FCR_%s-excd_%s.csv'%(sc,sc,shift,inf_exc), index_col = 0, parse_dates = True)
-			dfobj[sc] = projection_results[obj]
-		dfobj.to_csv('orca/data/climate_results/%s-exc%s.csv'%(obj,inf_exc))
+
+		if comm.rank <= 30: 
+			obj = result_ids[comm.rank]
+			dfobj = pd.DataFrame()
+			for sc in scenarios: 	
+				projection_results = pd.read_csv('orca/data/scenario_runs/%s/%s-results-FCR_%s-excd_%s.csv'%(sc,sc,shift,inf_exc), index_col = 0, parse_dates = True)
+				dfobj[sc] = projection_results[obj]
+			dfobj.to_csv('orca/data/climate_results/%s-exc%s.csv'%(obj,inf_exc))
 		comm.barrier()
 		call(['rm', 'orca/data/scenario_runs/%s/%s-results-FCR_%s-excd_%s.csv'%(s,s,shift,inf_exc)])
 		comm.barrier()
-		obj = input_ids[comm.rank]
+
+if comm.rank >= 31 and comm.rank <=59: 
+		obj = input_ids[comm.rank-31]
 		dfobj = pd.DataFrame()
 		for sc in scenarios: 	
 			projection_results = pd.read_csv('orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s-excdn_%s.csv'%(sc,sc,index_exceedence_sac), index_col = 0, parse_dates = True)
 			dfobj[sc] = projection_results[obj]
 		dfobj.to_csv('orca/data/climate_input_forecasts/%s-exc%s.csv'%(obj,inf_exc))
-		comm.barrier()
+comm.barrier()
+# call(['rm', 'orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s-excdn_%s.csv'%(s,s,index_exceedence_sac)])
+# call(['rm', 'orca/data/scenario_runs/%s/orca-data-processed-%s.csv'%(s,s)])
+
 
 
