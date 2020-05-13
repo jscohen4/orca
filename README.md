@@ -3,7 +3,7 @@
 A simulation mode incorporating CVP and SWP Delta exports, reservoir releases, and snow-pack to streamflow forecasts. This branch simulates both historical and projected cmip5 scenarios.
 
 ## Requirements:
-[NumPy](http://www.numpy.org/), [pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), [Scipy](http://www.scipy.org/), [scikit-learn](http://scikit-learn.org/), and [Platypus] (https://platypus.readthedocs.io/en/latest/).
+[NumPy](http://www.numpy.org/), [Pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), [Scipy](http://www.scipy.org/), [Scikit-learn](http://scikit-learn.org/),[Seaborn](https://seaborn.pydata.org/) [MPI for Python](https://mpi4py.readthedocs.io/en/stable/) and [Platypus](https://platypus.readthedocs.io/en/latest/).
 
 ## Running ORCA
 
