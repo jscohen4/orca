@@ -21,7 +21,7 @@ The following instrutctions correspond to the methods section of the paper.
 Run `adaptation-potential.py` to calculate the adaptation potential for each scenario. Results will appear in the file `data/adaptation-potential.csv`.
 
 ### Section 3.3 Clustering:
-`clustering.py` generates the scenario groupings for the high-potential, low-potential wet, and low-potential dry clusters. TEt file outputs appear in folder `data/scenario-clusters`
+`clustering.py` generates the scenario groupings for the high-potential, low-potential wet, and low-potential dry clusters. The file outputs appear in folder `data/scenario-clusters`
 
 ### Section 3.4 part 1: Training:
 
