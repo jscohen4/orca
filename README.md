@@ -19,5 +19,5 @@ A simulation mode incorporating CVP and SWP Delta exports, reservoir releases, a
 3. Run main.py and results will be in maurer_runs_data folder.
 
 ## License
-Copyright (C) 2018 CALFEWS Team. Released under the [MIT license](LICENSE.md).
+Copyright (C) 2020 Cohen, J.S., Zeff, H.B., & Herman, J.D. Released under the [MIT license](LICENSE.md).
 
