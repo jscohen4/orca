@@ -25,5 +25,7 @@ ORCA (Operations of Reservoirs in California): A simulation mode incorporating C
 3. Set climate_indices , climate_forecasts, and run_projection options in run_all_climate_projections.py. Set consolidate_outputs to format results for each scenario in the same csv files.
 4. After executing run_all_climate_projections.py, results will be in the scenario_runs and climate_results folders.
 
+## Paper Methods:
+
 ## License
 Copyright (C) 2020 CALFEWS Team. Released under the [MIT license](LICENSE.md).
