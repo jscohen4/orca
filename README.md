@@ -1,7 +1,7 @@
 # Operation of Reservoirs in California (ORCA)
 This repository contains all code corresponding to methods used to generate data for figures in the following paper:
 
-Cohen, J.S., Zeff, H.B., Herman, J.D.,  (2020). How do the hydrologic properties of training scenarios influence the robustness of reservoir policy adaptations to climate uncertainty? (submitted manuscript).
+Cohen, J.S., Zeff, H.B., & Herman, J.D.,  (2020). How do the hydrologic properties of training scenarios influence the robustness of reservoir policy adaptations to climate uncertainty? (submitted manuscript).
 
 ## Requirements:
 [NumPy](http://www.numpy.org/), [Pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), [Scipy](http://www.scipy.org/), [Scikit-learn](http://scikit-learn.org/), [Seaborn](https://seaborn.pydata.org/), [MPI for Python](https://mpi4py.readthedocs.io/en/stable/), and [Platypus](https://platypus.readthedocs.io/en/latest/).
@@ -36,5 +36,5 @@ In `orca-testing.py`, specify an individual testing set in lines 59 and 139. Cha
 `runk-sum.py` prints results from the Mann-Whitney U test. Specify the training set in line 28. Specify the two testing sets being compared in line 37.
 
 ## License
-Copyright (C) 2020 CALFEWS Team. Released under the [MIT license](LICENSE.md).
+Copyright (C) 2020 Cohen, J.S., Zeff, H.B., & Herman, J.D. Released under the [MIT license](LICENSE.md).
 
