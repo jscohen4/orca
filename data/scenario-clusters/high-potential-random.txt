@@ -1,0 +1,12 @@
+giss-e2-r_rcp60_r1i1p1
+giss-e2-r_rcp85_r1i1p1
+ccsm4_rcp45_r1i1p1
+fio-esm_rcp26_r1i1p1
+ipsl-cm5a-mr_rcp26_r1i1p1
+hadgem2-es_rcp45_r1i1p1
+noresm1-m_rcp60_r1i1p1
+gfdl-cm3_rcp26_r1i1p1
+miroc-esm-chem_rcp45_r1i1p1
+giss-e2-r_rcp26_r1i1p1
+ipsl-cm5a-mr_rcp45_r1i1p1
+ccsm4_rcp85_r1i1p1
