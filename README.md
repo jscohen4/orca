@@ -22,5 +22,8 @@ Run `adaptation-potential.py` to calculate the adaptation potential for each sce
 
 ### Section 3.3 Clustering:
 `clustering.py` generates the scenario groupings for the high-potential, low-potential wet, and low-potential dry clusters. TEt file outputs appear in folder `data/scenario-clusters`
+
+### Section 3.4 part 1: Training:
+
 ## License
 Copyright (C) 2020 CALFEWS Team. Released under the [MIT license](LICENSE.md).
