@@ -193,8 +193,8 @@ if __name__ == "__main__":
       for var in results.variables:
         var_list.append(int1.decode(var))
       variable_list.append(var_list)
-    pickle.dump(results_list, open("perfect-foresight/objectives/PF-objectives-sc%s.pkl"%i, "wb" ))
-    pickle.dump(variable_list, open("perfect-foresight/variables/PF-obj-variables-sc%s.pkl"%i, "wb" ))
+    pickle.dump(results_list, open("data/perfect-foresight/objectives/PF-objectives-sc%s.pkl"%i, "wb" ))
+    pickle.dump(variable_list, open("data/perfect-foresight/variables/PF-obj-variables-sc%s.pkl"%i, "wb" ))
 
 
     pool.close()

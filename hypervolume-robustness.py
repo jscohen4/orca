@@ -4,7 +4,6 @@ import pandas as pd
 import datetime
 from scipy.stats import norm,skew
 import seaborn as sns
-import inspyred.ec.analysis as pyred
 import pickle
 import math
 

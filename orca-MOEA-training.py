@@ -19,13 +19,26 @@ logging.basicConfig(level=logging.INFO)
 seed = 0
 random.seed(seed)
 
-with open('data/scenario-clusters/high_potential.txt') as f:
-  scenarios = f.read().splitlines()
+with open('data/scenario-clusters/high-potential-random.txt') as f: #training set S1
+  scenariosS1 = f.read().splitlines()
+
+with open('data/scenario-clusters/upper-random.txt') as f: #training set S2
+  scenariosS2 = f.read().splitlines()
+
+with open('data/scenario-clusters/lower-random.txt') as f: #training set S3
+  scenariosS2 = f.read().splitlines()
+
+scenariosS4 = scenariosS1 + scenariosS2 #training set S4
+
+scenariosS5 = scenariosS1 + scenariosS3 #training set S5
+
+scenariosS6 = scenariosS1 + scenariosS2 + scenariosS3 #training set S6
 
 seed = 0
 random.seed(seed)
 df_dict = {}
-for sc in scenarios:
+training_set = scenariosS1
+for sc in training_set:
   df_dict[sc] = pd.read_csv('orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s.csv'%(sc,sc),parse_dates = True, index_col = 0)
   df_dict[sc] = df_dict[sc][(df_dict[sc].index >= '2069-10-01') & (df_dict[sc].index <= '2079-10-01')] # def wrapper(SHA_exceedance,ORO_exceedance,FOL_exceedance,SHA_carryover,ORO_carryover,FOL_carryover,SHA_shift,ORO_shift,FOL_shift):
 #changing to one decade for testing
@@ -192,8 +205,8 @@ if __name__ == "__main__":
     for var in results.variables:
       var_list.append(int1.decode(var))
     variable_list.append(var_list)
-  pickle.dump(results_list, open("data/training-outputs/high-potential-objectives.pkl", "wb" ))
-  pickle.dump(variable_list, open("data/training-outputs/high-potential-variables.pkl", "wb" ))
+  pickle.dump(results_list, open("data/training-outputs/S1-objectives.pkl", "wb" ))
+  pickle.dump(variable_list, open("data/training-outputs/S1-variables.pkl", "wb" ))
 
 
   pool.close()

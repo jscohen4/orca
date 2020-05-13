@@ -180,4 +180,4 @@ for j,sc in enumerate(scenarios):
     print(hyperarray)
     dfhv[sc] = hyperarray
     print(dfhv)
-dfhv.to_csv('adaptation-potential.csv')
+dfhv.to_csv('data/adaptation-potential.csv')

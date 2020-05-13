@@ -7,7 +7,6 @@ import seaborn as sns
 from sklearn.cluster import MiniBatchKMeans, KMeans
 from sklearn.metrics.pairwise import pairwise_distances_argmin
 from sklearn.datasets import make_blobs
-from mpl_toolkits.mplot3d import Axes3D 
 from scipy.stats import pearsonr
 
 with open('scenario_names_all.txt') as f:
@@ -43,11 +42,11 @@ for i in lower[0]:
 	sc_lower.append(scenarios[i])
 
 
-with open('scenario-clusters/high_potential.txt','w') as f:
+with open('data/scenario-clusters/high_potential.txt','w') as f:
   f.write('\n'.join(sc_highpot))
 
-with open('scenario-clusters/upper.txt','w') as f:
+with open('data/scenario-clusters/upper.txt','w') as f:
   f.write('\n'.join(sc_upper))
 
-with open('scenario-clusters/lower.txt','w') as f:
+with open('data/scenario-clusters/lower.txt','w') as f:
   f.write('\n'.join(sc_lower))

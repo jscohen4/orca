@@ -58,22 +58,20 @@ projection_results = model.simulate() # takes a while... save results
 projection_results.to_csv('orca/data/scenario_runs/%s/%s-results-FCR_%s-excd_%s.csv'%(s,s,shift,index_exceedence_sac))
 comm.barrier()
 
-if comm.rank <= 28: 
-	obj = result_ids[comm.rank]
-	dfobj = pd.DataFrame()
-	for sc in scenarios: 	
-		projection_results = pd.read_csv('orca/data/scenario_runs/%s/%s-results-FCR_%s-excd_%s.csv'%(sc,sc,shift,index_exceedence_sac), index_col = 0, parse_dates = True)
-		dfobj[sc] = projection_results[obj]
-	dfobj.to_csv('orca/data/climate_results/%s-base-%s.csv'%(obj,window_type))
+obj = result_ids[comm.rank]
+dfobj = pd.DataFrame()
+for sc in scenarios: 	
+	projection_results = pd.read_csv('orca/data/scenario_runs/%s/%s-results-FCR_%s-excd_%s.csv'%(sc,sc,shift,index_exceedence_sac), index_col = 0, parse_dates = True)
+	dfobj[sc] = projection_results[obj]
+dfobj.to_csv('orca/data/climate_results/%s-base-%s.csv'%(obj,window_type))
 # comm.barrier()	
 # call(['rm', 'orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s-excdn_%s.csv'%(s,s,index_exceedence_sac)])
-if comm.rank >= 29 and comm.rank <=56: 
-	obj = input_ids[comm.rank-29]
-	dfobj = pd.DataFrame()
-	for sc in scenarios: 	
-		projection_results = pd.read_csv('orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s-excdn_%s.csv'%(sc,sc,index_exceedence_sac), index_col = 0, parse_dates = True)
-		dfobj[sc] = projection_results[obj]
-	dfobj.to_csv('orca/data/climate_input_forecasts/%s-base-%s.csv'%(obj,window_type))
+obj = input_ids[comm.rank-29]
+dfobj = pd.DataFrame()
+for sc in scenarios: 	
+	projection_results = pd.read_csv('orca/data/scenario_runs/%s/orca-data-climate-forecasted-%s-excdn_%s.csv'%(sc,sc,index_exceedence_sac), index_col = 0, parse_dates = True)
+	dfobj[sc] = projection_results[obj]
+dfobj.to_csv('orca/data/climate_input_forecasts/%s-base-%s.csv'%(obj,window_type))
 comm.barrier()	
 call(['rm', 'orca/data/scenario_runs/%s/%s-results-FCR_%s-excd_%s.csv'%(s,s,shift,index_exceedence_sac)])
 # call(['rm', 'orca/data/scenario_runs/%s/%s-results-FCR_%s-excd_%s.csv'%(s,s,shift,index_exceedence_sac)])
