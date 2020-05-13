@@ -30,4 +30,4 @@ A simulation mode incorporating CVP and SWP Delta exports, reservoir releases, a
 ### Forecast exceedance adaptation:
 
 ## License
-Copyright (C) 2020 CALFEWS Team. Released under the [MIT license](LICENSE.md).
+Copyright (C) 2020  Cohen, J.S., Zeff, H.B., & Herman, J.D. Team. Released under the [MIT license](LICENSE.md).
