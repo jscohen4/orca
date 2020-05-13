@@ -16,7 +16,7 @@ ORCA (Operations of Reservoirs in California): A simulation mode incorporating C
 
 ### Running ORCA in projection mode for individual cmip5 scenario:
 1. Choose cmip5 scenario to run. Its input data file can be found in the git repository [orca_cmip5_inputs](https://github.com/jscohen4/orca_cmip5_inputs). Copy desired input file from this repository to orca's input_climate_files folder.
-2. In main.py, set variable sc to desired scenario to read. Set options for plot, process_climate_data, climate_indices, and climate_forecasts. Historical  data can also be processed in same execution of script if updating forecast and gains regression coefficients is desired.
+2. In `main.py`, set variable sc to desired scenario to read. Set options for plot, process_climate_data, climate_indices, and climate_forecasts. Historical  data can also be processed in same execution of script if updating forecast and gains regression coefficients is desired.
 3. After executing main.py for the projection will be in the individual_projection_runs folder.
 
 ### Running ORCA in projection mode for multiple cmip5 scenarios:
@@ -26,7 +26,9 @@ ORCA (Operations of Reservoirs in California): A simulation mode incorporating C
 4. After executing run_all_climate_projections.py, results will be in the scenario_runs and climate_results folders.
 
 ## Methods:
-The following instrutctions correspond to the methods section of the paper. Initially, baseline simulations must be run for all scenarios using the instructions above. The code included in this branch often corresponds only to the high-potential scenarios (training set S1), but can easily be modified for any other training set from the study, per the instructions included. 
+The following instrutctions correspond to the methods section of the paper. 
+
+Initially, baseline simulations must be run for all scenarios using the instructions above. The code included in this branch often corresponds only to the high-potential scenarios (training set S1), but can easily be modified for any other training set from the study, per the instructions included. 
 
 ## License
 Copyright (C) 2020 CALFEWS Team. Released under the [MIT license](LICENSE.md).
