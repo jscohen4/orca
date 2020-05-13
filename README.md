@@ -6,10 +6,6 @@ Cohen, J.S., Zeff, H.B., Herman, J.D.,  (2020). How do the hydrologic properties
 ## Requirements:
 [NumPy](http://www.numpy.org/), [Pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), [Scipy](http://www.scipy.org/), [Scikit-learn](http://scikit-learn.org/), [Seaborn](https://seaborn.pydata.org/), [MPI for Python](https://mpi4py.readthedocs.io/en/stable/), and [Platypus](https://platypus.readthedocs.io/en/latest/).
 
-## Running ORCA
-ORCA (Operations of Reservoirs in California): A simulation mode incorporating Central Valley Project and State Water Project Delta exports, reservoir releases, and snowpack to streamflow forecasts.
-
-
 ## Methods:
 The following instrutctions correspond to the methods section of the paper. 
 
