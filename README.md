@@ -3,6 +3,8 @@ This repository contains all code corresponding to methods used to generate data
 
 Cohen, J.S., Zeff, H.B., & Herman, J.D.,  (2020). How do the hydrologic properties of training scenarios influence the robustness of reservoir policy adaptations to climate uncertainty? (submitted manuscript).
 
+[![DOI](https://zenodo.org/badge/85982450.svg)](https://zenodo.org/badge/latestdoi/85982450)
+
 ## Requirements:
 [NumPy](http://www.numpy.org/), [Pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), [Scipy](http://www.scipy.org/), [Scikit-learn](http://scikit-learn.org/), [Seaborn](https://seaborn.pydata.org/), [MPI for Python](https://mpi4py.readthedocs.io/en/stable/), and [Platypus](https://platypus.readthedocs.io/en/latest/).
 
