@@ -7,13 +7,17 @@ from .util import *
 
 class Reservoir():
 
+<<<<<<< HEAD
   def __init__(self, df, dfh, key, FCR_shift, exceedance,carryover_moea,projection = False):
+=======
+  def __init__(self, df, dfh, storage_baseline, key, FCR_shift, exceedance,carryover_moea,wyt_exc,projection = False):
+>>>>>>> ea25c1d342853b4f00fe57ac7b84e78afa6373ce
     T = len(df)
     self.projection = projection
     self.dayofyear = df.index.dayofyear
     self.month = df.index.month
     self.key = key
-    self.wyt = df.WYT_sim# simulated (forecasted)wyi
+    self.wyt = df['WYT_sim-exc%s'%wyt_exc]# simulated (forecasted)wyi
     for k,v in json.load(open('orca/data/json_files/%s_properties.json' % key)).items():
       setattr(self,k,v)
     self.evap_reg = json.load(open('orca/data/json_files/evap_regression.json'))
@@ -36,7 +40,7 @@ class Reservoir():
     self.mean = df['%s_mean' % key].values
     self.std = df['%s_std' % key].values  
     self.tas = df['%s_tas' % key].values
-    self.WYI = df['WYI_sim'].values
+    self.wyt = df['WYT_sim-exc%s'%wyt_exc]# simulated (forecasted)wyi
     self.obs_flow = df['%s_cum_flow_to_date' % key].values
     self.obs_snow = df['%s_snowpack' % key].values
     #initialize time series arrays
@@ -44,7 +48,7 @@ class Reservoir():
     self.R = np.zeros(T)
     self.Rtarget = np.zeros(T)
     self.R_to_delta = np.zeros(T)
-    self.S[0] = dfh['%s_storage' % key].iloc[0]
+    self.S[0] = storage_baseline.iloc[0]
     self.R[0] = 0
     self.storage_bounds = np.zeros(2)
     self.index_bounds = np.zeros(2)
@@ -54,7 +58,7 @@ class Reservoir():
     self.available_storage = np.zeros(T)
     self.soddp = np.zeros(T)
     self.spill = np.zeros(T)
-
+    self.curtailments = np.zeros(T)
     #tocs rule variables
     self.tocs_index = []
     for i,v in enumerate(self.tocs_rule['index']):        
@@ -127,6 +131,11 @@ class Reservoir():
                 # self.Rtarget[t] = self.Rtarget[t] * max(self.carryover_curtail_pct) #update target release
 
                 self.curt = True
+                self.curtailments[t] = max(self.carryover_curtail_pct,self.carryover_curtail_moea[wyt])
+        else:
+            self.curtailments[t] = 1
+    else:
+        self.curtailments[t] = 1
     # then clip based on constraints
     self.R[t] = min(self.Rtarget[t], W - self.dead_pool) # dead-pool constraint
     self.R[t] = min(self.R[t], self.max_outflow * cfs_tafd) #max outflow constraint
@@ -192,8 +201,8 @@ class Reservoir():
 
   def results_as_df(self, index):
     df = pd.DataFrame()
-    names = ['storage', 'out', 'target', 'out_to_delta', 'tocs', 'sodd', 'spill', 'forecast']
-    things = [self.S, self.R, self.Rtarget, self.R_to_delta, self.tocs,self.soddp,self.spill,self.forecast]
+    names = ['storage', 'out', 'target', 'out_to_delta', 'tocs', 'sodd', 'spill', 'forecast','curtail']
+    things = [self.S, self.R, self.Rtarget, self.R_to_delta, self.tocs,self.soddp,self.spill,self.curtailments]
     for n,t in zip(names,things):
       df['%s_%s' % (self.key,n)] = pd.Series(t, index=index)
     return df

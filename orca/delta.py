@@ -6,12 +6,12 @@ from .util import *
 
 class Delta():
 
-  def __init__(self, df, key, sim_gains):
+  def __init__(self, df, key, sim_gains,wyt_exc):
     T = len(df)
     self.dayofyear = df.index.dayofyear
     self.month = df.index.month
     self.key = key
-    self.wyt = df.WYT_sim 
+    self.wyt = df['WYT_sim-exc%s'%wyt_exc]# simulated (forecasted)wyi
     self.sim_gains = sim_gains
     self.OMR_sim = df.OMR_sim
     if self.sim_gains:

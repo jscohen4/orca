@@ -8,21 +8,31 @@ import matplotlib.pyplot as plt
 
 class Model(): 
 
+<<<<<<< HEAD
   def __init__(self, df, hist_datafile, SHA_shift, ORO_shift, FOL_shift,SHA_exceedance,ORO_exceedance,FOL_exceedance,SHA_carryover_moea,ORO_carryover_moea,FOL_carryover_moea,sd='10-01-1999',projection = False, sim_gains = False):
+=======
+  def __init__(self, df, hist_datafile, SHA_baseline, ORO_baseline, FOL_baseline, SHA_shift, ORO_shift, FOL_shift,SHA_exceedance,ORO_exceedance,FOL_exceedance,SHA_carryover_moea,ORO_carryover_moea,FOL_carryover_moea,wyt_exc,sd='10-01-1999',projection = False, sim_gains = False):
+>>>>>>> ea25c1d342853b4f00fe57ac7b84e78afa6373ce
     sd = '10-01-2050'
     self.df = df
     self.dfh = hist_datafile
     self.sim_gains = sim_gains
     self.projection = projection
     self.T = len(self.df)
+<<<<<<< HEAD
     self.shasta = Reservoir(self.df, self.dfh, 'SHA', SHA_shift, SHA_exceedance,SHA_carryover_moea,self.projection)
     self.folsom = Reservoir(self.df, self.dfh, 'FOL', FOL_shift, ORO_exceedance,ORO_carryover_moea,self.projection)
     self.oroville = Reservoir(self.df, self.dfh, 'ORO', ORO_shift, FOL_exceedance,FOL_carryover_moea,self.projection)
+=======
+    self.shasta = Reservoir(self.df, self.dfh, SHA_baseline, 'SHA', SHA_shift, SHA_exceedance, SHA_carryover_moea, wyt_exc, self.projection)
+    self.folsom = Reservoir(self.df, self.dfh, ORO_baseline, 'FOL', FOL_shift, ORO_exceedance, ORO_carryover_moea, wyt_exc, self.projection)
+    self.oroville = Reservoir(self.df, self.dfh, FOL_baseline,'ORO', ORO_shift, FOL_exceedance, FOL_carryover_moea, wyt_exc, self.projection)
+>>>>>>> ea25c1d342853b4f00fe57ac7b84e78afa6373ce
     self.reservoirs = [self.shasta, self.folsom, self.oroville]
-    self.delta = Delta(self.df, 'DEL', self.sim_gains)
+    self.delta = Delta(self.df, 'DEL', self.sim_gains,wyt_exc)
     self.dayofyear = self.df.index.dayofyear
     self.month = self.df.index.month    
-    self.wyt = self.df.WYT_sim
+    self.wyt = df['WYT_sim-exc%s'%wyt_exc]# simulated (forecasted)
 
   def simulate(self):
     self.sumnodds = np.zeros(367)
