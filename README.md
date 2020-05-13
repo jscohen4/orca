@@ -15,7 +15,7 @@ The following instrutctions correspond to the methods section of the paper.
   2. Run `run_all_climate_projections.py` to simulate baseline performance in series. Alternatively, simulations can be run in parallel, using 97 processors (1 for each scenario), with the script `main-parallel-base-cc.py`. Use the following command in a shell script: `mpirun -n 97 python main-parallel-base-cc.py`. In either case, baseline results will appear in the `orca/data/scenario_runs` and `orca/data/climate_results` folders.
 
 ### Section 3.2.1 part 2: Perfect Foresight Optimization:
-`perfect-foresight.py` will run the perfect foresight optimization for each scenario using NSGAIII. The script should be run in parallel with 128 processors, although this number can be adjusted. Specity in a shell script with the command `mpirun -n num_processors python perfect-foresight.py`. Pickle files contatininf decision variables and objectives output by each optimization will appear in the folders `data/perfect-foresight\objectives` and `data/perfect-foresight\variables`.
+`perfect-foresight.py` will run the perfect foresight optimization for each scenario using NSGAIII. The script should be run in parallel with 128 processors, although this number can be adjusted. Specity in a shell script with the command `mpirun -n num_processors python perfect-foresight.py`. Pickle files contatining decision variable and objective output from each optimization will appear in the folders `data/perfect-foresight\objectives` and `data/perfect-foresight\variables`.
 
 ### Section 3.2.2 Hypervolume Metric:
 Run `adaptation-potential.py` to calculate the adaptation potential for each scenario. Results will appear in the file `data/adaptation-potential.csv`.
