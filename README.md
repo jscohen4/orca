@@ -26,5 +26,9 @@ Run `adaptation-potential.py` to calculate the adaptation potential for each sce
 ### Section 3.4 part 1: Training:
 `orca-MOEA-training.py` will run the optimization procedure using one individual training set. The training set can be specified in line 40. Output file names in lines 208 and 209 should be adjusted accordingly. The script is run using 128 processors, although this number can be adjusted. Specify in a shell script with the command `mpirun -n num_processors python orca-MOEA-training.py`.
 
+### Section 3.4 part 2: Testing:
+In `orca-testing.py`, specify an individual testing set in lines 59 and 139. Change output file names in line 135 accordingly. The script must be run in parallel with the number of processors equal to the number of scenarios in the test set. These numbers are displayed in Table 1 in the manuscript. Specify training set policy file in line 134. Run with a shell script containing the command `mpirun -n num_processors python orca-testing.py`, with the number of processors specified. 
+
+
 ## License
 Copyright (C) 2020 CALFEWS Team. Released under the [MIT license](LICENSE.md).
