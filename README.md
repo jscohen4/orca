@@ -26,10 +26,13 @@ Cohen, J.S., Zeff, H.B., & Herman, J.D.,  (2020). Adaptation of Multi-Objective 
 4. After executing run_all_climate_projections.py, results will be in the scenario_runs and climate_results folders.
 
 ### Simulating all scenarios in parallel:
-
+`main-parallel-cc.py` will simulate all baseline runs on one processor for each scenario. It should be called in a shell script containing the command `mpirun -n 97 python main-parallel-cc.py`. Results will be in the folders `orca/data/scenario_runs` and `orca/data/climate_input_forecasts`
+. 
 ### Floodpool shift adaptation:
+`main-parallel-shift.py` will simulate each scenario for all floodpool shift levels. It should be called in a shell script containing the command `mpirun -n 97 python main-parallel-shift.py`. Results will be in the folders `orca/data/scenario_runs` and `orca/data/climate_input_forecasts`. 
 
 ### Forecast exceedance adaptation:
+`main-parallel-exc.py` will simulate each scenario for all forecast exceedance levels. It should be called in a shell script containing the command `mpirun -n 97 python main-parallel-exc.py`. Results will be in the folders `orca/data/scenario_runs` and `orca/data/climate_input_forecasts`. 
 
 ## License
 Copyright (C) 2020  Cohen, J.S., Zeff, H.B., & Herman, J.D. Released under the [MIT license](LICENSE.md).
