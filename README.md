@@ -24,4 +24,4 @@ A simulation mode incorporating CVP and SWP Delta exports, reservoir releases, a
 4. After executing run_all_climate_projections.py, results will be in the scenario_runs and climate_results folders.
 
 ## License
-Copyright (C) 2019 CALFEWS Team. Released under the [MIT license](LICENSE.md).
+Copyright (C) 2020 Cohen, J.S., Zeff, H.B., & Herman, J.D. Released under the [MIT license](LICENSE.md).
