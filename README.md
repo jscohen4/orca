@@ -15,10 +15,8 @@ The following instrutctions correspond to the methods section of the paper.
 
 ### Section 3.2.1 part 1: Baseline Policy Performance:
   1. Copy input files for all cmip5 scenarios from the [orca_cmip5_inputs](https://github.com/jscohen4/orca_cmip5_inputs) repository to ORCA's scenario_runs folder.
-  
   2a. Run `run_all_climate_projections.py` to simulate baseline performance in series. 
-  
-  2b: Alternatively, simulations can be run in parallel, using 97 processors (1 for each scenario), with the script `main-parallel-base-cc.py`. Use the following command in a shell script: `mpirun -n 97 python main-parallel-base-cc.py`.
+  2b: Alternatively, simulations can be run in parallel, using 97 processors (1 for each scenario), with the script `main-      parallel-base-cc.py`. Use the following command in a shell script: `mpirun -n 97 python main-parallel-base-cc.py`.
 In either case, baseline results will appear in the `orca/data/scenario_runs` and `orca/data/climate_results` folders.
 
 ## License
