@@ -1,6 +1,10 @@
 # Operation of Reservoirs in California (ORCA)
 
-A simulation mode incorporating CVP and SWP Delta exports, reservoir releases, and snow-pack to streamflow forecasts. This branch simulates historical scenarios with data from cdec cdec or data from 2006-2017 generated with WRF and and routed with WRF-WRF Hydro .
+This repository contains code used to simulate ORCA for the following paper:
+
+Holtzman, N., Pavelsky, T., Cohen, J., Wrzesien, M., and Herman, J. [Tailoring WRF and Noah-MP to improve process representation of Sierra Nevada runoff: Diagnostic evaluation and applications](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2019MS001832), Journal of Advances in Modeling Earth Systems 12 (3). 202\
+
+A simulation model incorporating CVP and SWP Delta exports, reservoir releases, and snow-pack to streamflow forecasts. This branch simulates historical scenarios with data from cdec cdec or data from 2006-2017 generated with WRF and and routed with NOAA-MP .
 
 ## Requirements:
 [NumPy](http://www.numpy.org/), [pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), [Scipy](http://www.scipy.org/), and [scikit-learn](http://scikit-learn.org/).
