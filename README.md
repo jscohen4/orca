@@ -1,6 +1,6 @@
 # Operation of Reservoirs in California (ORCA)
 
-A simulation mode incorporating CVP and SWP Delta exports, reservoir releases, and snow-pack to streamflow forecasts. This branch simulates both historical and projected cmip5 scenarios.
+A simulation model incorporating CVP and SWP Delta exports, reservoir releases, and snow-pack to streamflow forecasts. This branch simulates both historical and projected cmip5 scenarios.
 
 ## Requirements:
 [NumPy](http://www.numpy.org/), [pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), [Scipy](http://www.scipy.org/), and [scikit-learn](http://scikit-learn.org/).
