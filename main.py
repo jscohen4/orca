@@ -45,7 +45,8 @@ cdec = False # True if downloading up-to-date cdec data
 hist_indices = True #True if running calc_indices scriptwater_day
 hist_forcast = True #True if running updated forecast
 
-sc = 'ccsm20902100' #cmip5 climate scenario to use, if projection = True
+sc = 'noresm' #cmip5 climate scenario to use, if projection = True
+period = 'end'
 process_climate_data = True #only mark True if running climate projection and/or processing projection input data
 ####### only relevant if processing projection data
 climate_indices = True
@@ -61,7 +62,7 @@ if process_hist_data or not projection:
 
 if process_climate_data or projection:
   # call(['mkdir', 'orca/data/WRF_climate_output/%s'%sc])
-  text_file = open("orca/data/WRF_climate_output/%s/datetime.txt"%sc, "w")
+  text_file = open("orca/data/WRF-cc/%s/%s/datetime.txt"%(sc,period), "w")
   text_file.write("%s" %now)
   text_file.close()
 ####################### below this line data cocessing and model runs are executed
@@ -138,23 +139,23 @@ if process_climate_data:
   from orca.data import *
   # call(['cp','orca/data/WRF_climate_output/%s/orca_inputs.csv'%sc,'orca/data/individual_projection_runs/%s/%s_input_data.csv'%(sc,sc)]) 
   if climate_indices:
-    input_df = pd.read_csv('orca/data/WRF_climate_output/%s/orca_inputs.csv'%(sc), index_col = 0, parse_dates = True)
+    input_df = pd.read_csv('orca/data/WRF-cc/%s/%s/orca_inputs.csv'%(sc,period), index_col = 0, parse_dates = True)
     gains_loop_df = pd.read_csv('orca/data/historical_runs_data/gains_loops.csv', index_col = 0, parse_dates = True)
     OMR_loop_df = pd.read_csv('orca/data/historical_runs_data/OMR_loops.csv', index_col = 0, parse_dates = True)
     proj_ind_df = process_projection(input_df,gains_loop_df,OMR_loop_df,'orca/data/json_files/gains_regression.json','orca/data/json_files/inf_regression.json',window = window_type)  
-    proj_ind_df.to_csv('orca/data/WRF_climate_output/%s/orca-data-processed-%s.csv'%(sc,sc))
+    proj_ind_df.to_csv('orca/data/WRF-cc/%s/%s/orca-data-processed-%s-%s.csv'%(sc,period,sc,period))
   if climate_forecasts:
     if not climate_indices:
-      proj_ind_df = pd.read_csv('orca/data/WRF_climate_output/%s/orca-data-processed-%s.csv'%(sc,sc), index_col = 0, parse_dates = True)
+      proj_ind_df = pd.read_csv('orca/data/WRF-cc/%s/%s/orca-data-processed-%s-%s.csv'%(sc,period,sc,period), index_col = 0, parse_dates = True)
     WYI_stats_file = pd.read_csv('orca/data/forecast_regressions/WYI_forcasting_regression_stats.csv', index_col = 0, parse_dates = True)
     carryover_stats_file = pd.read_csv('orca/data/forecast_regressions/carryover_regression_statistics.csv', index_col = 0, parse_dates = True)
     forc_df= projection_forecast(proj_ind_df,WYI_stats_file,carryover_stats_file,window_type,window_length, index_exceedance_sac)
-    forc_df.to_csv('orca/data/WRF_climate_output/%s/orca-data-climate-forecasted-%s.csv'%(sc,sc))
+    forc_df.to_csv('orca/data/WRF-cc/%s/%s/orca-data-climate-forecasted-%s-%s.csv'%(sc,period,sc,period))
 
 if projection:
-  model = Model('orca/data/WRF_climate_output/%s/orca-data-climate-forecasted-%s.csv'%(sc,sc), 'orca/data/historical_runs_data/results.csv',SHA_shift, ORO_shift, FOL_shift,sd='10-01-1999',projection = True, sim_gains = True) #climate scenario test
+  model = Model('orca/data/WRF-cc/%s/%s/orca-data-climate-forecasted-%s-%s.csv'%(sc,period,sc,period), 'orca/data/historical_runs_data/results.csv',SHA_shift, ORO_shift, FOL_shift,sd='10-01-1999',projection = True, sim_gains = True) #climate scenario test
   results = model.simulate() # takes a while... save results
-  results.to_csv('orca/data/WRF_climate_output/%s/%s-results.csv'%(sc,sc))
+  results.to_csv('orca/data/WRF-cc/%s/%s/%s-%s-results.csv'%(sc,period,sc,period))
 # calibration points (lists of pandas series)
 # results = pd.read_csv('orca/data/results.csv', index_col=0, parse_dates=True)
   results['Combined_pump'] = results['DEL_HRO_pump'] + results['DEL_TRP_pump']

@@ -456,7 +456,7 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
   df.ORO_fci.fillna(method='bfill', inplace=True)
 
   snow_ids = ['GOL_swe','CSL_swe','HYS_swe','SCN_swe','RBB_swe','CAP_swe','RBP_swe',
-            'HMB_swe','FOR_swe','RTL_swe','GRZ_swe','SDF_swe','STL_swe','MED_swe','SNM_swe']
+            'HMB_swe','FOR_swe','RTL_swe','GRZ_swe','SDF_swe','SLT_swe','MED_swe','SNM_swe']
 
   if window == 'historical':
     for sn in snow_ids:
@@ -494,7 +494,7 @@ def process_projection(df,df_g,df_OMR,gains_regr,inf_regr,window): #used to proc
     df['YRS_swe'] = df[['GOL_swe','CSL_swe']].mean(axis=1)
     df['FOL_swe'] = df[['HYS_swe', 'SCN_swe', 'RBB_swe', 'CAP_swe']].mean(axis = 1) #taking out RBP (for this time), also test taking out RBB later
     df['ORO_swe'] = df[['FOR_swe', 'RTL_swe', 'GRZ_swe']].mean(axis = 1)
-    df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'STL_swe']].mean(axis = 1)
+    df['BND_swe'] = df[['SDF_swe', 'SNM_swe', 'SLT_swe']].mean(axis = 1)
 
   elif (window == 'rolling') | (window =='expanding') | (window == 'stationary'):
     for sn in snow_ids:
