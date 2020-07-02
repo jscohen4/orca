@@ -1,10 +1,8 @@
-[![DOI]10.1061/(ASCE)WR.1943-5452.0001300)
-
 # Operation of Reservoirs in California (ORCA)
 
 This repository contains all code corresponding to methods used to generate data for figures in the following paper:
 
-Cohen, J.S., Zeff, H.B., & Herman, J.D.,  (2020). Adaptation of Multi-Objective Reservoir Operations to Snowpack Decline in the Western United States (submitted manuscript).
+Cohen, J.S., Zeff, H.B., & Herman, J.D., (2020). Adaptation of multi-objective reservoir operations to snowpack decline in the Western United States, Journal of Water Resources Planning and Management (In Press).
 
 ## Requirements:
 [NumPy](http://www.numpy.org/), [pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), [Scipy](http://www.scipy.org/), [scikit-learn](http://scikit-learn.org/), and [MPI for Python](https://mpi4py.readthedocs.io/en/stable/).
