@@ -1,4 +1,4 @@
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3825917.svg)](https://doi.org/10.5281/zenodo.3825917)
+[![DOI]10.1061/(ASCE)WR.1943-5452.0001300)
 
 # Operation of Reservoirs in California (ORCA)
 
