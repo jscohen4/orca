@@ -2,7 +2,7 @@
 
 This repository contains all code corresponding to methods used to generate data for figures in the following paper:
 
-Cohen, J.S., Zeff, H.B., & Herman, J.D., (2020). Adaptation of multi-objective reservoir operations to snowpack decline in the Western United States, Journal of Water Resources Planning and Management (In Press).
+Cohen, J.S., Zeff, H.B., & Herman, J.D. Adaptation of multi-objective reservoir operations to snowpack decline in the Western United States, Journal of Water Resources Planning and Management. In Press. (101061). 2020. 
 
 ## Requirements:
 [NumPy](http://www.numpy.org/), [pandas](http://pandas.pydata.org/), [Matplotlib](http://matplotlib.org/), [Scipy](http://www.scipy.org/), [scikit-learn](http://scikit-learn.org/), and [MPI for Python](https://mpi4py.readthedocs.io/en/stable/).
