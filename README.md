@@ -1,5 +1,7 @@
 # Operation of Reservoirs in California (ORCA)
 
+[![DOI]10.1061/(ASCE)WR.1943-5452.0001300)	
+
 This repository contains all code corresponding to methods used to generate data for figures in the following paper:
 
 Cohen, J.S., Zeff, H.B., & Herman, J.D. Adaptation of multi-objective reservoir operations to snowpack decline in the Western United States, Journal of Water Resources Planning and Management. In Press. (101061). 2020. 
